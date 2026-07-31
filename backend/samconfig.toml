@@ -1,0 +1,24 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "iskon-dublin-dev"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+region = "eu-west-1"
+confirm_changeset = true
+
+[dev.deploy.parameters]
+stack_name = "iskon-dublin-dev"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+region = "eu-west-1"
+confirm_changeset = false
+parameter_overrides = "Environment=dev FrontendUrl=https://iskcondublin-git-dev-finedeeds.vercel.app SquareEnvironment=sandbox SquareLocationId=L39WW70HEZEJY SquareWebhookUrl=https://k0idmnjxeh.execute-api.eu-west-1.amazonaws.com/dev/api/webhooks/square"
+
+[prod.deploy.parameters]
+stack_name = "iskon-dublin-prod"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+region = "eu-west-1"
+confirm_changeset = true
+parameter_overrides = "Environment=prod FrontendUrl=https://www.iskcondublin.com ExtraCorsOrigins=https://iskcondublin.com SESFromEmail=info@iskcondublin.com SquareEnvironment=production SquareLocationId=LR73TTC5S55RS SquareWebhookUrl=https://giad7gjxgd.execute-api.eu-west-1.amazonaws.com/prod/api/webhooks/square"

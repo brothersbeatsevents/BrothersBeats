@@ -1,0 +1,482 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Brothers Beats Events Platform — Production Serverless Backend
+
+# ─────────────────────────────────────────────
+# Parameters
+# ─────────────────────────────────────────────
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+  FrontendUrl:
+    Type: String
+    Default: 'http://localhost:3000'
+    Description: Primary frontend URL for CORS (also used in API Gateway error response headers)
+  ExtraCorsOrigins:
+    Type: String
+    Default: ''
+    Description: Additional CORS origins comma-separated (e.g. https://www.example.com)
+  SESFromEmail:
+    Type: String
+    Default: ''
+    Description: Verified SES sender email (leave empty to disable sending)
+  StripeWebhookUrl:
+    Type: String
+    Default: ''
+    Description: Full URL of the Stripe webhook endpoint (e.g. https://api.example.com/prod/api/webhooks/stripe) - for reference/docs only, actual endpoint is configured in the Stripe dashboard
+  SESSNSTopicArn:
+    Type: String
+    Default: ''
+    Description: SNS Topic ARN to validate incoming SES notification webhooks (optional)
+
+Conditions:
+  IsProd: !Equals [!Ref Environment, prod]
+  IsNotProd: !Not [!Equals [!Ref Environment, prod]]
+  HasExtraCorsOrigins: !Not [!Equals [!Ref ExtraCorsOrigins, '']]
+  HasSESFromEmail: !Not [!Equals [!Ref SESFromEmail, '']]
+  IsNotProdAndHasSESFromEmail: !And
+    - !Not [!Equals [!Ref Environment, prod]]
+    - !Not [!Equals [!Ref SESFromEmail, '']]
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 30
+    MemorySize: 256
+    Architectures: [arm64]
+    Environment:
+      Variables:
+        NODE_ENV: !If [IsProd, production, development]
+        USE_DYNAMODB: 'true'
+        DYNAMODB_TABLE: !Ref DynamoDBTable
+        FRONTEND_URL: !If
+          - HasExtraCorsOrigins
+          - !Sub '${FrontendUrl},${ExtraCorsOrigins}'
+          - !Ref FrontendUrl
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+        COGNITO_DOMAIN: !Sub 'brothers-beats-${Environment}'
+        SES_FROM_EMAIL: !Ref SESFromEmail
+        SES_CONFIGURATION_SET: !If
+          - HasSESFromEmail
+          - !Sub 'brothers-beats-${Environment}'
+          - !Ref 'AWS::NoValue'
+        SES_SNS_TOPIC_ARN: !If
+          - HasSESFromEmail
+          - !Sub 'arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:brothers-beats-ses-notifications-${Environment}'
+          - !Ref SESSNSTopicArn
+        S3_MEDIA_BUCKET: !Ref MediaBucket
+        S3_MEDIA_REGION: !Ref 'AWS::Region'
+        STRIPE_WEBHOOK_URL: !Ref StripeWebhookUrl
+        COGNITO_ADMIN_GROUP_NAME: ADMIN
+        COGNITO_SUPER_ADMIN_GROUP_NAME: SUPER_ADMIN
+        COGNITO_CUSTOMER_GROUP_NAME: CUSTOMER
+        # STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET intentionally absent — fetched
+        # at runtime from /brothers-beats/stripe-secret-key[-prod] and
+        # /brothers-beats/stripe-webhook-secret[-prod] SSM SecureStrings via the
+        # Parameters & Secrets Lambda Extension (see services/stripe.ts).
+
+# ─────────────────────────────────────────────
+# Resources
+# ─────────────────────────────────────────────
+Resources:
+  # ── DynamoDB Single Table ──
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'brothers-beats-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+        - AttributeName: GSI2PK
+          AttributeType: S
+        - AttributeName: GSI2SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: GSI2PK
+              KeyType: HASH
+            - AttributeName: GSI2SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: brothers-beats
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ── S3 Media Bucket ──
+  MediaBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'brothers-beats-media-${Environment}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT]
+            AllowedOrigins: !If
+              - IsProd
+              - [!Ref FrontendUrl]
+              - [
+                  !Ref FrontendUrl,
+                  'http://localhost:3000',
+                  'http://localhost:3001',
+                ]
+            MaxAge: 3600
+      Tags:
+        - Key: Project
+          Value: brothers-beats
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ── S3 Media Bucket Policy (public read) ──
+  MediaBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MediaBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${MediaBucket.Arn}/*'
+
+  # ── Cognito User Pool ──
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub 'brothers-beats-${Environment}'
+      AutoVerifiedAttributes: [email]
+      UsernameAttributes: [email]
+      MfaConfiguration: OPTIONAL
+      EnabledMfas: [SOFTWARE_TOKEN_MFA]
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+        - Name: name
+          Required: false
+          Mutable: true
+      UserPoolTags:
+        Project: brothers-beats
+        Environment: !Ref Environment
+
+  # ── Cognito User Pool Domain ──
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub 'brothers-beats-${Environment}'
+      UserPoolId: !Ref CognitoUserPool
+
+  # ── Google Identity Provider ──
+  CognitoGoogleIdP:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ProviderName: Google
+      ProviderType: Google
+      ProviderDetails:
+        client_id: !Sub '{{resolve:ssm:/brothers-beats/${Environment}/google-client-id}}'
+        client_secret: !Sub '{{resolve:ssm:/brothers-beats/${Environment}/google-client-secret}}'
+        authorize_scopes: 'openid email profile'
+      AttributeMapping:
+        email: email
+        name: name
+        picture: picture
+
+  # ── Cognito Client ──
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: CognitoGoogleIdP
+    Properties:
+      ClientName: !Sub 'brothers-beats-app-${Environment}'
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      SupportedIdentityProviders:
+        - COGNITO
+        - Google
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs:
+        - !Sub '${FrontendUrl}/auth/callback'
+        - 'http://localhost:3000/auth/callback'
+      LogoutURLs:
+        - !Ref FrontendUrl
+        - 'http://localhost:3000'
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+
+  # ── Cognito Groups (role source of truth — see middleware/auth.ts) ──
+  CognitoSuperAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: SUPER_ADMIN
+      UserPoolId: !Ref CognitoUserPool
+      Description: Full platform administrators
+      Precedence: 0
+
+  CognitoAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: ADMIN
+      UserPoolId: !Ref CognitoUserPool
+      Description: Operational administrators (events, bookings, refunds, communications)
+      Precedence: 1
+
+  CognitoCustomerGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: CUSTOMER
+      UserPoolId: !Ref CognitoUserPool
+      Description: Default group for self-registered ticket buyers
+      Precedence: 10
+
+  # ── Lambda Function ──
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'brothers-beats-api-${Environment}'
+      Handler: lambda.handler
+      CodeUri: dist/
+      Description: Brothers Beats Events API
+      Layers:
+        - '{{resolve:ssm:/aws/service/aws-parameters-and-secrets-lambda-extension/arm64/latest}}'
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+                - ssm:GetParameters
+              Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/brothers-beats/*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              # SES v2 requires permission on both identity and configuration-set when ConfigurationSetName is set
+              Resource:
+                - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+                - !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+                - s3:DeleteObject
+              Resource: !Sub '${MediaBucket.Arn}/*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminGetUser
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminEnableUser
+                - cognito-idp:AdminDisableUser
+                - cognito-idp:AdminAddUserToGroup
+                - cognito-idp:AdminRemoveUserFromGroup
+                - cognito-idp:AdminListGroupsForUser
+                - cognito-idp:ListUsers
+              Resource: !GetAtt CognitoUserPool.Arn
+      Events:
+        ApiProxy:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            RestApiId: !Ref ApiGateway
+        ApiRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+            RestApiId: !Ref ApiGateway
+      Tags:
+        Project: brothers-beats
+        Environment: !Ref Environment
+
+  # ── REST API Gateway with throttling ──
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub 'brothers-beats-${Environment}'
+      StageName: !Ref Environment
+      TracingEnabled: false
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          ThrottlingBurstLimit: 50
+          ThrottlingRateLimit: 100
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${FrontendUrl}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+          ResponseTemplates:
+            application/json: '{"success":false,"error":"Bad request"}'
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${FrontendUrl}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+          ResponseTemplates:
+            application/json: '{"success":false,"error":"Internal server error"}'
+        THROTTLED:
+          StatusCode: 429
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${FrontendUrl}'"
+          ResponseTemplates:
+            application/json: '{"success":false,"error":"Rate limit exceeded"}'
+
+  # ── SES Email Identity (dev only — shared identity, created once)
+  SESEmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Condition: IsNotProdAndHasSESFromEmail
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      EmailIdentity: !Ref SESFromEmail
+
+  # ── SES Configuration Set + SNS bounce/complaint topic
+  # NOTE: These resources (`brothers-beats-${Environment}` config set,
+  # `brothers-beats-ses-notifications-${Environment}` SNS topic, and the bounce-
+  # complaint event destination + HTTPS subscription to the API webhook) are
+  # managed out-of-band (created manually). They are intentionally NOT defined
+  # here because CFN cannot adopt the existing physical resources without an
+  # import operation. The runtime Lambda references the config set by name via
+  # the SES SDK; the SNS topic name is wired up via the SES event destination.
+  # If they ever need to be brought under CFN management, use `sam deploy` with
+  # `--import-resources` (or `aws cloudformation create-change-set --change-set-
+  # type IMPORT`) instead of re-adding them here.
+
+  # ── CloudWatch Alarms (free tier: 10 alarms) ──
+  ApiErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'brothers-beats-api-errors-${Environment}'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      TreatMissingData: notBreaching
+
+  ApiThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'brothers-beats-throttles-${Environment}'
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      TreatMissingData: notBreaching
+
+# ─────────────────────────────────────────────
+# Outputs
+# ─────────────────────────────────────────────
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+  DynamoDBTableName:
+    Description: DynamoDB table name
+    Value: !Ref DynamoDBTable
+  CognitoUserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref CognitoUserPool
+  CognitoUserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref CognitoUserPoolClient
+  CognitoLoginUrl:
+    Description: Cognito Hosted UI Login URL
+    Value: !Sub >-
+      https://brothers-beats-${Environment}.auth.${AWS::Region}.amazoncognito.com/login?response_type=code&scope=openid+email+profile&redirect_uri=${FrontendUrl}/auth/callback
+  CognitoDomain:
+    Description: Cognito domain
+    Value: !Sub 'https://brothers-beats-${Environment}.auth.${AWS::Region}.amazoncognito.com'
+  MediaBucketName:
+    Description: S3 media bucket name
+    Value: !Ref MediaBucket
+  MediaBucketUrl:
+    Description: S3 media bucket URL
+    Value: !Sub 'https://${MediaBucket}.s3.${AWS::Region}.amazonaws.com'
