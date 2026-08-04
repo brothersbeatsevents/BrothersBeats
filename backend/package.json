@@ -10,8 +10,8 @@
     "start": "node dist/server.js",
     "seed": "USE_DYNAMODB=true tsx src/seed/seed-dynamodb.ts",
     "test": "tsx --test src/tests/**/*.test.ts",
-    "deploy:dev": "npm run build && sam deploy --config-env dev --profile brothersbeatsdev --no-confirm-changeset",
-    "deploy:prod": "npm run build && sam deploy --config-env prod --profile brothersbeatsprod --no-confirm-changeset"
+    "deploy:dev": "npm run build && sam deploy --config-env dev --profile brothersbeats",
+    "deploy:prod": "npm run build && sam deploy --config-env prod --profile brothersbeats"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1032.0",
