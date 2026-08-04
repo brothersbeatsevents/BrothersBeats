@@ -10,6 +10,8 @@ import {
   adminCreateTicketTier,
   adminUpdateTicketTier,
   adminDeleteTicketTier,
+  getPresignedUpload,
+  uploadToPresignedUrl,
 } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 
@@ -36,8 +38,11 @@ export default function AdminEventDetailPage() {
   const [error, setError] = useState('');
   const [showAddTier, setShowAddTier] = useState(false);
   const [tierForm, setTierForm] = useState({
-    name: '', priceAmountMinor: 0, maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD',
+    name: '', priceEuros: '0.00', maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD',
   });
+  const [editingTierId, setEditingTierId] = useState<string | null>(null);
+  const [editTierForm, setEditTierForm] = useState({ priceEuros: '0.00', maxQuantity: 0 });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   function load() {
     if (!token) return;
@@ -73,6 +78,23 @@ export default function AdminEventDetailPage() {
     load();
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+    setUploadingImage(true);
+    setError('');
+    try {
+      const { data } = await getPresignedUpload(file.type, 'events', token);
+      await uploadToPresignedUrl(data.uploadUrl, file);
+      await handleSaveField('heroImageUrl', data.publicUrl);
+    } catch (err: any) {
+      setError(err.message || 'Image upload failed.');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  }
+
   async function handleAddTier(e: React.FormEvent) {
     e.preventDefault();
     if (!token) return;
@@ -80,8 +102,9 @@ export default function AdminEventDetailPage() {
       await adminCreateTicketTier(
         params.id,
         {
-          ...tierForm,
-          priceAmountMinor: Number(tierForm.priceAmountMinor),
+          name: tierForm.name,
+          type: tierForm.type,
+          priceAmountMinor: Math.round(Number(tierForm.priceEuros) * 100),
           maxQuantity: Number(tierForm.maxQuantity),
           salesStartAt: new Date(tierForm.salesStartAt).toISOString(),
           salesEndAt: new Date(tierForm.salesEndAt).toISOString(),
@@ -89,10 +112,34 @@ export default function AdminEventDetailPage() {
         token,
       );
       setShowAddTier(false);
-      setTierForm({ name: '', priceAmountMinor: 0, maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD' });
+      setTierForm({ name: '', priceEuros: '0.00', maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD' });
       load();
     } catch (err: any) {
       setError(err.message || 'Failed to add ticket type.');
+    }
+  }
+
+  function startEditTier(tier: any) {
+    setEditingTierId(tier.id);
+    setEditTierForm({ priceEuros: (tier.priceAmountMinor / 100).toFixed(2), maxQuantity: tier.maxQuantity });
+  }
+
+  async function handleSaveTier(tierId: string) {
+    if (!token) return;
+    try {
+      await adminUpdateTicketTier(
+        params.id,
+        tierId,
+        {
+          priceAmountMinor: Math.round(Number(editTierForm.priceEuros) * 100),
+          maxQuantity: Number(editTierForm.maxQuantity),
+        },
+        token,
+      );
+      setEditingTierId(null);
+      load();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update ticket type.');
     }
   }
 
@@ -148,6 +195,20 @@ export default function AdminEventDetailPage() {
       <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 mb-8 space-y-4">
         <h2 className="font-display font-bold text-lg text-bb-text">Details</h2>
         <div>
+          <label className="block text-sm font-medium text-bb-text mb-1">Hero image</label>
+          {event.heroImageUrl && (
+            <img src={event.heroImageUrl} alt={event.title} className="w-full max-h-56 object-cover rounded-lg mb-2 bg-bb-neutral" />
+          )}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleImageUpload}
+            disabled={uploadingImage}
+            className="w-full text-sm text-bb-text-secondary file:mr-3 file:rounded-full file:border-0 file:bg-bb-orange file:text-white file:px-4 file:py-2 file:text-sm file:font-semibold hover:file:bg-bb-orange-dark disabled:opacity-60"
+          />
+          {uploadingImage && <p className="text-xs text-bb-text-secondary mt-1">Uploading…</p>}
+        </div>
+        <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Title</label>
           <input
             defaultValue={event.title}
@@ -196,11 +257,26 @@ export default function AdminEventDetailPage() {
 
         {showAddTier && (
           <form onSubmit={handleAddTier} className="grid grid-cols-2 gap-3 mb-6 bg-bb-neutral rounded-xl p-4">
-            <input required placeholder="Name" value={tierForm.name} onChange={(e) => setTierForm((f) => ({ ...f, name: e.target.value }))} className="rounded-lg border border-bb-border px-3 py-2 text-sm col-span-2" />
-            <input required type="number" min={0} placeholder="Price (cents)" value={tierForm.priceAmountMinor} onChange={(e) => setTierForm((f) => ({ ...f, priceAmountMinor: Number(e.target.value) }))} className="rounded-lg border border-bb-border px-3 py-2 text-sm" />
-            <input required type="number" min={1} placeholder="Max quantity" value={tierForm.maxQuantity} onChange={(e) => setTierForm((f) => ({ ...f, maxQuantity: Number(e.target.value) }))} className="rounded-lg border border-bb-border px-3 py-2 text-sm" />
-            <input required type="datetime-local" value={tierForm.salesStartAt} onChange={(e) => setTierForm((f) => ({ ...f, salesStartAt: e.target.value }))} className="rounded-lg border border-bb-border px-3 py-2 text-sm" />
-            <input required type="datetime-local" value={tierForm.salesEndAt} onChange={(e) => setTierForm((f) => ({ ...f, salesEndAt: e.target.value }))} className="rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-bb-text-secondary mb-1">Ticket name</label>
+              <input required placeholder="e.g. Early Bird" value={tierForm.name} onChange={(e) => setTierForm((f) => ({ ...f, name: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-bb-text-secondary mb-1">Price (€ per ticket)</label>
+              <input required type="number" min={0} step="0.01" placeholder="10.00" value={tierForm.priceEuros} onChange={(e) => setTierForm((f) => ({ ...f, priceEuros: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-bb-text-secondary mb-1">Capacity (tickets available)</label>
+              <input required type="number" min={1} placeholder="50" value={tierForm.maxQuantity} onChange={(e) => setTierForm((f) => ({ ...f, maxQuantity: Number(e.target.value) }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-bb-text-secondary mb-1">Sales start</label>
+              <input required type="datetime-local" value={tierForm.salesStartAt} onChange={(e) => setTierForm((f) => ({ ...f, salesStartAt: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-bb-text-secondary mb-1">Sales end</label>
+              <input required type="datetime-local" value={tierForm.salesEndAt} onChange={(e) => setTierForm((f) => ({ ...f, salesEndAt: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            </div>
             <button type="submit" className="col-span-2 bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold py-2 rounded-full text-sm transition-colors">
               Add ticket type
             </button>
@@ -209,21 +285,60 @@ export default function AdminEventDetailPage() {
 
         <div className="space-y-2">
           {(event.ticketTiers || []).map((tier: any) => (
-            <div key={tier.id} className="flex items-center justify-between border border-bb-border rounded-xl p-3">
-              <div>
-                <p className="font-semibold text-bb-text text-sm">{tier.name}</p>
-                <p className="text-xs text-bb-text-secondary">
-                  {formatMoney(tier.priceAmountMinor, tier.currency)} · {tier.quantitySold}/{tier.maxQuantity} sold
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => toggleTierVisibility(tier)} className="text-xs font-semibold text-bb-text-secondary hover:text-bb-text">
-                  {tier.visible ? 'Hide' : 'Show'}
-                </button>
-                <button onClick={() => handleDeleteTier(tier.id)} className="text-xs font-semibold text-bb-red hover:underline">
-                  Delete
-                </button>
-              </div>
+            <div key={tier.id} className="border border-bb-border rounded-xl p-3">
+              {editingTierId === tier.id ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-bb-text-secondary mb-1">Price (€ per ticket)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={editTierForm.priceEuros}
+                      onChange={(e) => setEditTierForm((f) => ({ ...f, priceEuros: e.target.value }))}
+                      className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-bb-text-secondary mb-1">Capacity (tickets available)</label>
+                    <input
+                      type="number"
+                      min={tier.quantitySold}
+                      value={editTierForm.maxQuantity}
+                      onChange={(e) => setEditTierForm((f) => ({ ...f, maxQuantity: Number(e.target.value) }))}
+                      className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div className="col-span-2 flex gap-2">
+                    <button onClick={() => handleSaveTier(tier.id)} className="text-xs font-semibold text-white bg-bb-green rounded-full px-4 py-2 hover:bg-bb-green-dark">
+                      Save
+                    </button>
+                    <button onClick={() => setEditingTierId(null)} className="text-xs font-semibold text-bb-text-secondary hover:text-bb-text px-4 py-2">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-bb-text text-sm">{tier.name}</p>
+                    <p className="text-xs text-bb-text-secondary">
+                      {formatMoney(tier.priceAmountMinor, tier.currency)} · {tier.quantitySold}/{tier.maxQuantity} sold
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => startEditTier(tier)} className="text-xs font-semibold text-bb-text-secondary hover:text-bb-text">
+                      Edit
+                    </button>
+                    <button onClick={() => toggleTierVisibility(tier)} className="text-xs font-semibold text-bb-text-secondary hover:text-bb-text">
+                      {tier.visible ? 'Hide' : 'Show'}
+                    </button>
+                    <button onClick={() => handleDeleteTier(tier.id)} className="text-xs font-semibold text-bb-red hover:underline">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
           {(!event.ticketTiers || event.ticketTiers.length === 0) && (

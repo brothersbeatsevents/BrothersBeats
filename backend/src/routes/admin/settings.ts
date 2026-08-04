@@ -39,7 +39,7 @@ router.put('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const settings = await getOrCreateSettings();
   const fields = [
     'organizationName', 'supportEmail', 'defaultCurrency', 'defaultTimezone',
-    'defaultRefundPolicy', 'defaultTermsAndConditions', 'socialLinks',
+    'defaultRefundPolicy', 'defaultTermsAndConditions', 'socialLinks', 'heroImageUrl',
   ] as const;
   for (const field of fields) {
     if (req.body[field] !== undefined) (settings as any)[field] = req.body[field];

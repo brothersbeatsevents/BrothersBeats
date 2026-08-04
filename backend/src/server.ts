@@ -19,6 +19,7 @@ import galleryRoutes from './routes/gallery';
 import serviceEnquiriesRoutes from './routes/service-enquiries';
 import sesNotificationRoutes from './routes/ses-notifications';
 import stripeWebhookRoutes from './routes/webhooks-stripe';
+import settingsRoutes from './routes/settings';
 import adminRoutes from './routes/admin';
 
 const app = express();
@@ -131,6 +132,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/service-enquiries', enquiryLimiter, serviceEnquiriesRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
 // SNS sends Content-Type: text/plain — parse as text before JSON sanitisation
 app.use(

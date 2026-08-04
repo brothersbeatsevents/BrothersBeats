@@ -13,17 +13,21 @@ const NAV_ITEMS = [
 ];
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       router.replace(`/auth/sign-in?next=${encodeURIComponent(pathname || '/account')}`);
+    } else if (isAdmin) {
+      // Admins manage the platform, not customer bookings — send them to the admin panel instead
+      router.replace('/admin');
     }
-  }, [loading, user, pathname, router]);
+  }, [loading, user, isAdmin, pathname, router]);
 
-  if (loading || !user) {
+  if (loading || !user || isAdmin) {
     return <div className="max-w-3xl mx-auto px-4 py-20 text-center text-bb-text-secondary">Loading…</div>;
   }
 

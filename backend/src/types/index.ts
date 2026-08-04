@@ -447,6 +447,7 @@ export interface OrgSettings {
   defaultRefundPolicy?: string;
   defaultTermsAndConditions?: string;
   socialLinks?: Record<string, string>;
+  heroImageUrl?: string;
   updated_at: string;
   updatedBy?: string;
 }

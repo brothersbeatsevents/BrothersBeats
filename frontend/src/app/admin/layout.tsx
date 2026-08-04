@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 
 const ADMIN_NAV = [
@@ -24,6 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isAdmin, loading, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   if (loading) {
     return <div className="max-w-7xl mx-auto px-4 py-20 text-center text-bb-text-secondary">Loading…</div>;
@@ -45,17 +47,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)]">
-      <aside className="w-56 bg-bb-text text-white flex-shrink-0 hidden md:flex md:flex-col">
-        <div className="p-4 border-b border-white/10">
-          <p className="font-display font-bold text-sm">Admin Panel</p>
-          <p className="text-xs text-white/60 truncate">{user.display_name}</p>
-        </div>
-        <nav className="p-2 space-y-1 flex-1 overflow-y-auto">
+    <div className="flex flex-col min-h-[calc(100vh-64px)]">
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-bb-text text-white border-b border-white/10">
+        <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="text-sm font-semibold">
+          ☰ Menu
+        </button>
+        <Link href="/" className="text-sm font-semibold text-white/80 hover:text-white">
+          &larr; Back to site
+        </Link>
+      </div>
+      {mobileNavOpen && (
+        <nav className="md:hidden bg-bb-text text-white p-2 space-y-1 border-b border-white/10">
           {ADMIN_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setMobileNavOpen(false)}
               className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                 pathname === item.href ? 'bg-bb-green text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
@@ -63,17 +70,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {item.label}
             </Link>
           ))}
-        </nav>
-        <div className="p-4 border-t border-white/10 space-y-2">
-          <Link href="/" className="block text-white/60 hover:text-white text-xs">
-            &larr; Back to site
-          </Link>
-          <button onClick={logout} className="text-white/60 hover:text-white text-xs">
+          <button onClick={logout} className="block w-full text-left px-3 py-2 text-sm text-white/60 hover:text-white">
             Sign out
           </button>
-        </div>
-      </aside>
-      <main className="flex-1 min-w-0 p-6 md:p-8 bg-bb-neutral">{children}</main>
+        </nav>
+      )}
+      <div className="flex flex-1 min-h-0">
+        <aside className="w-56 bg-bb-text text-white flex-shrink-0 hidden md:flex md:flex-col">
+          <div className="p-4 border-b border-white/10">
+            <p className="font-display font-bold text-sm">Admin Panel</p>
+            <p className="text-xs text-white/60 truncate">{user.display_name}</p>
+          </div>
+          <nav className="p-2 space-y-1 flex-1 overflow-y-auto">
+            {ADMIN_NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                  pathname === item.href ? 'bg-bb-green text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="p-4 border-t border-white/10 space-y-2">
+            <Link href="/" className="flex items-center gap-1 text-white/80 hover:text-white text-sm font-semibold">
+              &larr; Back to site
+            </Link>
+            <button onClick={logout} className="text-white/60 hover:text-white text-xs">
+              Sign out
+            </button>
+          </div>
+        </aside>
+        <main className="flex-1 min-w-0 p-6 md:p-8 bg-bb-neutral">{children}</main>
+      </div>
     </div>
   );
 }

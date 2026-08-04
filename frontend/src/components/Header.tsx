@@ -49,20 +49,21 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
-                {isAdmin && (
+                {isAdmin ? (
                   <Link
                     href="/admin"
                     className="text-sm font-medium text-bb-text-secondary hover:text-bb-green transition-colors"
                   >
-                    Admin
+                    Admin panel
+                  </Link>
+                ) : (
+                  <Link
+                    href="/account"
+                    className="text-sm font-medium text-bb-text-secondary hover:text-bb-green transition-colors"
+                  >
+                    {user.display_name}
                   </Link>
                 )}
-                <Link
-                  href="/account"
-                  className="text-sm font-medium text-bb-text-secondary hover:text-bb-green transition-colors"
-                >
-                  {user.display_name}
-                </Link>
                 <button
                   onClick={logout}
                   className="text-sm font-medium text-bb-text-secondary hover:text-bb-text transition-colors"
@@ -78,12 +79,14 @@ export default function Header() {
                 Sign in
               </Link>
             )}
-            <Link
-              href="/events"
-              className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold text-sm px-5 py-2.5 rounded-full transition-colors"
-            >
-              Explore Events
-            </Link>
+            {!isAdmin && (
+              <Link
+                href="/events"
+                className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold text-sm px-5 py-2.5 rounded-full transition-colors"
+              >
+                Explore Events
+              </Link>
+            )}
           </div>
 
           <button
@@ -116,14 +119,15 @@ export default function Header() {
             <div className="pt-3 mt-2 border-t border-bb-border space-y-1">
               {user ? (
                 <>
-                  {isAdmin && (
+                  {isAdmin ? (
                     <Link href="/admin" className="block py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral" onClick={() => setMobileOpen(false)}>
-                      Admin
+                      Admin panel
+                    </Link>
+                  ) : (
+                    <Link href="/account" className="block py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral" onClick={() => setMobileOpen(false)}>
+                      My account
                     </Link>
                   )}
-                  <Link href="/account" className="block py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral" onClick={() => setMobileOpen(false)}>
-                    My account
-                  </Link>
                   <button onClick={logout} className="block w-full text-left py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral">
                     Sign out
                   </button>
@@ -133,13 +137,15 @@ export default function Header() {
                   Sign in
                 </Link>
               )}
-              <Link
-                href="/events"
-                className="block text-center bg-bb-orange text-white font-semibold px-5 py-2.5 rounded-full"
-                onClick={() => setMobileOpen(false)}
-              >
-                Explore Events
-              </Link>
+              {!isAdmin && (
+                <Link
+                  href="/events"
+                  className="block text-center bg-bb-orange text-white font-semibold px-5 py-2.5 rounded-full"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Explore Events
+                </Link>
+              )}
             </div>
           </nav>
         )}

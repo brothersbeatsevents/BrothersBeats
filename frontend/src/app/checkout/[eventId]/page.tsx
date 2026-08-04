@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getPriceQuote, getEvent } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import PriceSummary from '@/components/ui/PriceSummary';
 import CheckoutForm from '@/components/ui/CheckoutForm';
 import ErrorState from '@/components/ui/ErrorState';
@@ -11,6 +12,7 @@ import ErrorState from '@/components/ui/ErrorState';
 function CheckoutPageContent() {
   const params = useParams<{ eventId: string }>();
   const searchParams = useSearchParams();
+  const { isAdmin } = useAuth();
   const tier = searchParams.get('tier') || '';
   const qty = Number(searchParams.get('qty')) || 1;
   const slug = searchParams.get('slug') || '';
@@ -42,6 +44,20 @@ function CheckoutPageContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.eventId, tier, qty]);
+
+  if (isAdmin) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <ErrorState
+          title="Admins can't purchase tickets"
+          message="Sign in with a customer account to buy tickets, or head back to the admin panel."
+        />
+        <Link href="/admin" className="mt-6 inline-block text-sm font-semibold text-bb-green hover:text-bb-green-dark">
+          &larr; Back to admin panel
+        </Link>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="max-w-3xl mx-auto px-4 py-16 text-center text-bb-text-secondary">Loading checkout…</div>;
