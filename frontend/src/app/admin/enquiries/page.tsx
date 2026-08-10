@@ -53,7 +53,7 @@ export default function AdminServiceEnquiriesPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="border border-bb-border font-semibold px-5 py-2.5 rounded-full text-sm hover:border-bb-green transition-colors disabled:opacity-60"
+          className="border border-bb-border font-semibold px-5 py-2.5 rounded-full text-sm hover:border-bb-gold transition-colors disabled:opacity-60"
         >
           {exporting ? 'Exporting…' : 'Export CSV'}
         </button>

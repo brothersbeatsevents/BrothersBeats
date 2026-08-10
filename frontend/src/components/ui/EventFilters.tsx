@@ -25,12 +25,12 @@ export default function EventFilters({
         value={values.q || ''}
         onChange={(e) => onChange({ ...values, q: e.target.value })}
         placeholder="Search events…"
-        className="flex-1 min-w-[200px] rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-green"
+        className="flex-1 min-w-[200px] rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
       />
       <select
         value={values.category || ''}
         onChange={(e) => onChange({ ...values, category: e.target.value || undefined })}
-        className="rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-green"
+        className="rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
       >
         <option value="">All categories</option>
         {EVENT_CATEGORIES.map((cat) => (
@@ -43,7 +43,7 @@ export default function EventFilters({
         <select
           value={values.city || ''}
           onChange={(e) => onChange({ ...values, city: e.target.value || undefined })}
-          className="rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
         >
           <option value="">All cities</option>
           {cities.map((city) => (
@@ -56,7 +56,7 @@ export default function EventFilters({
       <select
         value={values.sort || ''}
         onChange={(e) => onChange({ ...values, sort: e.target.value || undefined })}
-        className="rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-green"
+        className="rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
       >
         <option value="">Soonest first</option>
         <option value="recent">Recently added</option>

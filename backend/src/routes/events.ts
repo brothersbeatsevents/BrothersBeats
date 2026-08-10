@@ -97,7 +97,9 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
   const tiers = (
     await db.filterBy<TicketTierEntity>('ticketTiers', 'eventId', event.id)
   )
-    .filter((t) => t.visible)
+    // Early Bird is never sold directly — its discount is blended automatically
+    // into STANDARD ticket pricing (see services/ticket-pricing.ts).
+    .filter((t) => t.visible && t.type !== 'EARLY_BIRD')
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((t) => {
       const now = Date.now();

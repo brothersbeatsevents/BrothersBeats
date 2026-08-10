@@ -58,7 +58,7 @@ export default function PreferencesPage() {
               type="checkbox"
               checked={marketingConsent}
               onChange={(e) => setMarketingConsent(e.target.checked)}
-              className="w-5 h-5 rounded border-bb-border text-bb-green focus:ring-bb-green"
+              className="w-5 h-5 rounded border-bb-border text-bb-gold focus:ring-bb-gold"
             />
             <span className="text-sm text-bb-text">Email me about upcoming events and offers</span>
           </label>
@@ -74,8 +74,8 @@ export default function PreferencesPage() {
                 onClick={() => toggleCategory(key)}
                 className={`text-sm font-semibold px-4 py-2 rounded-full border transition-colors ${
                   categories.includes(key)
-                    ? 'bg-bb-green text-white border-bb-green'
-                    : 'border-bb-border text-bb-text-secondary hover:border-bb-green'
+                    ? 'bg-bb-gold text-bb-ink border-bb-gold'
+                    : 'border-bb-border text-bb-text-secondary hover:border-bb-gold'
                 }`}
               >
                 {label}
@@ -90,7 +90,7 @@ export default function PreferencesPage() {
             value={cityPreference}
             onChange={(e) => setCityPreference(e.target.value)}
             placeholder="e.g. Dublin"
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
 
@@ -98,7 +98,7 @@ export default function PreferencesPage() {
         <button
           type="submit"
           disabled={saving}
-          className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-full transition-colors"
+          className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors"
         >
           {saving ? 'Saving…' : 'Save preferences'}
         </button>

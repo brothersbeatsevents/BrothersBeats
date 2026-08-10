@@ -45,7 +45,7 @@ export default function AdminCustomersPage() {
               {customers.map((c) => (
                 <tr key={c.id} className="border-t border-bb-border hover:bg-bb-neutral/50">
                   <td className="px-4 py-2">
-                    <Link href={`/admin/customers/${c.id}`} className="text-bb-green font-semibold hover:underline">{c.display_name}</Link>
+                    <Link href={`/admin/customers/${c.id}`} className="text-bb-gold font-semibold hover:underline">{c.display_name}</Link>
                   </td>
                   <td className="px-4 py-2 text-bb-text-secondary">{c.email}</td>
                   <td className="px-4 py-2 text-bb-text-secondary text-xs">{new Date(c.created_at).toLocaleDateString()}</td>

@@ -26,7 +26,7 @@ export default function AdminCommunicationsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Communications</h1>
-        <Link href="/admin/communications/new" className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
+        <Link href="/admin/communications/new" className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
           + New campaign
         </Link>
       </div>
@@ -48,7 +48,7 @@ export default function AdminCommunicationsPage() {
               {campaigns.map((c) => (
                 <tr key={c.id} className="border-t border-bb-border hover:bg-bb-neutral/50">
                   <td className="px-4 py-2">
-                    <Link href={`/admin/communications/${c.id}`} className="text-bb-green font-semibold hover:underline">{c.name}</Link>
+                    <Link href={`/admin/communications/${c.id}`} className="text-bb-gold font-semibold hover:underline">{c.name}</Link>
                   </td>
                   <td className="px-4 py-2 text-bb-text-secondary text-xs">{c.audienceType}</td>
                   <td className="px-4 py-2">

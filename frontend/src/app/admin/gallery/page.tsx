@@ -73,7 +73,7 @@ export default function AdminGalleryPage() {
         <h1 className="font-display font-bold text-2xl text-bb-text">Gallery</h1>
         <Link
           href="/admin/gallery/new"
-          className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-colors"
+          className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-5 py-2.5 rounded-full text-sm transition-colors"
         >
           Add media
         </Link>
@@ -121,7 +121,7 @@ export default function AdminGalleryPage() {
                 <p className="text-xs text-bb-text-secondary mb-2">{STATUS_LABELS[item.status]}</p>
                 <div className="flex flex-wrap gap-1.5 text-xs">
                   {item.status !== 'PUBLISHED' && item.status !== 'ARCHIVED' && (
-                    <button onClick={() => handlePublish(item.id)} className="text-bb-green hover:underline">Publish</button>
+                    <button onClick={() => handlePublish(item.id)} className="text-bb-gold hover:underline">Publish</button>
                   )}
                   {item.status === 'PUBLISHED' && (
                     <button onClick={() => handleUnpublish(item.id)} className="text-bb-text-secondary hover:underline">Unpublish</button>

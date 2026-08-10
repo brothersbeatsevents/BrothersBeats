@@ -32,7 +32,7 @@ export default function AdminEventsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Events</h1>
-        <Link href="/admin/events/new" className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
+        <Link href="/admin/events/new" className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
           + New event
         </Link>
       </div>
@@ -55,7 +55,7 @@ export default function AdminEventsPage() {
               {events.map((e) => (
                 <tr key={e.id} className="border-t border-bb-border hover:bg-bb-neutral/50">
                   <td className="px-4 py-2">
-                    <Link href={`/admin/events/${e.id}`} className="text-bb-green font-semibold hover:underline">
+                    <Link href={`/admin/events/${e.id}`} className="text-bb-gold font-semibold hover:underline">
                       {e.title}
                     </Link>
                   </td>

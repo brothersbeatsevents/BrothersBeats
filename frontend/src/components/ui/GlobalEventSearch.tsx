@@ -53,7 +53,7 @@ export default function GlobalEventSearch({ className }: { className?: string })
         }}
         onKeyDown={(e) => e.key === 'Enter' && goToEvents()}
         placeholder="Search events, venues, cities…"
-        className="w-full rounded-full border border-bb-border bg-bb-surface px-5 py-3 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-green"
+        className="w-full rounded-full border border-bb-border bg-bb-surface px-5 py-3 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
       />
       {open && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-bb-surface border border-bb-border rounded-2xl shadow-xl overflow-hidden z-20">

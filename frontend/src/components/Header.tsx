@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
@@ -25,8 +26,9 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2 shrink-0">
+            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={40} height={40} className="h-10 w-10 object-contain" priority />
             <span className="font-display text-xl font-bold text-bb-text">
-              Brothers <span className="text-bb-orange">Beats</span>
+              Brothers <span className="text-bb-gold">Beats</span>
             </span>
           </Link>
 
@@ -37,8 +39,8 @@ export default function Header() {
                 href={link.href}
                 className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                   pathname === link.href
-                    ? 'text-bb-green bg-bb-pale-green'
-                    : 'text-bb-text-secondary hover:text-bb-green hover:bg-bb-neutral'
+                    ? 'text-bb-gold bg-bb-gold/10'
+                    : 'text-bb-text-secondary hover:text-bb-gold hover:bg-bb-neutral'
                 }`}
               >
                 {link.label}
@@ -52,14 +54,14 @@ export default function Header() {
                 {isAdmin ? (
                   <Link
                     href="/admin"
-                    className="text-sm font-medium text-bb-text-secondary hover:text-bb-green transition-colors"
+                    className="text-sm font-medium text-bb-text-secondary hover:text-bb-gold transition-colors"
                   >
                     Admin panel
                   </Link>
                 ) : (
                   <Link
                     href="/account"
-                    className="text-sm font-medium text-bb-text-secondary hover:text-bb-green transition-colors"
+                    className="text-sm font-medium text-bb-text-secondary hover:text-bb-gold transition-colors"
                   >
                     {user.display_name}
                   </Link>
@@ -74,7 +76,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/auth/sign-in"
-                className="text-sm font-medium text-bb-text-secondary hover:text-bb-green transition-colors"
+                className="text-sm font-medium text-bb-text-secondary hover:text-bb-gold transition-colors"
               >
                 Sign in
               </Link>
@@ -82,7 +84,7 @@ export default function Header() {
             {!isAdmin && (
               <Link
                 href="/events"
-                className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold text-sm px-5 py-2.5 rounded-full transition-colors"
+                className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold text-sm px-5 py-2.5 rounded-full transition-colors"
               >
                 Explore Events
               </Link>
@@ -140,7 +142,7 @@ export default function Header() {
               {!isAdmin && (
                 <Link
                   href="/events"
-                  className="block text-center bg-bb-orange text-white font-semibold px-5 py-2.5 rounded-full"
+                  className="block text-center bg-bb-gold text-bb-ink font-semibold px-5 py-2.5 rounded-full"
                   onClick={() => setMobileOpen(false)}
                 >
                   Explore Events

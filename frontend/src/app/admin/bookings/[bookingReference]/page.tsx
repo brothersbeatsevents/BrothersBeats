@@ -73,7 +73,7 @@ export default function AdminBookingDetailPage() {
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/bookings" className="text-sm text-bb-green hover:text-bb-green-dark">&larr; Back to bookings</Link>
+      <Link href="/admin/bookings" className="text-sm text-bb-gold hover:text-bb-gold-dark">&larr; Back to bookings</Link>
 
       <h1 className="font-display font-bold text-2xl text-bb-text mt-3 mb-1">{booking.bookingReference}</h1>
       <p className="text-bb-text-secondary mb-6">{booking.eventTitleSnapshot}</p>
@@ -95,9 +95,9 @@ export default function AdminBookingDetailPage() {
       <div className="flex flex-wrap gap-2 mb-8">
         {booking.bookingStatus === 'CONFIRMED' && (
           <>
-            <button onClick={() => handleResend('confirmation')} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-green disabled:opacity-60">Resend confirmation</button>
-            <button onClick={() => handleResend('tickets')} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-green disabled:opacity-60">Resend tickets</button>
-            <button onClick={handleRefund} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-green disabled:opacity-60">Issue refund</button>
+            <button onClick={() => handleResend('confirmation')} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Resend confirmation</button>
+            <button onClick={() => handleResend('tickets')} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Resend tickets</button>
+            <button onClick={handleRefund} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Issue refund</button>
           </>
         )}
         {!['CANCELLED', 'REFUNDED', 'EXPIRED'].includes(booking.bookingStatus) && (

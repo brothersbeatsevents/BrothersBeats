@@ -23,7 +23,7 @@ export default async function HomePage() {
 
       {settings?.heroImageUrl ? (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-          <div className="relative aspect-video w-full overflow-hidden rounded-3xl bg-bb-text">
+          <div className="relative aspect-video w-full overflow-hidden rounded-3xl bg-bb-ink">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={settings.heroImageUrl}
@@ -41,7 +41,7 @@ export default async function HomePage() {
               </p>
               <Link
                 href="/events"
-                className="mt-6 inline-block w-fit bg-white text-bb-text font-semibold px-6 py-3 rounded-full hover:bg-bb-lime transition-colors"
+                className="mt-6 inline-block w-fit bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
               >
                 Explore Events
               </Link>
@@ -65,7 +65,7 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text">Upcoming events</h2>
-          <Link href="/events" className="text-sm font-semibold text-bb-green hover:text-bb-green-dark">
+          <Link href="/events" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
             View all &rarr;
           </Link>
         </div>
@@ -76,7 +76,7 @@ export default async function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text">Event memories</h2>
-            <Link href="/gallery" className="text-sm font-semibold text-bb-green hover:text-bb-green-dark">
+            <Link href="/gallery" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
               View gallery &rarr;
             </Link>
           </div>
@@ -100,16 +100,16 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section className="bg-bb-green">
+      <section className="bg-bb-gold">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
-          <h2 className="font-display font-bold text-3xl text-white">Planning a private event?</h2>
-          <p className="mt-3 text-white/85 max-w-xl mx-auto">
+          <h2 className="font-display font-bold text-3xl text-bb-ink">Planning a private event?</h2>
+          <p className="mt-3 text-bb-ink/80 max-w-xl mx-auto">
             Brothers Beats can plan and manage your wedding, birthday, or corporate celebration as a paid,
             fully-organised private-event service.
           </p>
           <Link
             href="/services"
-            className="mt-6 inline-block bg-white text-bb-green font-semibold px-6 py-3 rounded-full hover:bg-bb-lime transition-colors"
+            className="mt-6 inline-block bg-bb-ink text-bb-gold font-semibold px-6 py-3 rounded-full hover:bg-bb-ink/80 transition-colors"
           >
             Plan a Private Event With Us
           </Link>

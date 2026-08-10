@@ -41,7 +41,7 @@ export default function SubscriptionForm({ defaultCategory }: { defaultCategory?
         <input
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm bg-bb-surface focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm bg-bb-surface focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
       </div>
       <div>
@@ -51,7 +51,7 @@ export default function SubscriptionForm({ defaultCategory }: { defaultCategory?
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm bg-bb-surface focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm bg-bb-surface focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
       </div>
       <div>
@@ -64,8 +64,8 @@ export default function SubscriptionForm({ defaultCategory }: { defaultCategory?
               onClick={() => toggleCategory(cat)}
               className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
                 categories.includes(cat)
-                  ? 'bg-bb-green text-white border-bb-green'
-                  : 'bg-bb-surface text-bb-text-secondary border-bb-border hover:border-bb-green'
+                  ? 'bg-bb-gold text-bb-ink border-bb-gold'
+                  : 'bg-bb-surface text-bb-text-secondary border-bb-border hover:border-bb-gold'
               }`}
             >
               {CATEGORY_LABELS[cat]}
@@ -77,7 +77,7 @@ export default function SubscriptionForm({ defaultCategory }: { defaultCategory?
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="w-full bg-bb-green hover:bg-bb-green-dark disabled:opacity-60 text-white font-semibold py-3 rounded-full transition-colors"
+        className="w-full bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold py-3 rounded-full transition-colors"
       >
         {status === 'loading' ? 'Subscribing…' : 'Subscribe'}
       </button>

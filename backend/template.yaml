@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Default: ''
     Description: Additional CORS origins comma-separated (e.g. https://www.example.com)
+  ExtraCallbackUrls:
+    Type: String
+    Default: ''
+    Description: Additional full OAuth callback URLs comma-separated, each including the path (e.g. https://preview.example.com/auth/callback)
   GoogleAuthEnabled:
     Type: String
     Default: 'false'
@@ -39,6 +43,7 @@ Parameters:
 Conditions:
   IsProd: !Equals [!Ref Environment, prod]
   HasExtraCorsOrigins: !Not [!Equals [!Ref ExtraCorsOrigins, '']]
+  HasExtraCallbackUrls: !Not [!Equals [!Ref ExtraCallbackUrls, '']]
   HasGoogleAuth: !Equals [!Ref GoogleAuthEnabled, 'true']
   HasSESFromEmail: !Not [!Equals [!Ref SESFromEmail, '']]
   IsNotProdAndHasSESFromEmail: !And
@@ -260,12 +265,14 @@ Resources:
       AllowedOAuthFlows: [code]
       AllowedOAuthScopes: [openid, email, profile]
       AllowedOAuthFlowsUserPoolClient: true
-      CallbackURLs:
-        - !Sub '${FrontendUrl}/auth/callback'
-        - 'http://localhost:3000/auth/callback'
-      LogoutURLs:
-        - !Ref FrontendUrl
-        - 'http://localhost:3000'
+      CallbackURLs: !If
+        - HasExtraCallbackUrls
+        - !Split [',', !Sub '${FrontendUrl}/auth/callback,${ExtraCallbackUrls},http://localhost:3000/auth/callback']
+        - [!Sub '${FrontendUrl}/auth/callback', 'http://localhost:3000/auth/callback']
+      LogoutURLs: !If
+        - HasExtraCorsOrigins
+        - !Split [',', !Sub '${FrontendUrl},${ExtraCorsOrigins},http://localhost:3000']
+        - [!Ref FrontendUrl, 'http://localhost:3000']
       AccessTokenValidity: 1
       IdTokenValidity: 1
       RefreshTokenValidity: 30

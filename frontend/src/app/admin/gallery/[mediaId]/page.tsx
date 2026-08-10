@@ -127,11 +127,11 @@ export default function GalleryMediaDetailPage() {
         {error && <p className="text-sm text-bb-red">{error}</p>}
 
         <div className="flex flex-wrap gap-3">
-          <button type="submit" disabled={saving} className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-full transition-colors">
+          <button type="submit" disabled={saving} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
             {saving ? 'Saving…' : 'Save changes'}
           </button>
           {item.status !== 'PUBLISHED' && item.status !== 'ARCHIVED' && (
-            <button type="button" onClick={handlePublish} className="border border-bb-green text-bb-green font-semibold px-6 py-2.5 rounded-full hover:bg-bb-pale-green transition-colors">
+            <button type="button" onClick={handlePublish} className="border border-bb-gold text-bb-gold font-semibold px-6 py-2.5 rounded-full hover:bg-bb-gold/10 transition-colors">
               Publish
             </button>
           )}

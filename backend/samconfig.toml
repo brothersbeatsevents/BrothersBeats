@@ -13,7 +13,7 @@ resolve_s3 = true
 capabilities = "CAPABILITY_IAM"
 region = "eu-west-1"
 confirm_changeset = true
-parameter_overrides = "Environment=dev FrontendUrl=http://localhost:3000 ExtraCorsOrigins=https://brothers-beats.vercel.app GoogleAuthEnabled=false"
+parameter_overrides = "Environment=dev FrontendUrl=http://localhost:3000 ExtraCorsOrigins=https://brothers-beats.vercel.app,https://brothers-beats-git-main-brothers-beats.vercel.app ExtraCallbackUrls=https://brothers-beats.vercel.app/auth/callback,https://brothers-beats-git-main-brothers-beats.vercel.app/auth/callback GoogleAuthEnabled=false"
 
 [prod.deploy.parameters]
 stack_name = "brothers-beats-prod"

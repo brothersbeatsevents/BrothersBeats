@@ -7,6 +7,7 @@ import { v4 as uuid } from 'uuid';
 import { db } from '../store';
 import { EventEntity, TicketTierEntity, PriceQuote } from '../types';
 import { AuthRequest } from '../middleware/auth';
+import { computeBlendedPrice } from '../services/ticket-pricing';
 
 const router = Router();
 
@@ -39,6 +40,13 @@ router.post('/quote', async (req: AuthRequest, res: Response): Promise<void> => 
   const tier = await db.get<TicketTierEntity>('ticketTiers', ticketTierId);
   if (!tier || tier.eventId !== eventId || !tier.visible) {
     res.status(404).json({ success: false, error: 'Ticket type not found' });
+    return;
+  }
+  if (tier.type === 'EARLY_BIRD') {
+    res.status(400).json({
+      success: false,
+      error: 'Early Bird pricing is applied automatically and cannot be selected directly',
+    });
     return;
   }
 
@@ -80,8 +88,8 @@ router.post('/quote', async (req: AuthRequest, res: Response): Promise<void> => 
     return;
   }
 
-  const subtotal = tier.priceAmountMinor * qty;
   const fees = 0; // No platform service fee in this deployment.
+  const blended = await computeBlendedPrice(tier, qty);
   const quote: PriceQuote = {
     quoteId: `quote-${uuid()}`,
     eventId,
@@ -89,11 +97,15 @@ router.post('/quote', async (req: AuthRequest, res: Response): Promise<void> => 
     ticketTierName: tier.name,
     quantity: qty,
     unitPriceAmountMinor: tier.priceAmountMinor,
-    subtotalAmountMinor: subtotal,
+    subtotalAmountMinor: blended.subtotalAmountMinor,
     feesAmountMinor: fees,
-    totalAmountMinor: subtotal + fees,
+    totalAmountMinor: blended.subtotalAmountMinor + fees,
     currency: tier.currency,
     expiresAt: new Date(now + 10 * 60 * 1000).toISOString(),
+    earlyBirdQuantity: blended.earlyBirdQuantity,
+    earlyBirdUnitPriceAmountMinor: blended.earlyBirdUnitPriceAmountMinor,
+    standardQuantity: blended.standardQuantity,
+    standardUnitPriceAmountMinor: blended.standardUnitPriceAmountMinor,
   };
 
   res.json({ success: true, data: quote });

@@ -4,24 +4,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── CSS Custom Properties — Brothers Beats palette ── */
+/* ── CSS Custom Properties — Brothers Beats palette (Black & Gold) ── */
 :root {
-  --bb-bg-main: #FFFDF8;
-  --bb-bg-surface: #FFFFFF;
-  --bb-bg-neutral: #F5F3EF;
-  --bb-border: #E4E1DC;
+  --bb-bg-main: #12100C;
+  --bb-bg-surface: #1D1812;
+  --bb-bg-neutral: #262019;
+  --bb-border: #3A3226;
 
-  --bb-text-primary: #221D19;
-  --bb-text-secondary: #615D59;
-  --bb-text-muted: #77726D;
+  --bb-text-primary: #F6F1E4;
+  --bb-text-secondary: #C9C1B0;
+  --bb-text-muted: #948A78;
+
+  --bb-ink: #0A0806;
+  --bb-gold: #D4AF37;
+  --bb-gold-dark: #B08A25;
+  --bb-gold-light: #E7CA6B;
 
   --bb-green: #087A3E;
   --bb-green-dark: #065E31;
-  --bb-lime: #CEFF58;
-
-  --bb-orange: #FF5E30;
-  --bb-orange-dark: #D94520;
-  --bb-ivory: #F7F5EF;
 
   --bb-blue: #6C85FF;
   --bb-pink: #FEC2EB;
@@ -49,6 +49,36 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── Form controls — override the browser default white background so text
+   (which inherits the page's light color) stays readable on the dark theme.
+   :where() keeps specificity at zero so any Tailwind bg/text utility still wins. */
+input:where(:not([type='checkbox']):not([type='radio']):not([type='range'])),
+textarea,
+select {
+  background-color: var(--bb-bg-surface);
+  color: var(--bb-text-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--bb-text-muted);
+  opacity: 1;
+}
+
+select option {
+  background-color: var(--bb-bg-surface);
+  color: var(--bb-text-primary);
+}
+
+/* Stop Chrome/Safari autofill from forcing a white background + black text. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--bb-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--bb-bg-surface) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -74,7 +104,7 @@ html {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bb-bg-neutral) 25%, #ECE9E3 37%, var(--bb-bg-neutral) 63%);
+  background: linear-gradient(90deg, var(--bb-bg-neutral) 25%, #332B20 37%, var(--bb-bg-neutral) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }

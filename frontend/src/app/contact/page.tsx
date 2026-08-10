@@ -27,14 +27,14 @@ export default function ContactPage() {
       <h1 className="font-display font-bold text-4xl text-bb-text mb-2">Contact us</h1>
       <p className="text-bb-text-secondary mb-4">
         Questions about an event or booking? Reach us directly at{' '}
-        <a href={`mailto:${SITE_CONFIG.supportEmail}`} className="text-bb-green underline">
+        <a href={`mailto:${SITE_CONFIG.supportEmail}`} className="text-bb-gold underline">
           {SITE_CONFIG.supportEmail}
         </a>{' '}
         or send a message below.
       </p>
       <p className="text-sm text-bb-text-secondary mb-8 bg-bb-neutral rounded-xl px-4 py-3">
         Planning a wedding, birthday, or corporate event and want Brothers Beats to manage it for you? Visit{' '}
-        <Link href="/services" className="text-bb-green underline">
+        <Link href="/services" className="text-bb-gold underline">
           our services page
         </Link>{' '}
         to send a private-event enquiry.
@@ -53,7 +53,7 @@ export default function ContactPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
           </div>
           <div>
@@ -63,7 +63,7 @@ export default function ContactPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
           </div>
           <div>
@@ -74,14 +74,14 @@ export default function ContactPage() {
               maxLength={5000}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
           </div>
           {status === 'error' && <p className="text-sm text-bb-red">Something went wrong. Please try again.</p>}
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-full transition-colors"
+            className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-3 rounded-full transition-colors"
           >
             {status === 'loading' ? 'Sending…' : 'Send message'}
           </button>

@@ -15,7 +15,7 @@ export default function TicketQuantitySelector({
         type="button"
         onClick={() => onChange(Math.max(min, quantity - 1))}
         disabled={quantity <= min}
-        className="w-9 h-9 rounded-full border border-bb-border flex items-center justify-center text-bb-text disabled:opacity-40 hover:border-bb-green transition-colors"
+        className="w-9 h-9 rounded-full border border-bb-border flex items-center justify-center text-bb-text disabled:opacity-40 hover:border-bb-gold transition-colors"
         aria-label="Decrease quantity"
       >
         −
@@ -25,7 +25,7 @@ export default function TicketQuantitySelector({
         type="button"
         onClick={() => onChange(Math.min(max, quantity + 1))}
         disabled={quantity >= max}
-        className="w-9 h-9 rounded-full border border-bb-border flex items-center justify-center text-bb-text disabled:opacity-40 hover:border-bb-green transition-colors"
+        className="w-9 h-9 rounded-full border border-bb-border flex items-center justify-center text-bb-text disabled:opacity-40 hover:border-bb-gold transition-colors"
         aria-label="Increase quantity"
       >
         +

@@ -29,7 +29,7 @@ export default function MyTicketsPage() {
         <EmptyState
           title="No bookings yet"
           message="When you book an event, it will show up here."
-          action={<Link href="/events" className="inline-block bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-6 py-2.5 rounded-full transition-colors">Browse events</Link>}
+          action={<Link href="/events" className="inline-block bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">Browse events</Link>}
         />
       ) : (
         <div className="space-y-3">

@@ -44,7 +44,7 @@ export default function BookingDetailPage() {
 
   return (
     <div>
-      <Link href="/account/tickets" className="text-sm text-bb-green hover:text-bb-green-dark">
+      <Link href="/account/tickets" className="text-sm text-bb-gold hover:text-bb-gold-dark">
         &larr; Back to my tickets
       </Link>
 
@@ -76,7 +76,7 @@ export default function BookingDetailPage() {
           <button
             onClick={handleResend}
             disabled={resending}
-            className="text-sm font-semibold text-bb-green hover:text-bb-green-dark border border-bb-green rounded-full px-5 py-2 transition-colors disabled:opacity-60"
+            className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark border border-bb-gold rounded-full px-5 py-2 transition-colors disabled:opacity-60"
           >
             {resending ? 'Sending…' : resent ? 'Tickets resent!' : 'Resend tickets by email'}
           </button>

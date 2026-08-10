@@ -40,7 +40,7 @@ export default function SignUpPage() {
 
         <button
           onClick={() => loginWithCognito()}
-          className="w-full border border-bb-border rounded-full py-3 font-semibold text-bb-text hover:border-bb-green transition-colors mb-6"
+          className="w-full border border-bb-border rounded-full py-3 font-semibold text-bb-text hover:border-bb-gold transition-colors mb-6"
         >
           Continue with Google
         </button>
@@ -58,7 +58,7 @@ export default function SignUpPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
           </div>
           <div>
@@ -68,7 +68,7 @@ export default function SignUpPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
           </div>
           <div>
@@ -79,7 +79,7 @@ export default function SignUpPage() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
             <p className="text-xs text-bb-text-muted mt-1">At least 8 characters.</p>
           </div>
@@ -87,7 +87,7 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold py-3 rounded-full transition-colors"
+            className="w-full bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold py-3 rounded-full transition-colors"
           >
             {loading ? 'Creating account…' : 'Create account'}
           </button>
@@ -95,7 +95,7 @@ export default function SignUpPage() {
 
         <p className="text-center text-sm text-bb-text-secondary mt-6">
           Already have an account?{' '}
-          <Link href="/auth/sign-in" className="text-bb-green font-semibold hover:text-bb-green-dark">
+          <Link href="/auth/sign-in" className="text-bb-gold font-semibold hover:text-bb-gold-dark">
             Sign in
           </Link>
         </p>

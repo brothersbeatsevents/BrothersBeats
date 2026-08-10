@@ -48,7 +48,7 @@ export default function AdminUsersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Admin users</h1>
-        <button onClick={() => setShowInvite((v) => !v)} className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
+        <button onClick={() => setShowInvite((v) => !v)} className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
           {showInvite ? 'Cancel' : '+ Invite admin'}
         </button>
       </div>
@@ -62,7 +62,7 @@ export default function AdminUsersPage() {
             <option value="SUPER_ADMIN">Super admin</option>
           </select>
           {error && <p className="col-span-3 text-sm text-bb-red">{error}</p>}
-          <button type="submit" className="col-span-3 bg-bb-green hover:bg-bb-green-dark text-white font-semibold py-2 rounded-full text-sm transition-colors">
+          <button type="submit" className="col-span-3 bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold py-2 rounded-full text-sm transition-colors">
             Send invite
           </button>
         </form>

@@ -89,14 +89,14 @@ export default function NewGalleryMediaPage() {
             <button
               type="button"
               onClick={() => setMediaType('IMAGE')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold ${mediaType === 'IMAGE' ? 'bg-bb-green text-white' : 'bg-bb-neutral text-bb-text-secondary'}`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold ${mediaType === 'IMAGE' ? 'bg-bb-gold text-bb-ink' : 'bg-bb-neutral text-bb-text-secondary'}`}
             >
               Photo
             </button>
             <button
               type="button"
               onClick={() => setMediaType('YOUTUBE_VIDEO')}
-              className={`px-4 py-2 rounded-full text-sm font-semibold ${mediaType === 'YOUTUBE_VIDEO' ? 'bg-bb-green text-white' : 'bg-bb-neutral text-bb-text-secondary'}`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold ${mediaType === 'YOUTUBE_VIDEO' ? 'bg-bb-gold text-bb-ink' : 'bg-bb-neutral text-bb-text-secondary'}`}
             >
               YouTube video
             </button>
@@ -161,7 +161,7 @@ export default function NewGalleryMediaPage() {
         <button
           type="submit"
           disabled={saving || uploading}
-          className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-full transition-colors"
+          className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors"
         >
           {saving ? 'Saving…' : 'Save as draft'}
         </button>

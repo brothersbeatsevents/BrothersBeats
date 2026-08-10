@@ -75,7 +75,7 @@ export default function CheckoutForm({
         <label className="block text-sm font-medium text-bb-text mb-1">Full name</label>
         <input
           {...register('buyerName')}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
         {errors.buyerName && <p className="text-xs text-bb-red mt-1">{errors.buyerName.message}</p>}
       </div>
@@ -84,7 +84,7 @@ export default function CheckoutForm({
         <input
           type="email"
           {...register('buyerEmail')}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
         {errors.buyerEmail && <p className="text-xs text-bb-red mt-1">{errors.buyerEmail.message}</p>}
       </div>
@@ -92,18 +92,18 @@ export default function CheckoutForm({
         <label className="block text-sm font-medium text-bb-text mb-1">Phone (optional)</label>
         <input
           {...register('buyerPhone')}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
       </div>
       <label className="flex items-start gap-2 text-sm text-bb-text-secondary">
         <input type="checkbox" {...register('acceptedTerms')} className="mt-0.5" />
         <span>
           I agree to the{' '}
-          <a href="/terms" target="_blank" className="text-bb-green underline">
+          <a href="/terms" target="_blank" className="text-bb-gold underline">
             terms of service
           </a>{' '}
           and{' '}
-          <a href="/refund-policy" target="_blank" className="text-bb-green underline">
+          <a href="/refund-policy" target="_blank" className="text-bb-gold underline">
             refund policy
           </a>
           .
@@ -120,7 +120,7 @@ export default function CheckoutForm({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold py-3 rounded-full transition-colors"
+        className="w-full bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold py-3 rounded-full transition-colors"
       >
         {submitting ? 'Redirecting to secure payment…' : 'Continue to payment'}
       </button>

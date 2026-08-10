@@ -37,7 +37,7 @@ function CallbackHandler() {
         <div className="max-w-md w-full bg-bb-surface border border-bb-border rounded-2xl p-8 text-center">
           <h2 className="font-display text-xl font-bold text-bb-text mb-2">Sign in failed</h2>
           <p className="text-sm text-bb-text-secondary mb-6">{error}</p>
-          <Link href="/auth/sign-in" className="inline-block bg-bb-orange text-white font-semibold px-6 py-3 rounded-full">
+          <Link href="/auth/sign-in" className="inline-block bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full">
             Try again
           </Link>
         </div>

@@ -31,11 +31,11 @@ export default function AdminBookingsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Bookings</h1>
         <div className="flex gap-2">
-          <Link href="/admin/bookings/new" className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
+          <Link href="/admin/bookings/new" className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
             + Manual booking
           </Link>
           {token && (
-            <a href={adminBookingsExportUrl(undefined, token)} className="border border-bb-border font-semibold px-5 py-2.5 rounded-full text-sm hover:border-bb-green transition-colors">
+            <a href={adminBookingsExportUrl(undefined, token)} className="border border-bb-border font-semibold px-5 py-2.5 rounded-full text-sm hover:border-bb-gold transition-colors">
               Export CSV
             </a>
           )}
@@ -74,7 +74,7 @@ export default function AdminBookingsPage() {
               {bookings.map((b) => (
                 <tr key={b.bookingReference} className="border-t border-bb-border hover:bg-bb-neutral/50">
                   <td className="px-4 py-2">
-                    <Link href={`/admin/bookings/${b.bookingReference}`} className="text-bb-green font-semibold hover:underline">
+                    <Link href={`/admin/bookings/${b.bookingReference}`} className="text-bb-gold font-semibold hover:underline">
                       {b.bookingReference}
                     </Link>
                   </td>

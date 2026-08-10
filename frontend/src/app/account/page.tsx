@@ -40,7 +40,7 @@ export default function AccountOverviewPage() {
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-bold text-xl text-bb-text">Recent bookings</h2>
-        <Link href="/account/tickets" className="text-sm font-semibold text-bb-green hover:text-bb-green-dark">
+        <Link href="/account/tickets" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
           View all
         </Link>
       </div>
@@ -50,7 +50,7 @@ export default function AccountOverviewPage() {
       ) : bookings.length === 0 ? (
         <div className="bg-bb-neutral rounded-2xl p-8 text-center">
           <p className="text-bb-text-secondary mb-4">You haven&apos;t booked any events yet.</p>
-          <Link href="/events" className="inline-block bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-6 py-2.5 rounded-full transition-colors">
+          <Link href="/events" className="inline-block bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
             Browse events
           </Link>
         </div>

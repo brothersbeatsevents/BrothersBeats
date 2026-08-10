@@ -8,17 +8,38 @@ export interface PriceQuoteData {
   feesAmountMinor: number;
   totalAmountMinor: number;
   currency: string;
+  earlyBirdQuantity?: number;
+  earlyBirdUnitPriceAmountMinor?: number;
+  standardQuantity?: number;
+  standardUnitPriceAmountMinor?: number;
 }
 
 export default function PriceSummary({ quote }: { quote: PriceQuoteData }) {
+  const hasEarlyBird = !!quote.earlyBirdQuantity;
+
   return (
     <div className="bg-bb-neutral rounded-2xl p-5 space-y-2 text-sm">
-      <div className="flex justify-between text-bb-text-secondary">
-        <span>
-          {quote.ticketTierName} × {quote.quantity}
-        </span>
-        <span>{formatMoney(quote.unitPriceAmountMinor * quote.quantity, quote.currency)}</span>
-      </div>
+      {hasEarlyBird ? (
+        <>
+          <div className="flex justify-between text-bb-text-secondary">
+            <span>{quote.ticketTierName} (Early Bird) × {quote.earlyBirdQuantity}</span>
+            <span>{formatMoney((quote.earlyBirdUnitPriceAmountMinor || 0) * (quote.earlyBirdQuantity || 0), quote.currency)}</span>
+          </div>
+          {!!quote.standardQuantity && (
+            <div className="flex justify-between text-bb-text-secondary">
+              <span>{quote.ticketTierName} × {quote.standardQuantity}</span>
+              <span>{formatMoney((quote.standardUnitPriceAmountMinor || 0) * quote.standardQuantity, quote.currency)}</span>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex justify-between text-bb-text-secondary">
+          <span>
+            {quote.ticketTierName} × {quote.quantity}
+          </span>
+          <span>{formatMoney(quote.unitPriceAmountMinor * quote.quantity, quote.currency)}</span>
+        </div>
+      )}
       {quote.feesAmountMinor > 0 && (
         <div className="flex justify-between text-bb-text-secondary">
           <span>Fees</span>

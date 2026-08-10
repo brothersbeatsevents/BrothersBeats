@@ -190,6 +190,11 @@ export interface BookingEntity {
   totalAmountMinor: number;
   refundedAmountMinor: number;
   currency: string;
+  // Present when the order automatically blended Early Bird + standard pricing.
+  earlyBirdQuantity?: number;
+  earlyBirdUnitPriceAmountMinor?: number;
+  standardQuantity?: number;
+  standardUnitPriceAmountMinor?: number;
 
   bookingStatus: BookingStatus;
   paymentStatus: PaymentStatus;
@@ -542,6 +547,11 @@ export interface PriceQuote {
   totalAmountMinor: number;
   currency: string;
   expiresAt: string;
+  // Set when part (or all) of the order was automatically priced at the Early Bird rate.
+  earlyBirdQuantity: number;
+  earlyBirdUnitPriceAmountMinor: number;
+  standardQuantity: number;
+  standardUnitPriceAmountMinor: number;
 }
 
 // API response wrappers

@@ -74,7 +74,7 @@ export default function ProfilePage() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="text-sm font-semibold text-bb-green hover:text-bb-green-dark border border-bb-green rounded-full px-4 py-2 transition-colors disabled:opacity-60"
+            className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark border border-bb-gold rounded-full px-4 py-2 transition-colors disabled:opacity-60"
           >
             {uploading ? 'Uploading…' : 'Change photo'}
           </button>
@@ -89,7 +89,7 @@ export default function ProfilePage() {
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
         <div>
@@ -105,7 +105,7 @@ export default function ProfilePage() {
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
         {error && <p className="text-sm text-bb-red">{error}</p>}
@@ -113,7 +113,7 @@ export default function ProfilePage() {
         <button
           type="submit"
           disabled={saving}
-          className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-full transition-colors"
+          className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors"
         >
           {saving ? 'Saving…' : 'Save changes'}
         </button>

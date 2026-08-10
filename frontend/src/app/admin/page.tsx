@@ -40,7 +40,7 @@ export default function AdminDashboard() {
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-bold text-lg text-bb-text">Recent bookings</h2>
-        <Link href="/admin/bookings" className="text-sm font-semibold text-bb-green hover:text-bb-green-dark">
+        <Link href="/admin/bookings" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
           View all
         </Link>
       </div>
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
             {data.recentBookings.map((b: any) => (
               <tr key={b.bookingReference} className="border-t border-bb-border">
                 <td className="px-4 py-2">
-                  <Link href={`/admin/bookings/${b.bookingReference}`} className="text-bb-green font-semibold hover:underline">
+                  <Link href={`/admin/bookings/${b.bookingReference}`} className="text-bb-gold font-semibold hover:underline">
                     {b.bookingReference}
                   </Link>
                 </td>

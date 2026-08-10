@@ -105,14 +105,17 @@ export function isConfigured(): boolean {
 
 // ── Checkout Session ──
 
+export interface CheckoutLineItem {
+  name: string;
+  unitAmountMinor: number;
+  quantity: number;
+}
+
 export interface CreateCheckoutSessionInput {
   bookingId: string;
   eventId: string;
   eventTitle: string;
-  ticketTierName: string;
-  quantity: number;
-  unitAmountMinor: number;
-  totalAmountMinor: number;
+  lineItems: CheckoutLineItem[];
   currency: string;
   buyerEmail: string;
   successUrl: string;
@@ -133,18 +136,16 @@ export async function createCheckoutSession(
     {
       mode: 'payment',
       customer_email: input.buyerEmail,
-      line_items: [
-        {
-          price_data: {
-            currency: input.currency.toLowerCase(),
-            unit_amount: input.unitAmountMinor,
-            product_data: {
-              name: `${input.eventTitle} — ${input.ticketTierName}`,
-            },
+      line_items: input.lineItems.map((item) => ({
+        price_data: {
+          currency: input.currency.toLowerCase(),
+          unit_amount: item.unitAmountMinor,
+          product_data: {
+            name: `${input.eventTitle} — ${item.name}`,
           },
-          quantity: input.quantity,
         },
-      ],
+        quantity: item.quantity,
+      })),
       metadata: {
         bookingId: input.bookingId,
         eventId: input.eventId,

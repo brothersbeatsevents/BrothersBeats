@@ -37,7 +37,7 @@ function UnsubscribeContent() {
           </p>
         </>
       )}
-      <Link href="/" className="inline-block mt-6 text-bb-green font-semibold hover:text-bb-green-dark">
+      <Link href="/" className="inline-block mt-6 text-bb-gold font-semibold hover:text-bb-gold-dark">
         Back to home
       </Link>
     </div>

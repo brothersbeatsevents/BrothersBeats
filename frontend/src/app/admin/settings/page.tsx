@@ -87,7 +87,7 @@ export default function AdminSettingsPage() {
           <textarea rows={3} value={form.defaultRefundPolicy || ''} onChange={(e) => set('defaultRefundPolicy', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
         </div>
         {saved && <p className="text-sm text-bb-green">Settings saved.</p>}
-        <button type="submit" disabled={saving} className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-full transition-colors">
+        <button type="submit" disabled={saving} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
           {saving ? 'Saving…' : 'Save settings'}
         </button>
       </form>

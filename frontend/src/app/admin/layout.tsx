@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <p className="text-bb-text-secondary mb-6">You need an admin account to access this area.</p>
         <button
           onClick={() => router.push('/auth/sign-in')}
-          className="bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-6 py-3 rounded-full transition-colors"
+          className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-3 rounded-full transition-colors"
         >
           Sign in
         </button>
@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-64px)]">
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-bb-text text-white border-b border-white/10">
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-bb-ink text-white border-b border-white/10">
         <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="text-sm font-semibold">
           ☰ Menu
         </button>
@@ -57,14 +57,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Link>
       </div>
       {mobileNavOpen && (
-        <nav className="md:hidden bg-bb-text text-white p-2 space-y-1 border-b border-white/10">
+        <nav className="md:hidden bg-bb-ink text-white p-2 space-y-1 border-b border-white/10">
           {ADMIN_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setMobileNavOpen(false)}
               className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                pathname === item.href ? 'bg-bb-green text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                pathname === item.href ? 'bg-bb-gold text-bb-ink' : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
             >
               {item.label}
@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
       )}
       <div className="flex flex-1 min-h-0">
-        <aside className="w-56 bg-bb-text text-white flex-shrink-0 hidden md:flex md:flex-col">
+        <aside className="w-56 bg-bb-ink text-white flex-shrink-0 hidden md:flex md:flex-col">
           <div className="p-4 border-b border-white/10">
             <p className="font-display font-bold text-sm">Admin Panel</p>
             <p className="text-xs text-white/60 truncate">{user.display_name}</p>
@@ -87,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                  pathname === item.href ? 'bg-bb-green text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  pathname === item.href ? 'bg-bb-gold text-bb-ink' : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 {item.label}

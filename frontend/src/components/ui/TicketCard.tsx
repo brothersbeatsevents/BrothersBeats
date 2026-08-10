@@ -42,7 +42,7 @@ export default function TicketCard({
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onDownload?.(ticket)}
-          className="shrink-0 text-sm font-semibold text-bb-green hover:text-bb-green-dark border border-bb-green rounded-full px-4 py-2 transition-colors"
+          className="shrink-0 text-sm font-semibold text-bb-gold hover:text-bb-gold-dark border border-bb-gold rounded-full px-4 py-2 transition-colors"
         >
           Download
         </a>

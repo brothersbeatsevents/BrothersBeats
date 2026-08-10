@@ -42,7 +42,7 @@ export default function BookingLookupPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
           </div>
           <div>
@@ -51,14 +51,14 @@ export default function BookingLookupPage() {
               value={bookingReference}
               onChange={(e) => setBookingReference(e.target.value)}
               placeholder="BBE-XXXXXXXX"
-              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
             />
           </div>
           {status === 'error' && <p className="text-sm text-bb-red">Something went wrong. Please try again.</p>}
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="w-full bg-bb-green hover:bg-bb-green-dark disabled:opacity-60 text-white font-semibold py-3 rounded-full transition-colors"
+            className="w-full bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold py-3 rounded-full transition-colors"
           >
             {status === 'loading' ? 'Sending…' : 'Send me the link'}
           </button>

@@ -52,7 +52,7 @@ function CheckoutPageContent() {
           title="Admins can't purchase tickets"
           message="Sign in with a customer account to buy tickets, or head back to the admin panel."
         />
-        <Link href="/admin" className="mt-6 inline-block text-sm font-semibold text-bb-green hover:text-bb-green-dark">
+        <Link href="/admin" className="mt-6 inline-block text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
           &larr; Back to admin panel
         </Link>
       </div>
@@ -74,7 +74,7 @@ function CheckoutPageContent() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {slug && (
-        <Link href={`/events/${slug}`} className="text-sm text-bb-text-secondary hover:text-bb-green">
+        <Link href={`/events/${slug}`} className="text-sm text-bb-text-secondary hover:text-bb-gold">
           &larr; Back to event
         </Link>
       )}

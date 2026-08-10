@@ -42,7 +42,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 key={item.href}
                 href={item.href}
                 className={`px-4 py-2 rounded-full sm:rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
-                  active ? 'bg-bb-green text-white' : 'text-bb-text-secondary hover:bg-bb-neutral'
+                  active ? 'bg-bb-gold text-bb-ink' : 'text-bb-text-secondary hover:bg-bb-neutral'
                 }`}
               >
                 {item.label}

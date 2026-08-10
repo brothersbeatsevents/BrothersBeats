@@ -69,7 +69,7 @@ export default function EventServiceEnquiryForm({
         <select
           value={eventServiceType}
           onChange={(e) => setEventServiceType(e.target.value)}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
         >
           {EVENT_SERVICE_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -86,7 +86,7 @@ export default function EventServiceEnquiryForm({
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
         <div>
@@ -96,7 +96,7 @@ export default function EventServiceEnquiryForm({
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
         <div>
@@ -105,7 +105,7 @@ export default function EventServiceEnquiryForm({
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
         <div>
@@ -114,7 +114,7 @@ export default function EventServiceEnquiryForm({
             type="date"
             value={preferredDate}
             onChange={(e) => setPreferredDate(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
         <div>
@@ -122,7 +122,7 @@ export default function EventServiceEnquiryForm({
           <input
             value={venueOrCity}
             onChange={(e) => setVenueOrCity(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
         <div>
@@ -133,7 +133,7 @@ export default function EventServiceEnquiryForm({
             max={100000}
             value={estimatedGuestCount}
             onChange={(e) => setEstimatedGuestCount(e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function EventServiceEnquiryForm({
           placeholder="e.g. €2,000–€5,000"
           value={budgetRange}
           onChange={(e) => setBudgetRange(e.target.value)}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
       </div>
 
@@ -156,7 +156,7 @@ export default function EventServiceEnquiryForm({
           maxLength={5000}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-green"
+          className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
       </div>
 
@@ -175,7 +175,7 @@ export default function EventServiceEnquiryForm({
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-full transition-colors"
+        className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-3 rounded-full transition-colors"
       >
         {status === 'loading' ? 'Sending…' : 'Send enquiry'}
       </button>

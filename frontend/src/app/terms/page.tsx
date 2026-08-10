@@ -31,7 +31,7 @@ export default function TermsPage() {
           <p>
             If an event is cancelled by the organizer, ticket holders will be notified by email and
             refunds will be processed according to our{' '}
-            <a href="/refund-policy" className="text-bb-green underline">refund policy</a>.
+            <a href="/refund-policy" className="text-bb-gold underline">refund policy</a>.
           </p>
         </div>
         <div>

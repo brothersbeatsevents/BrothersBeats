@@ -43,8 +43,8 @@ export default function GalleryPage() {
             onClick={() => setType(f.value)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
               type === f.value
-                ? 'bg-bb-green text-white'
-                : 'bg-bb-surface border border-bb-border text-bb-text-secondary hover:border-bb-green'
+                ? 'bg-bb-gold text-bb-ink'
+                : 'bg-bb-surface border border-bb-border text-bb-text-secondary hover:border-bb-gold'
             }`}
           >
             {f.label}

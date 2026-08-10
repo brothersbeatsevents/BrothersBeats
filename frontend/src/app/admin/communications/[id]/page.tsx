@@ -87,7 +87,7 @@ export default function CampaignDetailPage() {
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/communications" className="text-sm text-bb-green hover:text-bb-green-dark">&larr; Back to communications</Link>
+      <Link href="/admin/communications" className="text-sm text-bb-gold hover:text-bb-gold-dark">&larr; Back to communications</Link>
 
       <div className="flex items-center justify-between mt-3 mb-1">
         <h1 className="font-display font-bold text-2xl text-bb-text">{campaign.name}</h1>
@@ -107,17 +107,17 @@ export default function CampaignDetailPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button onClick={handleTest} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-green disabled:opacity-60">Send test</button>
+        <button onClick={handleTest} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Send test</button>
         {campaign.status === 'DRAFT' && (
           <>
-            <button onClick={handleSchedule} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-green disabled:opacity-60">Schedule</button>
-            <button onClick={handleSend} disabled={busy} className="text-sm font-semibold bg-bb-orange text-white rounded-full px-4 py-2 hover:bg-bb-orange-dark disabled:opacity-60">Send now</button>
+            <button onClick={handleSchedule} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Schedule</button>
+            <button onClick={handleSend} disabled={busy} className="text-sm font-semibold bg-bb-gold text-bb-ink rounded-full px-4 py-2 hover:bg-bb-gold-dark disabled:opacity-60">Send now</button>
             <button onClick={handleDelete} disabled={busy} className="text-sm font-semibold text-bb-red border border-bb-red/40 rounded-full px-4 py-2 hover:bg-bb-red/5 disabled:opacity-60">Delete</button>
           </>
         )}
         {campaign.status === 'SCHEDULED' && (
           <>
-            <button onClick={handleSend} disabled={busy} className="text-sm font-semibold bg-bb-orange text-white rounded-full px-4 py-2 hover:bg-bb-orange-dark disabled:opacity-60">Send now</button>
+            <button onClick={handleSend} disabled={busy} className="text-sm font-semibold bg-bb-gold text-bb-ink rounded-full px-4 py-2 hover:bg-bb-gold-dark disabled:opacity-60">Send now</button>
             <button onClick={handleCancel} disabled={busy} className="text-sm font-semibold text-bb-red border border-bb-red/40 rounded-full px-4 py-2 hover:bg-bb-red/5 disabled:opacity-60">Cancel</button>
           </>
         )}

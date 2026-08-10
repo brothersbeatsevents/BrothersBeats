@@ -89,7 +89,7 @@ export default function NewManualBookingPage() {
           </select>
         </div>
         {error && <p className="text-sm text-bb-red">{error}</p>}
-        <button type="submit" disabled={saving} className="bg-bb-orange hover:bg-bb-orange-dark disabled:opacity-60 text-white font-semibold px-6 py-2.5 rounded-full transition-colors">
+        <button type="submit" disabled={saving} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
           {saving ? 'Creating…' : 'Create booking'}
         </button>
       </form>

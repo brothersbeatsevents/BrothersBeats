@@ -40,10 +40,10 @@ function ConfirmationContent() {
           We&apos;re confirming your payment and your tickets will be emailed to you shortly.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/booking/lookup" className="bg-bb-green hover:bg-bb-green-dark text-white font-semibold px-6 py-3 rounded-full transition-colors">
+          <Link href="/booking/lookup" className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-3 rounded-full transition-colors">
             Find my booking
           </Link>
-          <Link href="/events" className="border border-bb-border text-bb-text font-semibold px-6 py-3 rounded-full hover:border-bb-green transition-colors">
+          <Link href="/events" className="border border-bb-border text-bb-text font-semibold px-6 py-3 rounded-full hover:border-bb-gold transition-colors">
             Browse more events
           </Link>
         </div>
@@ -60,7 +60,7 @@ function ConfirmationContent() {
       <div className="max-w-2xl mx-auto px-4 py-20">
         <ErrorState title="We couldn't find this booking" message={error || 'This link may be invalid or expired.'} />
         <div className="text-center mt-4">
-          <Link href="/booking/lookup" className="text-bb-green font-semibold hover:text-bb-green-dark">
+          <Link href="/booking/lookup" className="text-bb-gold font-semibold hover:text-bb-gold-dark">
             Try booking lookup instead
           </Link>
         </div>
@@ -100,7 +100,7 @@ function ConfirmationContent() {
                 <p className="text-xs text-bb-text-secondary">{t.attendeeName}</p>
               </div>
               {t.pdfDownloadUrl && (
-                <a href={t.pdfDownloadUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-bb-green hover:text-bb-green-dark">
+                <a href={t.pdfDownloadUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
                   Download
                 </a>
               )}

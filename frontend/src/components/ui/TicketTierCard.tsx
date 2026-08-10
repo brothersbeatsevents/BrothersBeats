@@ -32,7 +32,7 @@ export default function TicketTierCard({
       disabled={disabled}
       onClick={() => onSelect?.(tier)}
       className={`w-full text-left rounded-2xl border p-4 transition-colors ${
-        selected ? 'border-bb-green bg-bb-pale-green' : 'border-bb-border bg-bb-surface hover:border-bb-green'
+        selected ? 'border-bb-gold bg-bb-gold/10' : 'border-bb-border bg-bb-surface hover:border-bb-gold'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <div className="flex justify-between items-start gap-4">
@@ -50,7 +50,7 @@ export default function TicketTierCard({
           ) : !tier.onSale ? (
             <p className="text-xs font-medium text-bb-text-muted mt-1">Not on sale</p>
           ) : tier.available <= 10 ? (
-            <p className="text-xs font-medium text-bb-orange mt-1">{tier.available} left</p>
+            <p className="text-xs font-medium text-bb-gold mt-1">{tier.available} left</p>
           ) : null}
         </div>
       </div>

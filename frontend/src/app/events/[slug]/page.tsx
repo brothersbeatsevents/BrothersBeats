@@ -46,7 +46,7 @@ export default async function EventDetailPage({ params }: Props) {
       />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
-        <Link href="/events" className="text-sm text-bb-text-secondary hover:text-bb-green">
+        <Link href="/events" className="text-sm text-bb-text-secondary hover:text-bb-gold">
           &larr; Back to events
         </Link>
       </div>

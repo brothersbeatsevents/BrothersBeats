@@ -23,7 +23,7 @@ export default function AdminCustomerDetailPage() {
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/customers" className="text-sm text-bb-green hover:text-bb-green-dark">&larr; Back to customers</Link>
+      <Link href="/admin/customers" className="text-sm text-bb-gold hover:text-bb-gold-dark">&larr; Back to customers</Link>
 
       <h1 className="font-display font-bold text-2xl text-bb-text mt-3 mb-1">{customer.display_name}</h1>
       <p className="text-bb-text-secondary mb-6">{customer.email}{customer.phone ? ` · ${customer.phone}` : ''}</p>

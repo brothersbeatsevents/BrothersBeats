@@ -24,10 +24,22 @@ const COGNITO_DOMAIN = process.env.COGNITO_DOMAIN
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
 const CUSTOMER_GROUP = process.env.COGNITO_CUSTOMER_GROUP_NAME || 'CUSTOMER';
 
-// FRONTEND_URL may be comma-separated for CORS; use only the first entry as the canonical URL
-const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000')
-  .split(',')[0]
-  .trim();
+// FRONTEND_URL may be comma-separated for CORS (multiple allowed frontends, e.g. localhost + Vercel)
+const ALLOWED_FRONTEND_URLS = (process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((url) => url.trim());
+const FRONTEND_URL = ALLOWED_FRONTEND_URLS[0];
+
+// Resolve the frontend origin to redirect back to: prefer the requesting origin if it's
+// one of the allowed frontends, otherwise fall back to the canonical FRONTEND_URL.
+function resolveFrontendOrigin(req: AuthRequest): string {
+  const origin = req.get('origin') || req.get('referer');
+  if (origin) {
+    const match = ALLOWED_FRONTEND_URLS.find((allowed) => origin.startsWith(allowed));
+    if (match) return match;
+  }
+  return FRONTEND_URL;
+}
 
 function publicUser(user: User) {
   return {
@@ -121,13 +133,13 @@ router.post(
 );
 
 // GET /api/auth/cognito/login — Redirect to Cognito Hosted UI (Google)
-router.get('/cognito/login', (_req, res: Response): void => {
+router.get('/cognito/login', (req: AuthRequest, res: Response): void => {
   if (!COGNITO_DOMAIN || !COGNITO_CLIENT_ID) {
     res.status(503).json({ success: false, error: 'Cognito not configured' });
     return;
   }
 
-  const redirectUri = `${FRONTEND_URL}/auth/callback`;
+  const redirectUri = `${resolveFrontendOrigin(req)}/auth/callback`;
   const loginUrl = `${COGNITO_DOMAIN}/oauth2/authorize?client_id=${COGNITO_CLIENT_ID}&response_type=code&scope=openid+email+profile&identity_provider=Google&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
   res.json({ success: true, data: { loginUrl } });

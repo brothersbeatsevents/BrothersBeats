@@ -178,7 +178,7 @@ export default function AdminEventDetailPage() {
             key={a.action}
             onClick={() => handleAction(a.action)}
             disabled={saving}
-            className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-green transition-colors disabled:opacity-60"
+            className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold transition-colors disabled:opacity-60"
           >
             {a.label}
           </button>
@@ -186,7 +186,7 @@ export default function AdminEventDetailPage() {
         <button
           onClick={() => handleAction('duplicate')}
           disabled={saving}
-          className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-green transition-colors disabled:opacity-60"
+          className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold transition-colors disabled:opacity-60"
         >
           Duplicate
         </button>
@@ -204,7 +204,7 @@ export default function AdminEventDetailPage() {
             accept="image/jpeg,image/png,image/webp"
             onChange={handleImageUpload}
             disabled={uploadingImage}
-            className="w-full text-sm text-bb-text-secondary file:mr-3 file:rounded-full file:border-0 file:bg-bb-orange file:text-white file:px-4 file:py-2 file:text-sm file:font-semibold hover:file:bg-bb-orange-dark disabled:opacity-60"
+            className="w-full text-sm text-bb-text-secondary file:mr-3 file:rounded-full file:border-0 file:bg-bb-gold file:text-bb-ink file:px-4 file:py-2 file:text-sm file:font-semibold hover:file:bg-bb-gold-dark disabled:opacity-60"
           />
           {uploadingImage && <p className="text-xs text-bb-text-secondary mt-1">Uploading…</p>}
         </div>
@@ -249,7 +249,7 @@ export default function AdminEventDetailPage() {
           <h2 className="font-display font-bold text-lg text-bb-text">Ticket types</h2>
           <button
             onClick={() => setShowAddTier((v) => !v)}
-            className="text-sm font-semibold text-bb-green hover:text-bb-green-dark"
+            className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark"
           >
             {showAddTier ? 'Cancel' : '+ Add ticket type'}
           </button>
@@ -259,7 +259,24 @@ export default function AdminEventDetailPage() {
           <form onSubmit={handleAddTier} className="grid grid-cols-2 gap-3 mb-6 bg-bb-neutral rounded-xl p-4">
             <div className="col-span-2">
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Ticket name</label>
-              <input required placeholder="e.g. Early Bird" value={tierForm.name} onChange={(e) => setTierForm((f) => ({ ...f, name: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+              <input required placeholder="e.g. General Admission" value={tierForm.name} onChange={(e) => setTierForm((f) => ({ ...f, name: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-bb-text-secondary mb-1">Type</label>
+              <select value={tierForm.type} onChange={(e) => setTierForm((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm">
+                <option value="STANDARD">Standard</option>
+                <option value="EARLY_BIRD">Early Bird</option>
+                <option value="GROUP">Group</option>
+                <option value="VIP">VIP</option>
+                <option value="COMPLIMENTARY">Complimentary</option>
+                <option value="CUSTOM">Custom</option>
+              </select>
+              {tierForm.type === 'EARLY_BIRD' && (
+                <p className="text-xs text-bb-text-muted mt-1">
+                  Early Bird isn&apos;t shown as a selectable option — its price is applied automatically to the
+                  first Standard tickets sold, up to this capacity.
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Price (€ per ticket)</label>
@@ -277,7 +294,7 @@ export default function AdminEventDetailPage() {
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Sales end</label>
               <input required type="datetime-local" value={tierForm.salesEndAt} onChange={(e) => setTierForm((f) => ({ ...f, salesEndAt: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
             </div>
-            <button type="submit" className="col-span-2 bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold py-2 rounded-full text-sm transition-colors">
+            <button type="submit" className="col-span-2 bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold py-2 rounded-full text-sm transition-colors">
               Add ticket type
             </button>
           </form>
@@ -310,7 +327,7 @@ export default function AdminEventDetailPage() {
                     />
                   </div>
                   <div className="col-span-2 flex gap-2">
-                    <button onClick={() => handleSaveTier(tier.id)} className="text-xs font-semibold text-white bg-bb-green rounded-full px-4 py-2 hover:bg-bb-green-dark">
+                    <button onClick={() => handleSaveTier(tier.id)} className="text-xs font-semibold text-bb-ink bg-bb-gold rounded-full px-4 py-2 hover:bg-bb-gold-dark">
                       Save
                     </button>
                     <button onClick={() => setEditingTierId(null)} className="text-xs font-semibold text-bb-text-secondary hover:text-bb-text px-4 py-2">

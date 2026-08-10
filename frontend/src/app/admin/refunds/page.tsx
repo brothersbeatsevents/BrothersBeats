@@ -67,7 +67,7 @@ export default function AdminRefundsPage() {
                   <td className="px-4 py-2 text-bb-text-secondary text-xs">{new Date(r.requestedAt).toLocaleDateString()}</td>
                   <td className="px-4 py-2">
                     {r.status === 'FAILED' && (
-                      <button onClick={() => handleRetry(r.id)} className="text-xs font-semibold text-bb-green hover:underline">Retry</button>
+                      <button onClick={() => handleRetry(r.id)} className="text-xs font-semibold text-bb-gold hover:underline">Retry</button>
                     )}
                   </td>
                 </tr>

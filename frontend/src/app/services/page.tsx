@@ -42,14 +42,14 @@ export default function ServicesPage() {
           <ul className="space-y-2 text-sm text-bb-text-secondary mb-6">
             {TICKETED_HIGHLIGHTS.map((h) => (
               <li key={h} className="flex gap-2">
-                <span className="text-bb-green">•</span>
+                <span className="text-bb-gold">•</span>
                 <span>{h}</span>
               </li>
             ))}
           </ul>
           <Link
             href="/events"
-            className="inline-block bg-bb-orange hover:bg-bb-orange-dark text-white font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
+            className="inline-block bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
           >
             Browse upcoming events
           </Link>
@@ -65,7 +65,7 @@ export default function ServicesPage() {
           <ul className="space-y-2 text-sm text-bb-text-secondary">
             {PRIVATE_EVENT_HIGHLIGHTS.map((h) => (
               <li key={h} className="flex gap-2">
-                <span className="text-bb-green">•</span>
+                <span className="text-bb-gold">•</span>
                 <span>{h}</span>
               </li>
             ))}

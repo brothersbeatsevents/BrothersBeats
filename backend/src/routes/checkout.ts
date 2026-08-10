@@ -8,6 +8,7 @@ import { db } from '../store';
 import { optionalAuth, AuthRequest } from '../middleware/auth';
 import { EventEntity, TicketTierEntity, BookingEntity, BookingAttendee } from '../types';
 import { reserveInventory, releaseInventory, expireStaleReservations, InventoryError } from '../services/inventory';
+import { computeBlendedPrice } from '../services/ticket-pricing';
 import { createCheckoutSession } from '../services/stripe';
 
 const router = Router();
@@ -63,6 +64,13 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     res.status(404).json({ success: false, error: 'Ticket type not found' });
     return;
   }
+  if (tier.type === 'EARLY_BIRD') {
+    res.status(400).json({
+      success: false,
+      error: 'Early Bird pricing is applied automatically and cannot be selected directly',
+    });
+    return;
+  }
   const now = Date.now();
   if (!tier.active || new Date(tier.salesStartAt).getTime() > now || new Date(tier.salesEndAt).getTime() < now) {
     res.status(409).json({ success: false, error: 'This ticket type is not currently on sale' });
@@ -103,7 +111,7 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
       }))
     : [{ attendeeId: `att-${uuid()}`, name: buyerName, email: buyerEmail }];
 
-  const subtotal = tier.priceAmountMinor * qty;
+  const blended = await computeBlendedPrice(tier, qty);
   const nowIso = new Date().toISOString();
   const bookingId = `booking-${uuid()}`;
   const booking: BookingEntity = {
@@ -121,11 +129,15 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
 
     quantity: qty,
     unitPriceAmountMinor: tier.priceAmountMinor,
-    subtotalAmountMinor: subtotal,
+    subtotalAmountMinor: blended.subtotalAmountMinor,
     feesAmountMinor: 0,
-    totalAmountMinor: subtotal,
+    totalAmountMinor: blended.subtotalAmountMinor,
     refundedAmountMinor: 0,
     currency: tier.currency,
+    earlyBirdQuantity: blended.earlyBirdQuantity,
+    earlyBirdUnitPriceAmountMinor: blended.earlyBirdUnitPriceAmountMinor,
+    standardQuantity: blended.standardQuantity,
+    standardUnitPriceAmountMinor: blended.standardUnitPriceAmountMinor,
 
     bookingStatus: 'RESERVED_PENDING_PAYMENT',
     paymentStatus: 'PENDING',
@@ -149,14 +161,26 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
   };
 
   try {
+    const lineItems = [];
+    if (blended.earlyBirdQuantity > 0) {
+      lineItems.push({
+        name: `${tier.name} (Early Bird)`,
+        unitAmountMinor: blended.earlyBirdUnitPriceAmountMinor,
+        quantity: blended.earlyBirdQuantity,
+      });
+    }
+    if (blended.standardQuantity > 0) {
+      lineItems.push({
+        name: tier.name,
+        unitAmountMinor: blended.standardUnitPriceAmountMinor,
+        quantity: blended.standardQuantity,
+      });
+    }
     const session = await createCheckoutSession({
       bookingId: booking.id,
       eventId: event.id,
       eventTitle: event.title,
-      ticketTierName: tier.name,
-      quantity: qty,
-      unitAmountMinor: tier.priceAmountMinor,
-      totalAmountMinor: booking.totalAmountMinor,
+      lineItems,
       currency: tier.currency,
       buyerEmail,
       successUrl: `${FRONTEND_URL}/booking/confirmation?bookingReference=${booking.bookingReference}&session_id={CHECKOUT_SESSION_ID}`,
