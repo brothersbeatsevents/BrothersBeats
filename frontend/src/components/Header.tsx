@@ -27,7 +27,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={40} height={40} className="h-10 w-10 object-contain" priority />
-            <span className="font-display text-xl font-bold text-bb-text">
+            <span className="hidden sm:inline font-display text-xl font-bold text-bb-text">
               Brothers <span className="text-bb-gold">Beats</span>
             </span>
           </Link>
@@ -91,23 +91,36 @@ export default function Header() {
             )}
           </div>
 
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 text-bb-text"
-            aria-label="Toggle menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {mobileOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          <div className="lg:hidden flex items-center gap-1">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-full bg-bb-gold px-3 py-2 text-sm font-semibold text-bb-ink transition-colors hover:bg-bb-gold-dark"
+              >
+                Admin
+              </Link>
+            )}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 text-bb-text"
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-navigation"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {mobileOpen && (
-          <nav className="lg:hidden pb-6 pt-2 space-y-1 border-t border-bb-border">
+          <nav id="mobile-navigation" className="lg:hidden pb-6 pt-2 space-y-1 border-t border-bb-border">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}

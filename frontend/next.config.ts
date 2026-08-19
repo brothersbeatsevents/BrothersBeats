@@ -1,6 +1,11 @@
 import type { NextConfig } from 'next';
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
-const nextConfig: NextConfig = {
+const nextConfig = (phase: string): NextConfig => ({
+  // Keep `next dev` artifacts separate from production builds. Next otherwise
+  // writes both processes to `.next`, so running `npm run build` while the dev
+  // server is open can remove manifests that the dev server is actively using.
+  distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
   images: {
     unoptimized: true,
   },
@@ -40,6 +45,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-};
+});
 
 export default nextConfig;

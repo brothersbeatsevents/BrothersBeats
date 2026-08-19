@@ -6,9 +6,11 @@ dist/
 build/
 out/
 .next/
+.next-dev/
 
 # Next.js
 frontend/.next/
+frontend/.next-dev/
 frontend/out/
 
 # AWS SAM / serverless artifacts

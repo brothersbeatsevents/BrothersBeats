@@ -58,7 +58,7 @@ export default function EventFilters({
         onChange={(e) => onChange({ ...values, sort: e.target.value || undefined })}
         className="rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
       >
-        <option value="">Soonest first</option>
+        <option value="">Latest first</option>
         <option value="recent">Recently added</option>
       </select>
     </div>

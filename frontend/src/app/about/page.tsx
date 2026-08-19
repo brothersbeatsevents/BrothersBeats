@@ -14,21 +14,22 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
           <h1 className="font-display font-bold text-4xl sm:text-5xl text-bb-text">About Brothers Beats</h1>
           <p className="mt-4 text-lg text-bb-text-secondary max-w-2xl mx-auto">
-            Brothers Beats creates and hosts unforgettable events — from live music to community
-            gatherings and corporate celebrations — and sells the tickets to attend them.
+            Your destination for unforgettable live entertainment across Ireland — concerts,
+            comedy, private events, sports, and exclusive experiences.
           </p>
         </div>
       </section>
 
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-16 space-y-8">
         <div>
-          <h2 className="font-display font-bold text-2xl text-bb-text mb-3">Our mission</h2>
           <p className="text-bb-text-secondary">
-            Brothers Beats Events was founded to make attending events simple, transparent, and
-            enjoyable. As the organiser behind every event on this site, we handle the
-            logistics — secure payments, digital tickets, and communications — so attendees can
-            focus on enjoying great experiences. We also offer paid private-event management for
-            weddings, birthdays, and corporate celebrations.
+            Brothers Beats Events was born from our passion for creativity and our love for bringing
+            people together. We wanted to create something that helps people turn their ideas into
+            events that go beyond expectations. We saw that event planning could be easier, more
+            professional and less stressful, so we wanted to change that. Our goal is to take the
+            pressure out of planning, giving people more time to focus on enjoying the experience.
+            For us, it’s about creating events where people can switch off from everyday life, have
+            fun and make memories they’ll genuinely remember.
           </p>
         </div>
         <div>

@@ -3,15 +3,19 @@ export const SITE_CONFIG = {
   name: 'Brothers Beats Events',
   tagline: 'Fresh Events. Vibrant Energy.',
   description:
-    'Discover and book tickets for memorable events created by Brothers Beats — live music, community gatherings, corporate events, and celebrations.',
+    'Your destination for unforgettable live entertainment across Ireland — concerts, comedy, private events, sports, and exclusive experiences.',
+  mission:
+    'We organize, we manage, and we execute—all for you to enjoy.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.brothersbeats.events',
   ogImage: '/images/og-default.jpg',
   locale: 'en_IE',
   twitter: '@BrothersBeatsEvents',
-  supportEmail: 'support@brothersbeats.events',
+  supportEmail: 'brothersbeatsevents@gmail.com',
   socials: {
-    facebook: 'https://www.facebook.com/brothersbeatsevents',
-    instagram: 'https://www.instagram.com/brothersbeatsevents',
+    instagram: 'https://www.instagram.com/brothersbeatsevents?igsh=bzJ1dmJ4djc4NGEz&utm_source=qr',
+    facebook: 'https://www.facebook.com/share/1HRsyGnwbJ/?mibextid=wwXIfr',
+    youtube: 'https://www.youtube.com/@BrothersbeatsEvents',
+    linkedin: 'https://www.linkedin.com/in/brothersbeats-events-a29645428?trk=contact-info',
   },
   address: {
     street: 'Dublin, Ireland',

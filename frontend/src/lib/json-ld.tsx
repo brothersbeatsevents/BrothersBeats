@@ -14,7 +14,7 @@ export function organizationJsonLd() {
       addressLocality: SITE_CONFIG.address.city,
       addressCountry: SITE_CONFIG.address.country,
     },
-    sameAs: [SITE_CONFIG.socials.facebook, SITE_CONFIG.socials.instagram],
+    sameAs: Object.values(SITE_CONFIG.socials),
   };
 }
 
