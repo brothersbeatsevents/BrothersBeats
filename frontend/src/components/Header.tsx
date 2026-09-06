@@ -22,13 +22,13 @@ export default function Header() {
   if (pathname?.startsWith('/admin')) return null;
 
   return (
-    <header className="sticky top-0 z-50 bg-bb-surface/95 backdrop-blur border-b border-bb-border">
+    <header className="sticky top-0 z-50 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={40} height={40} className="h-10 w-10 object-contain" priority />
-            <span className="hidden sm:inline font-display text-xl font-bold text-bb-text">
-              Brothers <span className="text-bb-gold">Beats</span>
+            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={56} height={56} className="h-14 w-14 shrink-0 object-contain" priority />
+            <span className="hidden sm:inline font-display text-xl font-bold text-white">
+              Brothers <span className="text-bb-gold">Beats Events</span>
             </span>
           </Link>
 
@@ -40,7 +40,7 @@ export default function Header() {
                 className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                   pathname === link.href
                     ? 'text-bb-gold bg-bb-gold/10'
-                    : 'text-bb-text-secondary hover:text-bb-gold hover:bg-bb-neutral'
+                    : 'text-white/75 hover:text-bb-gold hover:bg-white/10'
                 }`}
               >
                 {link.label}
@@ -54,21 +54,21 @@ export default function Header() {
                 {isAdmin ? (
                   <Link
                     href="/admin"
-                    className="text-sm font-medium text-bb-text-secondary hover:text-bb-gold transition-colors"
+                    className="text-sm font-medium text-white/75 hover:text-bb-gold transition-colors"
                   >
                     Admin panel
                   </Link>
                 ) : (
                   <Link
                     href="/account"
-                    className="text-sm font-medium text-bb-text-secondary hover:text-bb-gold transition-colors"
+                    className="text-sm font-medium text-white/75 hover:text-bb-gold transition-colors"
                   >
                     {user.display_name}
                   </Link>
                 )}
                 <button
                   onClick={logout}
-                  className="text-sm font-medium text-bb-text-secondary hover:text-bb-text transition-colors"
+                  className="text-sm font-medium text-white/75 hover:text-white transition-colors"
                 >
                   Sign out
                 </button>
@@ -76,7 +76,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/auth/sign-in"
-                className="text-sm font-medium text-bb-text-secondary hover:text-bb-gold transition-colors"
+                className="text-sm font-medium text-white/75 hover:text-bb-gold transition-colors"
               >
                 Sign in
               </Link>
@@ -103,7 +103,7 @@ export default function Header() {
             )}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 text-bb-text"
+              className="p-2 text-white"
               aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileOpen}
               aria-controls="mobile-navigation"
@@ -120,35 +120,35 @@ export default function Header() {
         </div>
 
         {mobileOpen && (
-          <nav id="mobile-navigation" className="lg:hidden pb-6 pt-2 space-y-1 border-t border-bb-border">
+          <nav id="mobile-navigation" className="lg:hidden pb-6 pt-2 space-y-1 border-t border-white/10">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="block py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral"
+                className="block py-2.5 px-3 rounded-lg font-medium text-white/75 hover:bg-white/10"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="pt-3 mt-2 border-t border-bb-border space-y-1">
+            <div className="pt-3 mt-2 border-t border-white/10 space-y-1">
               {user ? (
                 <>
                   {isAdmin ? (
-                    <Link href="/admin" className="block py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral" onClick={() => setMobileOpen(false)}>
+                    <Link href="/admin" className="block py-2.5 px-3 rounded-lg font-medium text-white/75 hover:bg-white/10" onClick={() => setMobileOpen(false)}>
                       Admin panel
                     </Link>
                   ) : (
-                    <Link href="/account" className="block py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral" onClick={() => setMobileOpen(false)}>
+                    <Link href="/account" className="block py-2.5 px-3 rounded-lg font-medium text-white/75 hover:bg-white/10" onClick={() => setMobileOpen(false)}>
                       My account
                     </Link>
                   )}
-                  <button onClick={logout} className="block w-full text-left py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral">
+                  <button onClick={logout} className="block w-full text-left py-2.5 px-3 rounded-lg font-medium text-white/75 hover:bg-white/10">
                     Sign out
                   </button>
                 </>
               ) : (
-                <Link href="/auth/sign-in" className="block py-2.5 px-3 rounded-lg font-medium text-bb-text-secondary hover:bg-bb-neutral" onClick={() => setMobileOpen(false)}>
+                <Link href="/auth/sign-in" className="block py-2.5 px-3 rounded-lg font-medium text-white/75 hover:bg-white/10" onClick={() => setMobileOpen(false)}>
                   Sign in
                 </Link>
               )}

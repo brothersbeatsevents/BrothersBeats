@@ -15,7 +15,7 @@ export default function EventDetailTiers({ event }: { event: any }) {
   const [quoteLoading, setQuoteLoading] = useState(false);
 
   const soldOut = event.status === 'SOLD_OUT' || event.availableTickets <= 0;
-  const salesClosed = event.status === 'CANCELLED' || event.status === 'COMPLETED' || event.status === 'SALES_PAUSED';
+  const salesClosed = event.isPast || event.status === 'CANCELLED' || event.status === 'COMPLETED' || event.status === 'SALES_PAUSED';
 
   const selectedId = Object.keys(quantities).find((id) => quantities[id] > 0);
   const selected = tiers.find((t) => t.id === selectedId);
@@ -86,7 +86,11 @@ export default function EventDetailTiers({ event }: { event: any }) {
     return (
       <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 text-center sticky top-24">
         <p className="font-semibold text-bb-text">
-          {event.status === 'CANCELLED' ? 'This event has been cancelled' : 'Tickets are not currently available'}
+          {event.status === 'CANCELLED'
+            ? 'This event has been cancelled'
+            : event.isPast
+              ? 'This event has ended'
+              : 'Tickets are not currently available'}
         </p>
       </div>
     );

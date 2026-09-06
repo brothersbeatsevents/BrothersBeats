@@ -37,12 +37,14 @@ export async function getEvents(params?: {
   city?: string;
   q?: string;
   sort?: string;
+  past?: boolean;
 }) {
   const qs = new URLSearchParams();
   if (params?.category) qs.set('category', params.category);
   if (params?.city) qs.set('city', params.city);
   if (params?.q) qs.set('q', params.q);
   if (params?.sort) qs.set('sort', params.sort);
+  if (params?.past) qs.set('past', 'true');
   const query = qs.toString();
   return apiFetch<{ success: boolean; data: any[] }>(`/events${query ? `?${query}` : ''}`);
 }

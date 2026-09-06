@@ -45,14 +45,19 @@ function publicEventSummary(event: EventEntity) {
 
 // GET /api/events — list published + publicly visible events
 router.get('/', async (req, res: Response): Promise<void> => {
-  const { category, city, q, sort } = req.query as Record<string, string>;
+  const { category, city, q, sort, past } = req.query as Record<string, string>;
+  const now = Date.now();
+  const showPast = past === 'true';
 
   let events = (await db.getAll<EventEntity>('events')).filter(
-    (e) =>
-      e.visibility === 'PUBLIC' &&
-      ['PUBLISHED', 'SALES_PAUSED', 'SOLD_OUT', 'CANCELLED', 'COMPLETED'].includes(
-        e.status,
-      ),
+    (e) => {
+      if (e.visibility !== 'PUBLIC' || e.status === 'ARCHIVED') {
+        return false;
+      }
+      if (e.status === 'CANCELLED') return showPast;
+      const isPast = new Date(e.endDateTime).getTime() < now;
+      return showPast ? isPast : !isPast;
+    },
   );
 
   if (category) events = events.filter((e) => e.category === category);
@@ -136,6 +141,7 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
       shortDescription: event.shortDescription,
       longDescription: event.longDescription,
       status: event.status,
+      isPast: new Date(event.endDateTime).getTime() < Date.now(),
       venueName: event.venueName,
       venueAddress: event.venueAddress,
       city: event.city,
@@ -161,8 +167,7 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
       perOrderLimit: event.perOrderLimit,
       availableTickets: available,
       badge,
-      cancellationMessage:
-        event.status === 'CANCELLED' ? event.cancellationMessage : undefined,
+      cancellationMessage: undefined,
       ticketTiers: tiers,
     },
   });

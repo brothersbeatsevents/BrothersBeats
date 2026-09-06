@@ -4,16 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── CSS Custom Properties — Brothers Beats palette (Black & Gold) ── */
+/* ── CSS Custom Properties — Brothers Beats palette (White & Gold) ── */
 :root {
-  --bb-bg-main: #12100C;
-  --bb-bg-surface: #1D1812;
-  --bb-bg-neutral: #262019;
-  --bb-border: #3A3226;
+  --bb-bg-main: #FFFFFF;
+  --bb-bg-surface: #FFFFFF;
+  --bb-bg-neutral: #F4F1EA;
+  --bb-border: #DED8CC;
 
-  --bb-text-primary: #F6F1E4;
-  --bb-text-secondary: #C9C1B0;
-  --bb-text-muted: #948A78;
+  --bb-text-primary: #201C16;
+  --bb-text-secondary: #655F55;
+  --bb-text-muted: #8A8174;
 
   --bb-ink: #0A0806;
   --bb-gold: #D4AF37;
@@ -49,8 +49,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* ── Form controls — override the browser default white background so text
-   (which inherits the page's light color) stays readable on the dark theme.
+/* ── Form controls — keep fields aligned with the light page theme.
    :where() keeps specificity at zero so any Tailwind bg/text utility still wins. */
 input:where(:not([type='checkbox']):not([type='radio']):not([type='range'])),
 textarea,
@@ -104,7 +103,7 @@ input:-webkit-autofill:focus {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bb-bg-neutral) 25%, #332B20 37%, var(--bb-bg-neutral) 63%);
+  background: linear-gradient(90deg, var(--bb-bg-neutral) 25%, #E8E2D7 37%, var(--bb-bg-neutral) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -115,7 +114,7 @@ input:-webkit-autofill:focus {
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bb-bg-neutral);
+  background: var(--bb-bg-main);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--bb-border);

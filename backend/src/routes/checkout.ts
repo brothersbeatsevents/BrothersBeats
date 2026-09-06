@@ -54,7 +54,7 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     res.status(401).json({ success: false, error: 'Please sign in to purchase tickets for this event' });
     return;
   }
-  if (event.status !== 'PUBLISHED') {
+  if (event.status !== 'PUBLISHED' || new Date(event.endDateTime).getTime() < Date.now()) {
     res.status(409).json({ success: false, error: 'Tickets are not currently on sale for this event' });
     return;
   }

@@ -21,19 +21,20 @@ function EventsPageContent() {
     q: searchParams.get('q') || undefined,
     sort: searchParams.get('sort') || undefined,
   };
+  const showPast = searchParams.get('view') === 'past';
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
-      const res = await getEvents(filters);
+      const res = await getEvents({ ...filters, past: showPast });
       setEvents(res.data);
     } catch {
       setError(true);
     }
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, showPast]);
 
   useEffect(() => {
     load();
@@ -41,6 +42,7 @@ function EventsPageContent() {
 
   function handleFilterChange(values: EventFilterValues) {
     const qs = new URLSearchParams();
+    if (showPast) qs.set('view', 'past');
     if (values.category) qs.set('category', values.category);
     if (values.city) qs.set('city', values.city);
     if (values.q) qs.set('q', values.q);
@@ -52,7 +54,25 @@ function EventsPageContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="font-display font-bold text-3xl sm:text-4xl text-bb-text mb-6">All events</h1>
+      <h1 className="font-display font-bold text-3xl sm:text-4xl text-bb-text mb-6">
+        {showPast ? 'Past events' : 'Upcoming events'}
+      </h1>
+      <div className="flex gap-2 mb-6" role="tablist" aria-label="Event views">
+        <button
+          type="button"
+          onClick={() => router.push('/events')}
+          className={`px-4 py-2 rounded-full text-sm font-semibold ${!showPast ? 'bg-bb-gold text-bb-ink' : 'border border-bb-border text-bb-text-secondary'}`}
+        >
+          Upcoming
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push('/events?view=past')}
+          className={`px-4 py-2 rounded-full text-sm font-semibold ${showPast ? 'bg-bb-gold text-bb-ink' : 'border border-bb-border text-bb-text-secondary'}`}
+        >
+          Past events
+        </button>
+      </div>
       <EventFilters values={filters} onChange={handleFilterChange} cities={cities} />
       {loading ? (
         <LoadingSkeleton />

@@ -9,13 +9,13 @@ const config: Config = {
     extend: {
       colors: {
         bb: {
-          bg: '#12100C',
-          surface: '#1D1812',
-          neutral: '#262019',
-          border: '#3A3226',
-          text: '#F6F1E4',
-          'text-secondary': '#C9C1B0',
-          'text-muted': '#948A78',
+          bg: '#FFFFFF',
+          surface: '#FFFFFF',
+          neutral: '#F4F1EA',
+          border: '#DED8CC',
+          text: '#201C16',
+          'text-secondary': '#655F55',
+          'text-muted': '#8A8174',
           ink: '#0A0806',
           green: '#087A3E',
           'green-dark': '#065E31',
