@@ -406,15 +406,6 @@ Resources:
           ResponseTemplates:
             application/json: '{"success":false,"error":"Rate limit exceeded"}'
 
-  # ── SES Email Identity (dev only — shared identity, created once)
-  SESEmailIdentity:
-    Type: AWS::SES::EmailIdentity
-    Condition: IsNotProdAndHasSESFromEmail
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      EmailIdentity: !Ref SESFromEmail
-
   # ── SES Configuration Set + SNS bounce/complaint topic
   # NOTE: These resources (`brothers-beats-${Environment}` config set,
   # `brothers-beats-ses-notifications-${Environment}` SNS topic, and the bounce-

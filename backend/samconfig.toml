@@ -13,7 +13,7 @@ resolve_s3 = true
 capabilities = "CAPABILITY_IAM"
 region = "eu-west-1"
 confirm_changeset = true
-parameter_overrides = "Environment=dev FrontendUrl=https://dev.brothersbeatsevents.com ExtraCorsOrigins=http://localhost:3000,https://brothersbeatsevents.com,https://brothers-beats.vercel.app,https://brothers-beats-git-main-brothers-beats.vercel.app ExtraCallbackUrls=http://localhost:3000/auth/callback,https://brothersbeatsevents.com/auth/callback,https://brothers-beats.vercel.app/auth/callback,https://brothers-beats-git-main-brothers-beats.vercel.app/auth/callback GoogleAuthEnabled=false StripeWebhookUrl=https://0uqtxsfr2h.execute-api.eu-west-1.amazonaws.com/dev/api/webhooks/stripe"
+parameter_overrides = "Environment=dev FrontendUrl=https://dev.brothersbeatsevents.com ExtraCorsOrigins=http://localhost:3000,https://brothersbeatsevents.com,https://brothers-beats.vercel.app,https://brothers-beats-git-main-brothers-beats.vercel.app ExtraCallbackUrls=http://localhost:3000/auth/callback,https://brothersbeatsevents.com/auth/callback,https://brothers-beats.vercel.app/auth/callback,https://brothers-beats-git-main-brothers-beats.vercel.app/auth/callback GoogleAuthEnabled=false StripeWebhookUrl=https://0uqtxsfr2h.execute-api.eu-west-1.amazonaws.com/dev/api/webhooks/stripe SESFromEmail=brothersbeatsevents@gmail.com"
 
 [prod.deploy.parameters]
 stack_name = "brothers-beats-prod"
