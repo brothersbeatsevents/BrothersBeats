@@ -47,5 +47,6 @@ export async function getSettingsSSR() {
     organizationName: string;
     heroImageUrl: string | null;
     heroImagePosition?: string;
+    heroImageZoom?: number;
   }>('/settings');
 }

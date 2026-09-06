@@ -27,8 +27,13 @@ export default function Header() {
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={64} height={64} className="h-16 w-16 shrink-0 object-contain" priority />
-            <span className="hidden sm:inline font-display text-xl font-bold text-white">
-              Brothers <span className="text-bb-gold">Beats Events</span>
+            <span className="hidden sm:flex flex-col font-display font-bold leading-tight">
+              <span className="text-xl text-white">
+                Brothers <span className="text-bb-gold">Beats Events</span>
+              </span>
+              <span className="text-[0.78rem] tracking-[0.08em] whitespace-nowrap text-bb-gold">
+                Fresh Events | Vibrant Energy
+              </span>
             </span>
           </Link>
 

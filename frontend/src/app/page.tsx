@@ -29,7 +29,10 @@ export default async function HomePage() {
               src={settings.heroImageUrl}
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ objectPosition: settings.heroImagePosition || '50% 50%' }}
+              style={{
+                objectPosition: settings.heroImagePosition || '50% 50%',
+                transform: `scale(${settings.heroImageZoom || 1})`,
+              }}
             />
             <Link
               href="/events"

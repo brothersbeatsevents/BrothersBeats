@@ -454,6 +454,7 @@ export interface OrgSettings {
   socialLinks?: Record<string, string>;
   heroImageUrl?: string;
   heroImagePosition?: string;
+  heroImageZoom?: number;
   updated_at: string;
   updatedBy?: string;
 }
