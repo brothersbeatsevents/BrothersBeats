@@ -128,7 +128,7 @@ app.use('/api/checkout', paymentLimiter, checkoutRoutes);
 app.use('/api/booking', bookingRoutes);
 app.use('/api/me', meRoutes);
 app.use('/api/subscribers', subscriberRoutes);
-app.use('/api/contact', contactRoutes);
+app.use('/api/contact', enquiryLimiter, contactRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/service-enquiries', enquiryLimiter, serviceEnquiriesRoutes);

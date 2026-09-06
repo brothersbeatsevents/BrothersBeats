@@ -508,7 +508,13 @@ export type EventServiceType =
   | 'CORPORATE'
   | 'COMMUNITY'
   | 'ENTERTAINMENT'
-  | 'OTHER';
+  | 'OTHER'
+  | 'SPONSORSHIP'
+  | 'PERFORMER'
+  | 'PARTNERSHIP'
+  | 'ORGANISE_EVENT'
+  | 'PERSONAL_PARTY'
+  | 'GENERAL_ENQUIRY';
 
 export interface EventServiceEnquiryEntity {
   id: string; // enquiryId

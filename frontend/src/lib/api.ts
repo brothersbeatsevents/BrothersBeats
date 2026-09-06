@@ -120,7 +120,7 @@ export async function unsubscribe(email: string) {
   });
 }
 
-export async function sendContactMessage(data: { name: string; email: string; message: string }) {
+export async function sendContactMessage(data: { name: string; email: string; message: string; contactReason?: string; phone?: string; website?: string; formStartedAt?: number }) {
   return apiFetch<{ success: boolean; message: string }>('/contact', {
     method: 'POST',
     body: data,

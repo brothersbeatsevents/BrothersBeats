@@ -29,10 +29,11 @@ export default function Header() {
             <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={64} height={64} className="h-16 w-16 shrink-0 object-contain" priority />
             <span className="hidden sm:flex flex-col font-display font-bold leading-tight">
               <span className="text-xl text-white">
-                Brothers <span className="text-bb-gold">Beats Events</span>
+                <span>Brothers</span><span className="text-bb-gold">Beats</span>{' '}
+                <span>Events</span>
               </span>
-              <span className="text-[0.78rem] tracking-[0.08em] whitespace-nowrap text-bb-gold">
-                Fresh Events | Vibrant Energy
+              <span className="text-[0.78rem] tracking-[0.08em] whitespace-nowrap">
+                <span className="text-bb-gold">Fresh Events | </span><span className="text-white">Vibrant Energy</span>
               </span>
             </span>
           </Link>

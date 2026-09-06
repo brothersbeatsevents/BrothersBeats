@@ -57,7 +57,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-2">
-            <Image src="/images/BBlogo3.png" alt="Brothers Beats logo" width={168} height={112} className="h-14 w-auto object-contain" />
+            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={168} height={112} className="h-14 w-auto object-contain" />
             <p className="mt-3 text-sm text-white/70 max-w-sm">
               {SITE_CONFIG.mission} {SITE_CONFIG.description}
             </p>
