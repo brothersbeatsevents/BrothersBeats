@@ -43,5 +43,9 @@ export async function getGallerySSR(params?: { featured?: boolean }) {
 }
 
 export async function getSettingsSSR() {
-  return serverFetch<{ organizationName: string; heroImageUrl: string | null }>('/settings');
+  return serverFetch<{
+    organizationName: string;
+    heroImageUrl: string | null;
+    heroImagePosition?: string;
+  }>('/settings');
 }

@@ -24,9 +24,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={56} height={56} className="h-14 w-14 shrink-0 object-contain" priority />
+            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={64} height={64} className="h-16 w-16 shrink-0 object-contain" priority />
             <span className="hidden sm:inline font-display text-xl font-bold text-white">
               Brothers <span className="text-bb-gold">Beats Events</span>
             </span>

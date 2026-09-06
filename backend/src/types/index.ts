@@ -453,6 +453,7 @@ export interface OrgSettings {
   defaultTermsAndConditions?: string;
   socialLinks?: Record<string, string>;
   heroImageUrl?: string;
+  heroImagePosition?: string;
   updated_at: string;
   updatedBy?: string;
 }

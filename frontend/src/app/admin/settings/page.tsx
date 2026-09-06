@@ -47,6 +47,11 @@ export default function AdminSettingsPage() {
     }
   }
 
+  const [positionX = '50%', positionY = '50%'] = (form?.heroImagePosition || '50% 50%').split(' ');
+  function setHeroImagePosition(axis: 'x' | 'y', value: string) {
+    set('heroImagePosition', axis === 'x' ? `${value}% ${positionY}` : `${positionX} ${value}%`);
+  }
+
   if (!form) return <p className="text-bb-text-secondary">Loading…</p>;
 
   return (
@@ -58,11 +63,23 @@ export default function AdminSettingsPage() {
           <label className="block text-sm font-medium text-bb-text mb-1">Homepage hero image</label>
           {form.heroImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={form.heroImageUrl} alt="" className="w-full max-w-sm h-auto rounded-xl border border-bb-border mb-2" />
+            <img src={form.heroImageUrl} alt="" className="w-full max-w-sm aspect-video object-cover rounded-xl border border-bb-border mb-2" style={{ objectPosition: form.heroImagePosition || '50% 50%' }} />
           )}
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleHeroImageUpload} disabled={uploadingImage} className="text-sm" />
           {uploadingImage && <p className="text-xs text-bb-text-secondary mt-1">Uploading…</p>}
-          <p className="text-xs text-bb-text-muted mt-1">Shown below the tagline on the homepage.</p>
+          <p className="text-xs text-bb-text-muted mt-1">Preview uses the homepage 16:9 crop.</p>
+          {form.heroImageUrl && (
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <label className="text-xs text-bb-text-secondary">
+                Horizontal crop
+                <input type="range" min="0" max="100" value={parseInt(positionX, 10) || 50} onChange={(e) => setHeroImagePosition('x', e.target.value)} className="w-full mt-2" />
+              </label>
+              <label className="text-xs text-bb-text-secondary">
+                Vertical crop
+                <input type="range" min="0" max="100" value={parseInt(positionY, 10) || 50} onChange={(e) => setHeroImagePosition('y', e.target.value)} className="w-full mt-2" />
+              </label>
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Organization name</label>
