@@ -206,7 +206,7 @@ async function ensureUniqueSlugIfChanged(event: EventEntity, newTitle: string): 
   }
 }
 
-// DELETE /api/admin/events/:id — only permitted while still a draft with no ticket tiers sold
+// DELETE /api/admin/events/:id — only permitted for an unpublished event with no bookings
 router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   const event = await db.get<EventEntity>('events', req.params.id);
   if (!event) {
@@ -214,18 +214,56 @@ router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => 
     return;
   }
   if (event.status !== 'DRAFT') {
-    res.status(409).json({ success: false, error: 'Only draft events can be deleted. Cancel it instead.' });
+    res.status(409).json({ success: false, error: 'Unpublish the event before deleting it.' });
     return;
   }
+  const bookings = await db.filterBy<BookingEntity>('bookings', 'eventId', event.id);
+  if (bookings.length > 0) {
+    res.status(409).json({ success: false, error: 'This event cannot be deleted because it has bookings or reservations.' });
+    return;
+  }
+  const tiers = await db.filterBy<TicketTierEntity>('ticketTiers', 'eventId', event.id);
+  for (const tier of tiers) await db.delete('ticketTiers', tier.id);
   await db.delete('events', event.id);
   auditLog(req.user!.id, 'DELETE_EVENT', 'EVENT', event.id, {
     actorRole: req.user!.role as 'ADMIN' | 'SUPER_ADMIN',
-    summary: `Deleted draft event "${event.title}"`,
+    summary: `Deleted unpublished event "${event.title}"`,
   });
   res.json({ success: true, message: 'Event deleted' });
 });
 
 // ── Lifecycle transitions ──
+
+router.post('/:id/unpublish', async (req: AuthRequest, res: Response): Promise<void> => {
+  const event = await db.get<EventEntity>('events', req.params.id);
+  if (!event) {
+    res.status(404).json({ success: false, error: 'Event not found' });
+    return;
+  }
+  if (event.status === 'DRAFT') {
+    res.json({ success: true, data: event });
+    return;
+  }
+  if (['COMPLETED', 'ARCHIVED'].includes(event.status)) {
+    res.status(409).json({ success: false, error: `Cannot unpublish an event with status ${event.status}` });
+    return;
+  }
+  const bookings = await db.filterBy<BookingEntity>('bookings', 'eventId', event.id);
+  if (bookings.length > 0) {
+    res.status(409).json({ success: false, error: 'This event cannot be unpublished because it has bookings or reservations.' });
+    return;
+  }
+  event.status = 'DRAFT';
+  event.updatedBy = req.user!.id;
+  event.updated_at = new Date().toISOString();
+  await db.put('events', event);
+  auditLog(req.user!.id, 'UNPUBLISH_EVENT', 'EVENT', event.id, {
+    actorRole: req.user!.role as any,
+    eventId: event.id,
+    summary: `Unpublished "${event.title}"`,
+  });
+  res.json({ success: true, data: event });
+});
 
 router.post('/:id/publish', async (req: AuthRequest, res: Response): Promise<void> => {
   const event = await db.get<EventEntity>('events', req.params.id);

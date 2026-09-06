@@ -296,7 +296,7 @@ export async function adminDeleteEvent(id: string, token: string) {
 
 export async function adminEventAction(
   id: string,
-  action: 'publish' | 'pause-sales' | 'resume-sales' | 'cancel' | 'complete' | 'duplicate',
+  action: 'publish' | 'unpublish' | 'pause-sales' | 'resume-sales' | 'cancel' | 'complete' | 'duplicate',
   token: string,
   body?: Record<string, any>,
 ) {

@@ -30,22 +30,12 @@ export default async function HomePage() {
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" aria-hidden />
-            <div className="relative h-full flex flex-col justify-center px-6 sm:px-12 max-w-xl">
-              <h1 className="font-display font-bold text-3xl sm:text-5xl text-white leading-tight">
-                {SITE_CONFIG.tagline}
-              </h1>
-              <p className="mt-4 text-base sm:text-lg text-white/90">
-                Discover and book tickets for the best live music, community gatherings, and
-                celebrations near you.
-              </p>
-              <Link
-                href="/events"
-                className="mt-6 inline-block w-fit bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
-              >
-                Explore Events
-              </Link>
-            </div>
+            <Link
+              href="/events"
+              className="absolute right-5 bottom-5 sm:right-8 sm:bottom-8 bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
+            >
+              Explore Events
+            </Link>
           </div>
         </section>
       ) : (
