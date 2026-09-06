@@ -19,7 +19,7 @@ async function getOrCreateSettings(): Promise<OrgSettings> {
   const defaults: OrgSettings = {
     id: SETTINGS_ID,
     organizationName: 'Brothers Beats Events',
-    supportEmail: process.env.SUPPORT_EMAIL || 'support@brothersbeats.events',
+    supportEmail: process.env.SUPPORT_EMAIL || 'brothersbeatsevents@gmail.com',
     defaultCurrency: 'EUR',
     defaultTimezone: 'Europe/Dublin',
     updated_at: new Date().toISOString(),

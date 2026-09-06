@@ -13,7 +13,7 @@ const CONFIG_SET = process.env.SES_CONFIGURATION_SET || '';
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')[0]
   .trim();
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@brothersbeats.events';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'brothersbeatsevents@gmail.com';
 
 const sesClient = new SESv2Client({ region: REGION });
 
