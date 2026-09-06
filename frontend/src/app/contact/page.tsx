@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { sendContactMessage } from '@/lib/api';
 import { SITE_CONFIG } from '@/lib/site-config';
 
-type ContactReason = 'SPONSORSHIP' | 'PERFORMER' | 'PARTNERSHIP' | 'ORGANISE_EVENT' | 'PERSONAL_PARTY' | 'GENERAL';
+type ContactReason = 'SPONSORSHIP' | 'PERFORMER' | 'PARTNERSHIP' | 'ORGANISE_EVENT' | 'PERSONAL_PARTY' | 'GENERAL_ENQUIRY';
 
 const REASONS: Array<{ value: ContactReason; label: string }> = [
   { value: 'SPONSORSHIP', label: 'Sponsorship' },
@@ -12,7 +12,7 @@ const REASONS: Array<{ value: ContactReason; label: string }> = [
   { value: 'PARTNERSHIP', label: 'Partnership' },
   { value: 'ORGANISE_EVENT', label: 'Organising an Event' },
   { value: 'PERSONAL_PARTY', label: 'Personal Party' },
-  { value: 'GENERAL', label: 'General Enquiry' },
+  { value: 'GENERAL_ENQUIRY', label: 'General Enquiry' },
 ];
 
 const inputClass = 'w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold';
