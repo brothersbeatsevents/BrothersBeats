@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth';
 import Header from '@/components/Header';
+import { getSettingsSSR } from '@/lib/server-api';
 import Footer from '@/components/Footer';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { organizationJsonLd, JsonLd } from '@/lib/json-ld';
@@ -71,20 +72,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSettingsSSR();
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-bb-bg text-bb-text font-body">
         <JsonLd data={organizationJsonLd()} />
         <CookieBanner />
         <AuthProvider>
-          <Header />
+          <Header whatsappUrl={settings?.whatsappGroupUrl} />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <Footer whatsappUrl={settings?.whatsappGroupUrl} />
         </AuthProvider>
       </body>
     </html>

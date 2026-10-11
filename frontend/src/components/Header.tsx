@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
+import HeaderTopBar from './HeaderTopBar';
 
 const NAV_LINKS = [
   { href: '/events', label: 'Events' },
@@ -14,7 +15,7 @@ const NAV_LINKS = [
   { href: '/contact', label: 'Contact' },
 ];
 
-export default function Header() {
+export default function Header({ whatsappUrl }: { whatsappUrl?: string | null }) {
   const { user, logout, isAdmin } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
+      <HeaderTopBar whatsappUrl={whatsappUrl} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center gap-2 shrink-0">

@@ -641,6 +641,50 @@ export async function adminDeleteGalleryItem(mediaId: string, token: string) {
   return apiFetch<{ success: boolean; message: string }>(`/admin/gallery/${mediaId}`, { method: 'DELETE', token });
 }
 
+// ── Admin: Sponsors ──
+
+export async function adminGetSponsors(token: string, params?: { scope?: 'SITE' | 'EVENT'; eventId?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.scope) qs.set('scope', params.scope);
+  if (params?.eventId) qs.set('eventId', params.eventId);
+  const query = qs.toString();
+  return apiFetch<{ success: boolean; data: any[] }>(`/admin/sponsors${query ? `?${query}` : ''}`, { token });
+}
+
+export async function adminCreateSponsor(data: Record<string, any>, token: string) {
+  return apiFetch<{ success: boolean; data: any }>('/admin/sponsors', { method: 'POST', body: data, token });
+}
+
+export async function adminUpdateSponsor(id: string, data: Record<string, any>, token: string) {
+  return apiFetch<{ success: boolean; data: any }>(`/admin/sponsors/${id}`, { method: 'PATCH', body: data, token });
+}
+
+export async function adminDeleteSponsor(id: string, token: string) {
+  return apiFetch<{ success: boolean; message: string }>(`/admin/sponsors/${id}`, { method: 'DELETE', token });
+}
+
+// ── Admin: Check-in ──
+
+export type CheckInResult =
+  | 'CHECKED_IN'
+  | 'ALREADY_CHECKED_IN'
+  | 'INVALID'
+  | 'WRONG_EVENT'
+  | 'CANCELLED'
+  | 'REFUNDED'
+  | 'EVENT_CANCELLED';
+
+export async function adminCheckInTicket(code: string, eventId: string | undefined, token: string) {
+  return apiFetch<{
+    success: boolean;
+    data: {
+      result: CheckInResult;
+      message?: string;
+      ticket?: { ticketNumber: string; attendeeName?: string; checkedInAt?: string; eventTitle?: string; tierName?: string };
+    };
+  }>('/admin/checkin', { method: 'POST', body: { code, eventId: eventId || undefined }, token });
+}
+
 // ── Admin: Event-service enquiries ──
 
 export async function adminGetServiceEnquiries(

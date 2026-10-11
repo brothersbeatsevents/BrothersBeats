@@ -15,6 +15,8 @@ import customersRoutes from './customers';
 import subscribersRoutes from './subscribers';
 import galleryRoutes from './gallery';
 import serviceEnquiriesRoutes from './service-enquiries';
+import sponsorsRoutes from './sponsors';
+import checkinRoutes from './checkin';
 
 const router = Router();
 
@@ -30,5 +32,7 @@ router.use('/customers', customersRoutes);
 router.use('/subscribers', subscribersRoutes);
 router.use('/gallery', galleryRoutes);
 router.use('/service-enquiries', serviceEnquiriesRoutes);
+router.use('/sponsors', sponsorsRoutes);
+router.use('/checkin', checkinRoutes);
 
 export default router;

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getEventsSSR, getGallerySSR, getSettingsSSR } from '@/lib/server-api';
+import { getEventsSSR, getGallerySSR, getSettingsSSR, getSponsorsSSR } from '@/lib/server-api';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { organizationJsonLd, JsonLd } from '@/lib/json-ld';
 import EventGrid from '@/components/ui/EventGrid';
+import SponsorGrid from '@/components/ui/SponsorGrid';
 
 export const metadata: Metadata = {
   title: `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`,
@@ -16,7 +17,7 @@ export default async function HomePage() {
   const upcoming = events.filter((e: any) => e.status === 'PUBLISHED' || e.status === 'SALES_PAUSED').slice(0, 6);
   const gallery = (await getGallerySSR()).slice(0, 8);
   const settings = await getSettingsSSR();
-
+  const sponsors = await getSponsorsSSR();
   return (
     <>
       <JsonLd data={organizationJsonLd()} />
@@ -91,6 +92,31 @@ export default async function HomePage() {
               </Link>
             ))}
           </div>
+        </section>
+      )}
+
+      {sponsors.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text text-center mb-8">Our Sponsors</h2>
+          <SponsorGrid sponsors={sponsors} />
+        </section>
+      )}
+
+      {settings?.whatsappGroupUrl && (
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wide text-bb-text-secondary">Join Our</p>
+          <h2 className="mt-1 font-display font-bold text-2xl sm:text-3xl text-bb-text">WhatsApp Announcement Group</h2>
+          <p className="mt-3 text-bb-text-secondary max-w-xl mx-auto">
+            Get instant updates on upcoming events, ticket releases, and exclusive offers.
+          </p>
+          <a
+            href={settings.whatsappGroupUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-block bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
+          >
+            Join Now
+          </a>
         </section>
       )}
 

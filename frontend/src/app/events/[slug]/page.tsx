@@ -6,6 +6,7 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { eventJsonLd, breadcrumbJsonLd, JsonLd } from '@/lib/json-ld';
 import EventHero from '@/components/ui/EventHero';
 import EventDetailTiers from './EventDetailTiers';
+import SponsorGrid from '@/components/ui/SponsorGrid';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -70,6 +71,12 @@ export default async function EventDetailPage({ params }: Props) {
             <div>
               <h2 className="font-display font-bold text-lg text-bb-text mb-2">Refund policy</h2>
               <p className="text-sm text-bb-text-secondary whitespace-pre-line">{event.refundPolicy}</p>
+            </div>
+          )}
+          {event.sponsors?.length > 0 && (
+            <div>
+              <h2 className="font-display font-bold text-lg text-bb-text mb-3">Event sponsors</h2>
+              <SponsorGrid sponsors={event.sponsors} />
             </div>
           )}
         </div>

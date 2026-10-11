@@ -455,6 +455,7 @@ export interface OrgSettings {
   heroImageUrl?: string;
   heroImagePosition?: string;
   heroImageZoom?: number;
+  whatsappGroupUrl?: string;
   updated_at: string;
   updatedBy?: string;
 }
@@ -487,6 +488,26 @@ export interface GalleryMediaEntity {
   sortOrder: number;
 
   publishedAt?: string;
+  createdBy: string;
+  updatedBy: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Sponsors (SITE = landing page "Our Sponsors"; EVENT = shown on one event page) ──
+export type SponsorScope = 'SITE' | 'EVENT';
+
+export interface SponsorEntity {
+  id: string; // sponsorId
+  scope: SponsorScope;
+  eventId?: string; // required when scope === 'EVENT'
+  name: string;
+  logoUrl: string;
+  logoS3Key?: string;
+  websiteUrl?: string;
+  description?: string;
+  active: boolean;
+  sortOrder: number;
   createdBy: string;
   updatedBy: string;
   created_at: string;

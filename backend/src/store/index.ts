@@ -25,6 +25,7 @@ const ENTITY_MAP: Record<string, dynamo.EntityType> = {
   orgSettings: 'ORG_SETTINGS',
   galleryMedia: 'GALLERY_MEDIA',
   serviceEnquiries: 'EVENT_SERVICE_ENQUIRY',
+  sponsors: 'SPONSOR',
 };
 
 type CollectionName = keyof typeof ENTITY_MAP;

@@ -46,7 +46,8 @@ export type EntityType =
   | 'EMAIL_SUPPRESSION'
   | 'ORG_SETTINGS'
   | 'GALLERY_MEDIA'
-  | 'EVENT_SERVICE_ENQUIRY';
+  | 'EVENT_SERVICE_ENQUIRY'
+  | 'SPONSOR';
 
 // Fields that hold a slug for GSI1 (or another unique lookup key reused as "slug")
 const SLUG_ENTITIES = new Set<EntityType>(['USER', 'EVENT']);
@@ -90,6 +91,13 @@ function getGSI2Keys(
         return {
           GSI2PK: `EVENT#${item.eventId}`,
           GSI2SK: `GALLERY#${item.created_at}`,
+        };
+      return {};
+    case 'SPONSOR':
+      if (item.eventId)
+        return {
+          GSI2PK: `EVENT#${item.eventId}`,
+          GSI2SK: `SPONSOR#${item.sortOrder ?? 0}#${item.id}`,
         };
       return {};
     default:

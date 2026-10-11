@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid';
 import { db } from '../../store';
 import { AuthRequest, authenticate, requireAdmin } from '../../middleware/auth';
 import { auditLog } from '../../middleware/audit';
-import { EventEntity, TicketTierEntity, BookingEntity } from '../../types';
+import { EventEntity, TicketTierEntity, BookingEntity, SponsorEntity } from '../../types';
 import { sendEventUpdated, sendEventCancelled } from '../../services/email';
 
 const router = Router();
@@ -224,6 +224,8 @@ router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => 
   }
   const tiers = await db.filterBy<TicketTierEntity>('ticketTiers', 'eventId', event.id);
   for (const tier of tiers) await db.delete('ticketTiers', tier.id);
+  const sponsors = await db.filterBy<SponsorEntity>('sponsors', 'eventId', event.id);
+  for (const sponsor of sponsors) await db.delete('sponsors', sponsor.id);
   await db.delete('events', event.id);
   auditLog(req.user!.id, 'DELETE_EVENT', 'EVENT', event.id, {
     actorRole: req.user!.role as 'ADMIN' | 'SUPER_ADMIN',
@@ -248,10 +250,13 @@ router.post('/:id/unpublish', async (req: AuthRequest, res: Response): Promise<v
     res.status(409).json({ success: false, error: `Cannot unpublish an event with status ${event.status}` });
     return;
   }
-  const bookings = await db.filterBy<BookingEntity>('bookings', 'eventId', event.id);
-  if (bookings.length > 0) {
-    res.status(409).json({ success: false, error: 'This event cannot be unpublished because it has bookings or reservations.' });
-    return;
+  // Cancelled events may be unpublished even with bookings; refunds are handled separately.
+  if (event.status !== 'CANCELLED') {
+    const bookings = await db.filterBy<BookingEntity>('bookings', 'eventId', event.id);
+    if (bookings.length > 0) {
+      res.status(409).json({ success: false, error: 'This event cannot be unpublished because it has bookings or reservations.' });
+      return;
+    }
   }
   event.status = 'DRAFT';
   event.updatedBy = req.user!.id;

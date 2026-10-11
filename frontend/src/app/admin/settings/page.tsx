@@ -139,6 +139,11 @@ export default function AdminSettingsPage() {
           </div>
         </div>
         <div>
+          <label className="block text-sm font-medium text-bb-text mb-1">WhatsApp group link</label>
+          <input type="url" placeholder="https://whatsapp.com/channel/…" value={form.whatsappGroupUrl || ''} onChange={(e) => set('whatsappGroupUrl', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
+          <p className="text-xs text-bb-text-muted mt-1">Target of the "Join Now" button on the homepage. Leave empty to hide the section.</p>
+        </div>
+        <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Default refund policy</label>
           <textarea rows={3} value={form.defaultRefundPolicy || ''} onChange={(e) => set('defaultRefundPolicy', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
         </div>

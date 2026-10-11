@@ -6,7 +6,8 @@
 
 import { Router, Response } from 'express';
 import { db } from '../store';
-import { EventEntity, TicketTierEntity } from '../types';
+import { EventEntity, TicketTierEntity, SponsorEntity } from '../types';
+import { toPublicSponsor } from '../services/sponsor-validation';
 
 const router = Router();
 
@@ -131,6 +132,11 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
 
   const { available, badge } = availability(event);
 
+  const sponsors = (await db.filterBy<SponsorEntity>('sponsors', 'eventId', event.id))
+    .filter((s) => s.scope === 'EVENT' && s.active)
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.created_at.localeCompare(b.created_at))
+    .map(toPublicSponsor);
+
   res.json({
     success: true,
     data: {
@@ -169,6 +175,7 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
       badge,
       cancellationMessage: undefined,
       ticketTiers: tiers,
+      sponsors,
     },
   });
 });
