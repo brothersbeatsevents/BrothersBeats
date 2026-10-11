@@ -16,6 +16,7 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
     data: {
       organizationName: settings?.organizationName || 'Brothers Beats Events',
       heroImageUrl: settings?.heroImageUrl || null,
+      whatsappGroupUrl: settings?.whatsappGroupUrl || null,
     },
   });
 });

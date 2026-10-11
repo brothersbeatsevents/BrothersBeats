@@ -42,6 +42,16 @@ export async function getGallerySSR(params?: { featured?: boolean }) {
   return (await serverFetch<any[]>(`/gallery${query ? `?${query}` : ''}`)) ?? [];
 }
 
+export async function getSponsorsSSR() {
+  return (await serverFetch<any[]>('/sponsors')) ?? [];
+}
+
 export async function getSettingsSSR() {
-  return serverFetch<{ organizationName: string; heroImageUrl: string | null }>('/settings');
+  return serverFetch<{
+    organizationName: string;
+    heroImageUrl: string | null;
+    heroImagePosition?: string;
+    heroImageZoom?: number;
+    whatsappGroupUrl?: string | null;
+  }>('/settings');
 }

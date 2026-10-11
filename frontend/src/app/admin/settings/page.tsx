@@ -10,6 +10,7 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [draggingCrop, setDraggingCrop] = useState(false);
 
   useEffect(() => {
     if (token) adminGetSettings(token).then((res) => setForm(res.data));
@@ -47,6 +48,31 @@ export default function AdminSettingsPage() {
     }
   }
 
+  const [positionX = '50%', positionY = '50%'] = (form?.heroImagePosition || '50% 50%').split(' ');
+  const zoom = Number(form?.heroImageZoom) || 1;
+
+  function updateCrop(nextX: number, nextY: number) {
+    set('heroImagePosition', `${Math.max(0, Math.min(100, nextX))}% ${Math.max(0, Math.min(100, nextY))}%`);
+  }
+
+  function handleCropPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDraggingCrop(true);
+  }
+
+  function handleCropPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!draggingCrop) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const deltaX = (e.movementX / rect.width) * 100 / Math.max(zoom, 1);
+    const deltaY = (e.movementY / rect.height) * 100 / Math.max(zoom, 1);
+    updateCrop(parseFloat(positionX) - deltaX, parseFloat(positionY) - deltaY);
+  }
+
+  function handleCropPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    setDraggingCrop(false);
+  }
+
   if (!form) return <p className="text-bb-text-secondary">Loading…</p>;
 
   return (
@@ -58,11 +84,41 @@ export default function AdminSettingsPage() {
           <label className="block text-sm font-medium text-bb-text mb-1">Homepage hero image</label>
           {form.heroImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={form.heroImageUrl} alt="" className="w-full max-w-sm h-auto rounded-xl border border-bb-border mb-2" />
+            <div
+              className={`relative w-full max-w-xl aspect-video overflow-hidden rounded-xl border border-bb-border mb-2 bg-bb-ink touch-none ${draggingCrop ? 'cursor-grabbing' : 'cursor-grab'}`}
+              onPointerDown={handleCropPointerDown}
+              onPointerMove={handleCropPointerMove}
+              onPointerUp={handleCropPointerUp}
+              onPointerCancel={handleCropPointerUp}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={form.heroImageUrl}
+                alt=""
+                draggable={false}
+                className="absolute inset-0 w-full h-full object-cover select-none"
+                style={{ objectPosition: form.heroImagePosition || '50% 50%', transform: `scale(${zoom})` }}
+              />
+              <div className="absolute inset-0 pointer-events-none ring-2 ring-inset ring-white/70" />
+            </div>
           )}
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleHeroImageUpload} disabled={uploadingImage} className="text-sm" />
           {uploadingImage && <p className="text-xs text-bb-text-secondary mt-1">Uploading…</p>}
-          <p className="text-xs text-bb-text-muted mt-1">Shown below the tagline on the homepage.</p>
+          <p className="text-xs text-bb-text-muted mt-1">Drag the image to choose the crop. The frame is locked to 16:9.</p>
+          {form.heroImageUrl && (
+            <div className="mt-4">
+              <label className="text-xs text-bb-text-secondary">
+                Zoom
+                <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(e) => set('heroImageZoom', Number(e.target.value))} className="w-full mt-2" />
+              </label>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-bb-text-muted">{zoom.toFixed(2)}x</span>
+                <button type="button" onClick={() => { set('heroImagePosition', '50% 50%'); set('heroImageZoom', 1); }} className="text-xs font-semibold text-bb-gold hover:text-bb-gold-dark">
+                  Reset crop
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Organization name</label>
@@ -81,6 +137,11 @@ export default function AdminSettingsPage() {
             <label className="block text-sm font-medium text-bb-text mb-1">Default timezone</label>
             <input value={form.defaultTimezone || ''} onChange={(e) => set('defaultTimezone', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-bb-text mb-1">WhatsApp group link</label>
+          <input type="url" placeholder="https://whatsapp.com/channel/…" value={form.whatsappGroupUrl || ''} onChange={(e) => set('whatsappGroupUrl', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
+          <p className="text-xs text-bb-text-muted mt-1">Target of the "Join Now" button on the homepage. Leave empty to hide the section.</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Default refund policy</label>

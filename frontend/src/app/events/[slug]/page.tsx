@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getEventSSR } from '@/lib/server-api';
+import { getEventSSR, getSettingsSSR } from '@/lib/server-api';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { eventJsonLd, breadcrumbJsonLd, JsonLd } from '@/lib/json-ld';
 import EventHero from '@/components/ui/EventHero';
 import EventDetailTiers from './EventDetailTiers';
+import SponsorGrid from '@/components/ui/SponsorGrid';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -32,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function EventDetailPage({ params }: Props) {
   const { slug } = await params;
   const event = await getEventSSR(slug);
+  const settings = await getSettingsSSR();
   if (!event) notFound();
 
   return (
@@ -51,7 +53,13 @@ export default async function EventDetailPage({ params }: Props) {
         </Link>
       </div>
 
-      <EventHero event={event} />
+      <EventHero
+        event={{
+          ...event,
+          heroImagePosition: settings?.heroImagePosition,
+          heroImageZoom: settings?.heroImageZoom,
+        }}
+      />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-6">
@@ -63,6 +71,12 @@ export default async function EventDetailPage({ params }: Props) {
             <div>
               <h2 className="font-display font-bold text-lg text-bb-text mb-2">Refund policy</h2>
               <p className="text-sm text-bb-text-secondary whitespace-pre-line">{event.refundPolicy}</p>
+            </div>
+          )}
+          {event.sponsors?.length > 0 && (
+            <div>
+              <h2 className="font-display font-bold text-lg text-bb-text mb-3">Event sponsors</h2>
+              <SponsorGrid sponsors={event.sponsors} />
             </div>
           )}
         </div>

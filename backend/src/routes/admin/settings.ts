@@ -19,7 +19,7 @@ async function getOrCreateSettings(): Promise<OrgSettings> {
   const defaults: OrgSettings = {
     id: SETTINGS_ID,
     organizationName: 'Brothers Beats Events',
-    supportEmail: process.env.SUPPORT_EMAIL || 'support@brothersbeats.events',
+    supportEmail: process.env.SUPPORT_EMAIL || 'brothersbeatsevents@gmail.com',
     defaultCurrency: 'EUR',
     defaultTimezone: 'Europe/Dublin',
     updated_at: new Date().toISOString(),
@@ -36,10 +36,26 @@ router.get('/', async (_req: AuthRequest, res: Response): Promise<void> => {
 
 // PUT /api/admin/settings
 router.put('/', async (req: AuthRequest, res: Response): Promise<void> => {
+  const whatsappUrl = req.body.whatsappGroupUrl;
+  if (typeof whatsappUrl === 'string' && whatsappUrl.trim()) {
+    let protocol = '';
+    try {
+      protocol = new URL(whatsappUrl.trim()).protocol;
+    } catch {
+      // falls through to the rejection below
+    }
+    if (protocol !== 'https:' && protocol !== 'http:') {
+      res.status(400).json({ success: false, error: 'WhatsApp link must be a valid http(s) URL' });
+      return;
+    }
+  }
+  if (whatsappUrl !== undefined) req.body.whatsappGroupUrl = typeof whatsappUrl === 'string' ? whatsappUrl.trim() : '';
+
   const settings = await getOrCreateSettings();
   const fields = [
     'organizationName', 'supportEmail', 'defaultCurrency', 'defaultTimezone',
-    'defaultRefundPolicy', 'defaultTermsAndConditions', 'socialLinks', 'heroImageUrl',
+    'defaultRefundPolicy', 'defaultTermsAndConditions', 'socialLinks', 'heroImageUrl', 'heroImagePosition', 'heroImageZoom',
+    'whatsappGroupUrl',
   ] as const;
   for (const field of fields) {
     if (req.body[field] !== undefined) (settings as any)[field] = req.body[field];

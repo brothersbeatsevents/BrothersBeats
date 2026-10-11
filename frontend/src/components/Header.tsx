@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
+import HeaderTopBar from './HeaderTopBar';
 
 const NAV_LINKS = [
   { href: '/events', label: 'Events' },
@@ -14,7 +15,7 @@ const NAV_LINKS = [
   { href: '/contact', label: 'Contact' },
 ];
 
-export default function Header() {
+export default function Header({ whatsappUrl }: { whatsappUrl?: string | null }) {
   const { user, logout, isAdmin } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -23,12 +24,19 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
+      <HeaderTopBar whatsappUrl={whatsappUrl} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={56} height={56} className="h-14 w-14 shrink-0 object-contain" priority />
-            <span className="hidden sm:inline font-display text-xl font-bold text-white">
-              Brothers <span className="text-bb-gold">Beats Events</span>
+            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={64} height={64} className="h-16 w-16 shrink-0 object-contain" priority />
+            <span className="hidden sm:flex flex-col font-display font-bold leading-tight">
+              <span className="text-xl text-white">
+                <span>Brothers</span><span className="text-bb-gold">Beats</span>{' '}
+                <span>Events</span>
+              </span>
+              <span className="text-[0.78rem] tracking-[0.08em] whitespace-nowrap">
+                <span className="text-bb-gold">Fresh Events | </span><span className="text-white">Vibrant Energy</span>
+              </span>
             </span>
           </Link>
 

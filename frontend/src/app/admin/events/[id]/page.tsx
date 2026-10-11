@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import {
   adminGetEvent,
   adminUpdateEvent,
+  adminDeleteEvent,
   adminEventAction,
   adminCreateTicketTier,
   adminUpdateTicketTier,
@@ -18,14 +19,17 @@ import { formatMoney } from '@/lib/format';
 const LIFECYCLE_ACTIONS: Record<string, { action: any; label: string }[]> = {
   DRAFT: [{ action: 'publish', label: 'Publish' }],
   PUBLISHED: [
+    { action: 'unpublish', label: 'Unpublish' },
     { action: 'pause-sales', label: 'Pause sales' },
     { action: 'cancel', label: 'Cancel event' },
     { action: 'complete', label: 'Mark complete' },
   ],
   SALES_PAUSED: [
+    { action: 'unpublish', label: 'Unpublish' },
     { action: 'resume-sales', label: 'Resume sales' },
     { action: 'cancel', label: 'Cancel event' },
   ],
+  CANCELLED: [{ action: 'unpublish', label: 'Unpublish' }],
 };
 
 export default function AdminEventDetailPage() {
@@ -55,6 +59,7 @@ export default function AdminEventDetailPage() {
 
   async function handleAction(action: string) {
     if (!token) return;
+    if (action === 'unpublish' && !confirm('Unpublish this event? It will be hidden until published again.')) return;
     let body: Record<string, any> | undefined;
     if (action === 'cancel') {
       const reason = prompt('Cancellation reason?') || 'Cancelled by organizer';
@@ -67,6 +72,20 @@ export default function AdminEventDetailPage() {
       load();
     } catch (err: any) {
       setError(err.message || 'Action failed.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteEvent() {
+    if (!token || !confirm('Delete this unpublished event permanently?')) return;
+    setSaving(true);
+    setError('');
+    try {
+      await adminDeleteEvent(params.id, token);
+      router.push('/admin/events');
+    } catch (err: any) {
+      setError(err.message || 'Event could not be deleted.');
     } finally {
       setSaving(false);
     }
@@ -183,6 +202,15 @@ export default function AdminEventDetailPage() {
             {a.label}
           </button>
         ))}
+        {event.status === 'DRAFT' && (
+          <button
+            onClick={handleDeleteEvent}
+            disabled={saving}
+            className="text-sm font-semibold border border-bb-red text-bb-red rounded-full px-4 py-2 hover:bg-bb-red/10 transition-colors disabled:opacity-60"
+          >
+            Delete event
+          </button>
+        )}
         <button
           onClick={() => handleAction('duplicate')}
           disabled={saving}

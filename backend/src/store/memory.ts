@@ -20,6 +20,7 @@ import {
   OrgSettings,
   GalleryMediaEntity,
   EventServiceEnquiryEntity,
+  SponsorEntity,
 } from '../types';
 
 class Store {
@@ -39,6 +40,7 @@ class Store {
   orgSettings: Map<string, OrgSettings> = new Map();
   galleryMedia: Map<string, GalleryMediaEntity> = new Map();
   serviceEnquiries: Map<string, EventServiceEnquiryEntity> = new Map();
+  sponsors: Map<string, SponsorEntity> = new Map();
 
   // Helper: get all values as array
   getAll<T>(map: Map<string, T>): T[] {
@@ -81,6 +83,7 @@ class Store {
     this.orgSettings.clear();
     this.galleryMedia.clear();
     this.serviceEnquiries.clear();
+    this.sponsors.clear();
   }
 }
 

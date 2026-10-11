@@ -27,7 +27,7 @@ router.post(
       return;
     }
 
-    const validFolders = ['events', 'campaigns', 'general', 'gallery'];
+    const validFolders = ['events', 'campaigns', 'general', 'gallery', 'sponsors'];
     const safeFolder = validFolders.includes(folder) ? folder : 'general';
 
     const maxSize = contentType === 'application/pdf' ? PDF_MAX_SIZE : MAX_SIZE;

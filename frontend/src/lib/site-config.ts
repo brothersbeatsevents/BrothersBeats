@@ -15,6 +15,8 @@ export const SITE_CONFIG = {
     instagram: 'https://www.instagram.com/brothersbeatsevents?igsh=bzJ1dmJ4djc4NGEz&utm_source=qr',
     facebook: 'https://www.facebook.com/share/1HRsyGnwbJ/?mibextid=wwXIfr',
     youtube: 'https://www.youtube.com/@BrothersbeatsEvents',
+    // Add the TikTok profile URL here; the icon is hidden while empty.
+    tiktok: '',
     linkedin: 'https://www.linkedin.com/in/brothersbeats-events-a29645428?trk=contact-info',
   },
   address: {

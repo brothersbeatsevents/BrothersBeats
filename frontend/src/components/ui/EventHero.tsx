@@ -14,6 +14,8 @@ export interface EventHeroData {
   timezone: string;
   status: string;
   heroImageUrl?: string;
+  heroImagePosition?: string;
+  heroImageZoom?: number;
   cancellationMessage?: string;
 }
 
@@ -26,10 +28,18 @@ export default function EventHero({ event }: { event: EventHeroData }) {
             This event has been cancelled. {event.cancellationMessage}
           </div>
         )}
-        <div className="rounded-2xl overflow-hidden bg-bb-bg-surface aspect-[16/7] mb-6">
+        <div className="rounded-2xl overflow-hidden bg-bb-bg-surface aspect-video mb-6">
           {event.heroImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={event.heroImageUrl} alt={event.title} className="w-full h-full object-cover" />
+            <img
+              src={event.heroImageUrl}
+              alt={event.title}
+              className="w-full h-full object-cover"
+              style={{
+                objectPosition: event.heroImagePosition || '50% 50%',
+                transform: `scale(${event.heroImageZoom || 1})`,
+              }}
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-bb-text-muted bg-bb-pale-green" />
           )}
