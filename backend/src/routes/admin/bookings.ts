@@ -7,8 +7,9 @@ import { v4 as uuid } from 'uuid';
 import { db } from '../../store';
 import { AuthRequest, authenticate, requireAdmin } from '../../middleware/auth';
 import { auditLog } from '../../middleware/audit';
-import { BookingEntity, EventEntity, TicketTierEntity, TicketEntity, BookingAttendee } from '../../types';
-import { reserveInventory, confirmInventory, releaseInventory, restoreInventoryOnRefund, InventoryError } from '../../services/inventory';
+import { BookingEntity, EventEntity, TicketTierEntity, TicketEntity, BookingAttendee, BookingLineItem } from '../../types';
+import { reserveOrderInventory, confirmBookingInventory, releaseBookingInventory, restoreBookingInventory, InventoryError } from '../../services/inventory';
+import { bookingSelections, parseTicketSelections, TicketOrderError } from '../../services/ticket-order';
 import { generateTicketNumber, generateAndStoreQrCode, generateAndStoreTicketPdf } from '../../services/tickets';
 import { sendBookingConfirmation, sendTicketDelivery } from '../../services/email';
 
@@ -87,15 +88,14 @@ router.get('/:bookingReference', async (req: AuthRequest, res: Response): Promis
 // POST /api/admin/bookings — create a manual (offline) booking: cash / bank transfer / complimentary
 router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const {
-    eventId, ticketTierId, quantity, buyerName, buyerEmail, buyerPhone,
+    eventId, buyerName, buyerEmail, buyerPhone,
     attendees, paymentMethod, internalNote,
   } = req.body;
-  const qty = Number(quantity);
 
-  if (!eventId || !ticketTierId || !Number.isInteger(qty) || qty < 1 || !buyerName || !buyerEmail) {
+  if (!eventId || !buyerName || !buyerEmail) {
     res.status(400).json({
       success: false,
-      error: 'eventId, ticketTierId, quantity, buyerName, and buyerEmail are required',
+      error: 'eventId, buyerName, and buyerEmail are required',
     });
     return;
   }
@@ -109,22 +109,29 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     res.status(404).json({ success: false, error: 'Event not found' });
     return;
   }
-  const tier = await db.get<TicketTierEntity>('ticketTiers', ticketTierId);
-  if (!tier || tier.eventId !== eventId) {
-    res.status(404).json({ success: false, error: 'Ticket type not found' });
-    return;
-  }
-
+  const lineItems: BookingLineItem[] = [];
+  let currency: string | undefined;
   try {
-    await reserveInventory(event, tier, qty);
-    await confirmInventory(eventId, ticketTierId, qty);
+    for (const item of parseTicketSelections(req.body)) {
+      const tier = await db.get<TicketTierEntity>('ticketTiers', item.ticketTierId);
+      if (!tier || tier.eventId !== eventId) throw new TicketOrderError('Ticket type not found', 404);
+      if (currency && currency !== tier.currency) throw new TicketOrderError('Ticket types must use the same currency');
+      currency = tier.currency;
+      const price = paymentMethod === 'COMPLIMENTARY' ? 0 : tier.priceAmountMinor;
+      lineItems.push({ ...item, ticketTierName: tier.name, unitPriceAmountMinor: price,
+        subtotalAmountMinor: price * item.quantity, earlyBirdQuantity: 0, earlyBirdUnitPriceAmountMinor: 0,
+        standardQuantity: item.quantity, standardUnitPriceAmountMinor: price });
+    }
+    await reserveOrderInventory(eventId, lineItems);
   } catch (err) {
-    if (err instanceof InventoryError) {
-      res.status(409).json({ success: false, error: err.message });
+    if (err instanceof InventoryError || err instanceof TicketOrderError) {
+      res.status(err instanceof TicketOrderError ? err.status : 409).json({ success: false, error: err.message });
       return;
     }
     throw err;
   }
+  const qty = lineItems.reduce((sum, item) => sum + item.quantity, 0);
+  const first = lineItems[0];
 
   const bookingAttendees: BookingAttendee[] = Array.isArray(attendees) && attendees.length
     ? attendees.slice(0, qty).map((a: { name?: string; email?: string }) => ({
@@ -133,7 +140,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     : [{ attendeeId: `att-${uuid()}`, name: buyerName, email: buyerEmail }];
 
   const now = new Date().toISOString();
-  const subtotal = tier.priceAmountMinor * qty;
+  const subtotal = lineItems.reduce((sum, item) => sum + item.subtotalAmountMinor, 0);
   const booking: BookingEntity = {
     id: `booking-${uuid()}`,
     bookingReference: generateBookingReference(),
@@ -141,17 +148,18 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     eventTitleSnapshot: event.title,
     eventStartDateTimeSnapshot: event.startDateTime,
     venueNameSnapshot: event.venueName,
-    ticketTierId: tier.id,
-    ticketTierNameSnapshot: tier.name,
+    ticketTierId: first.ticketTierId,
+    ticketTierNameSnapshot: lineItems.length === 1 ? first.ticketTierName : lineItems.map((item) => `${item.ticketTierName} × ${item.quantity}`).join(', '),
+    lineItems,
     quantity: qty,
-    unitPriceAmountMinor: paymentMethod === 'COMPLIMENTARY' ? 0 : tier.priceAmountMinor,
+    unitPriceAmountMinor: first.unitPriceAmountMinor,
     subtotalAmountMinor: paymentMethod === 'COMPLIMENTARY' ? 0 : subtotal,
     feesAmountMinor: 0,
     totalAmountMinor: paymentMethod === 'COMPLIMENTARY' ? 0 : subtotal,
     refundedAmountMinor: 0,
-    currency: tier.currency,
+    currency: currency!,
     bookingStatus: 'CONFIRMED',
-    paymentStatus: paymentMethod === 'COMPLIMENTARY' ? 'NOT_REQUIRED' : 'SUCCEEDED',
+    paymentStatus: subtotal === 0 ? 'NOT_REQUIRED' : 'SUCCEEDED',
     buyerName,
     buyerEmail,
     normalizedBuyerEmail: buyerEmail.trim().toLowerCase(),
@@ -165,14 +173,17 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     created_at: now,
     updated_at: now,
   };
+  await confirmBookingInventory(booking);
   await db.put('bookings', booking);
 
+  const ticketTiers = bookingSelections(booking).flatMap((item) => Array(item.quantity).fill(item.ticketTierId));
   const tickets: TicketEntity[] = [];
   for (let i = 0; i < qty; i++) {
     const attendee = bookingAttendees[i] || bookingAttendees[0];
     const ticketId = `ticket-${uuid()}`;
     const ticket: TicketEntity = {
-      id: ticketId, bookingId: booking.id, eventId: event.id, ticketTierId: tier.id,
+      id: ticketId, bookingId: booking.id, eventId: event.id, ticketTierId: ticketTiers[i],
+      ticketTierNameSnapshot: booking.lineItems?.find((item) => item.ticketTierId === ticketTiers[i])?.ticketTierName ?? booking.ticketTierNameSnapshot,
       attendeeId: attendee.attendeeId, attendeeName: attendee.name || buyerName,
       ticketNumber: generateTicketNumber(), status: 'VALID', qrCodeHash: '',
       created_at: now, updated_at: now,
@@ -191,7 +202,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug,
   }).catch((err) => console.error('[Admin] sendBookingConfirmation failed:', err));
   await sendTicketDelivery(
-    buyerEmail, buyerName, tickets.map((t) => ({ ticketNumber: t.ticketNumber })),
+    buyerEmail, buyerName, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
     { title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug },
     booking.bookingReference,
   ).catch((err) => console.error('[Admin] sendTicketDelivery failed:', err));
@@ -220,9 +231,9 @@ router.post('/:bookingReference/cancel', async (req: AuthRequest, res: Response)
   }
 
   if (booking.bookingStatus === 'RESERVED_PENDING_PAYMENT') {
-    await releaseInventory(booking.eventId, booking.ticketTierId, booking.quantity);
+    await releaseBookingInventory(booking);
   } else if (booking.bookingStatus === 'CONFIRMED') {
-    await restoreInventoryOnRefund(booking.eventId, booking.ticketTierId, booking.quantity);
+    await restoreBookingInventory(booking);
     const tickets = await db.filterBy<TicketEntity>('tickets', 'bookingId', booking.id);
     for (const ticket of tickets) {
       ticket.status = 'CANCELLED';
@@ -281,7 +292,7 @@ router.post('/:bookingReference/resend-tickets', async (req: AuthRequest, res: R
     return;
   }
   await sendTicketDelivery(
-    booking.buyerEmail, booking.buyerName, tickets.map((t) => ({ ticketNumber: t.ticketNumber })),
+    booking.buyerEmail, booking.buyerName, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
     { title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug },
     booking.bookingReference, true,
   );

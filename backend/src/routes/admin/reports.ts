@@ -3,6 +3,7 @@
 // ──────────────────────────────────────────
 
 import { Router, Response } from 'express';
+import { bookingSelections } from '../../services/ticket-order';
 import { db } from '../../store';
 import { AuthRequest, authenticate, requireAdmin } from '../../middleware/auth';
 import { EventEntity, BookingEntity, TicketEntity, SubscriberEntity } from '../../types';
@@ -63,10 +64,19 @@ router.get('/sales', async (req: AuthRequest, res: Response): Promise<void> => {
 
   const byTier = new Map<string, { name: string; quantity: number; grossMinor: number }>();
   for (const b of confirmed) {
-    const entry = byTier.get(b.ticketTierId) || { name: b.ticketTierNameSnapshot, quantity: 0, grossMinor: 0 };
-    entry.quantity += b.quantity;
-    entry.grossMinor += b.totalAmountMinor - b.refundedAmountMinor;
-    byTier.set(b.ticketTierId, entry);
+    let allocatedRefund = 0;
+    let runningSubtotal = 0;
+    for (const item of bookingSelections(b)) {
+      const line = b.lineItems?.find((line) => line.ticketTierId === item.ticketTierId);
+      const subtotal = line ? line.totalAmountMinor ?? line.subtotalAmountMinor : b.totalAmountMinor;
+      runningSubtotal += subtotal;
+      const refundToHere = b.totalAmountMinor ? Math.round(b.refundedAmountMinor * runningSubtotal / b.totalAmountMinor) : 0;
+      const entry = byTier.get(item.ticketTierId) || { name: line?.ticketTierName ?? b.ticketTierNameSnapshot, quantity: 0, grossMinor: 0 };
+      entry.quantity += item.quantity;
+      entry.grossMinor += subtotal - (refundToHere - allocatedRefund);
+      allocatedRefund = refundToHere;
+      byTier.set(item.ticketTierId, entry);
+    }
   }
 
   res.json({

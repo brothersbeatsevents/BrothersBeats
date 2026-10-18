@@ -6,10 +6,13 @@ import { Router, Response } from 'express';
 import { v4 as uuid } from 'uuid';
 import { db } from '../store';
 import { optionalAuth, AuthRequest } from '../middleware/auth';
-import { EventEntity, TicketTierEntity, BookingEntity, BookingAttendee } from '../types';
-import { reserveInventory, releaseInventory, expireStaleReservations, InventoryError } from '../services/inventory';
-import { computeBlendedPrice } from '../services/ticket-pricing';
+import { EventEntity, BookingEntity, BookingAttendee } from '../types';
+import { reserveOrderInventory, releaseBookingInventory, expireStaleReservations, InventoryError } from '../services/inventory';
+import { parseTicketSelections, quoteTicketOrder, TicketOrderError } from '../services/ticket-order';
+import { fulfillBooking } from '../services/booking-fulfillment';
+import { signBookingToken } from '../services/booking-links';
 import { createCheckoutSession } from '../services/stripe';
+import { DiscountCodeError } from '../services/discount-codes';
 
 const router = Router();
 
@@ -27,21 +30,15 @@ function generateBookingReference(): string {
 router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   const {
     eventId,
-    ticketTierId,
-    quantity,
     buyerName,
     buyerEmail,
     buyerPhone,
     attendees,
     marketingConsent,
   } = req.body;
-  const qty = Number(quantity);
-
-  if (!eventId || !ticketTierId || !Number.isInteger(qty) || qty < 1 || !buyerName || !buyerEmail) {
-    res.status(400).json({
-      success: false,
-      error: 'eventId, ticketTierId, quantity, buyerName, and buyerEmail are required',
-    });
+  if (typeof eventId !== 'string' || typeof buyerName !== 'string' || !buyerName.trim() ||
+      typeof buyerEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+    res.status(400).json({ success: false, error: 'eventId, buyerName, and a valid buyerEmail are required' });
     return;
   }
 
@@ -59,49 +56,27 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const tier = await db.get<TicketTierEntity>('ticketTiers', ticketTierId);
-  if (!tier || tier.eventId !== eventId || !tier.visible) {
-    res.status(404).json({ success: false, error: 'Ticket type not found' });
-    return;
-  }
-  if (tier.type === 'EARLY_BIRD') {
-    res.status(400).json({
-      success: false,
-      error: 'Early Bird pricing is applied automatically and cannot be selected directly',
-    });
-    return;
-  }
-  const now = Date.now();
-  if (!tier.active || new Date(tier.salesStartAt).getTime() > now || new Date(tier.salesEndAt).getTime() < now) {
-    res.status(409).json({ success: false, error: 'This ticket type is not currently on sale' });
-    return;
-  }
-  if (qty < tier.minPerOrder || qty > tier.maxPerOrder || qty > event.perOrderLimit) {
-    res.status(400).json({ success: false, error: 'Invalid ticket quantity for this order' });
-    return;
-  }
-  if (tier.type === 'GROUP' && tier.groupMinSize && qty < tier.groupMinSize) {
-    res.status(400).json({
-      success: false,
-      error: `Group tickets require a minimum of ${tier.groupMinSize} tickets`,
-    });
-    return;
-  }
-
-  // Best-effort cleanup of stale reservations before checking capacity.
   await expireStaleReservations(eventId).catch((err) =>
     console.error('[Checkout] expireStaleReservations failed:', err),
   );
-
+  // Refresh after cleanup; DynamoDB reads return separate objects.
+  const refreshedEvent = (await db.get<EventEntity>('events', eventId))!;
+  let quote;
   try {
-    await reserveInventory(event, tier, qty);
+    const items = parseTicketSelections(req.body);
+    // Price before reserving: the current order must not consume its own Early Bird allowance.
+    quote = await quoteTicketOrder(refreshedEvent, items, req.body.discountCode);
+    await reserveOrderInventory(eventId, items);
   } catch (err) {
-    if (err instanceof InventoryError) {
-      res.status(409).json({ success: false, error: err.message });
+    if (err instanceof TicketOrderError || err instanceof DiscountCodeError || err instanceof InventoryError) {
+      res.status(err instanceof InventoryError ? 409 : err.status).json({ success: false, error: err.message });
       return;
     }
     throw err;
   }
+  const qty = quote.quantity;
+  const first = quote.lineItems![0];
+  const now = Date.now();
 
   const bookingAttendees: BookingAttendee[] = Array.isArray(attendees) && attendees.length
     ? attendees.slice(0, qty).map((a: { name?: string; email?: string }) => ({
@@ -111,7 +86,6 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
       }))
     : [{ attendeeId: `att-${uuid()}`, name: buyerName, email: buyerEmail }];
 
-  const blended = await computeBlendedPrice(tier, qty);
   const nowIso = new Date().toISOString();
   const bookingId = `booking-${uuid()}`;
   const booking: BookingEntity = {
@@ -124,20 +98,23 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     eventStartDateTimeSnapshot: event.startDateTime,
     venueNameSnapshot: event.venueName,
 
-    ticketTierId: tier.id,
-    ticketTierNameSnapshot: tier.name,
+    ticketTierId: first.ticketTierId,
+    ticketTierNameSnapshot: quote.ticketTierName,
+    lineItems: quote.lineItems,
 
     quantity: qty,
-    unitPriceAmountMinor: tier.priceAmountMinor,
-    subtotalAmountMinor: blended.subtotalAmountMinor,
+    unitPriceAmountMinor: first.unitPriceAmountMinor,
+    subtotalAmountMinor: quote.subtotalAmountMinor,
+    discountCode: quote.discountCode,
+    discountAmountMinor: quote.discountAmountMinor,
     feesAmountMinor: 0,
-    totalAmountMinor: blended.subtotalAmountMinor,
+    totalAmountMinor: quote.totalAmountMinor,
     refundedAmountMinor: 0,
-    currency: tier.currency,
-    earlyBirdQuantity: blended.earlyBirdQuantity,
-    earlyBirdUnitPriceAmountMinor: blended.earlyBirdUnitPriceAmountMinor,
-    standardQuantity: blended.standardQuantity,
-    standardUnitPriceAmountMinor: blended.standardUnitPriceAmountMinor,
+    currency: quote.currency,
+    earlyBirdQuantity: quote.earlyBirdQuantity,
+    earlyBirdUnitPriceAmountMinor: quote.earlyBirdUnitPriceAmountMinor,
+    standardQuantity: quote.standardQuantity,
+    standardUnitPriceAmountMinor: quote.standardUnitPriceAmountMinor,
 
     bookingStatus: 'RESERVED_PENDING_PAYMENT',
     paymentStatus: 'PENDING',
@@ -150,8 +127,8 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     attendees: bookingAttendees,
 
     source: 'ONLINE',
-    paymentMethod: 'STRIPE',
-    paymentProvider: 'STRIPE',
+    paymentMethod: quote.totalAmountMinor === 0 ? 'COMPLIMENTARY' : 'STRIPE',
+    paymentProvider: quote.totalAmountMinor === 0 ? undefined : 'STRIPE',
 
     reservedUntil: new Date(now + 30 * 60 * 1000).toISOString(),
 
@@ -160,36 +137,40 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     updated_at: nowIso,
   };
 
+  let checkoutUrl: string;
   try {
-    const lineItems = [];
-    if (blended.earlyBirdQuantity > 0) {
-      lineItems.push({
-        name: `${tier.name} (Early Bird)`,
-        unitAmountMinor: blended.earlyBirdUnitPriceAmountMinor,
-        quantity: blended.earlyBirdQuantity,
-      });
-    }
-    if (blended.standardQuantity > 0) {
-      lineItems.push({
-        name: tier.name,
-        unitAmountMinor: blended.standardUnitPriceAmountMinor,
-        quantity: blended.standardQuantity,
-      });
-    }
-    const session = await createCheckoutSession({
-      bookingId: booking.id,
-      eventId: event.id,
-      eventTitle: event.title,
-      lineItems,
-      currency: tier.currency,
-      buyerEmail,
-      successUrl: `${FRONTEND_URL}/booking/confirmation?bookingReference=${booking.bookingReference}&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${FRONTEND_URL}/events/${event.slug}?checkout=cancelled`,
-    });
-
-    booking.paymentProviderSessionId = session.sessionId;
     await db.put('bookings', booking);
+    if (booking.totalAmountMinor === 0) {
+      await fulfillBooking(booking, refreshedEvent);
+      checkoutUrl = `${FRONTEND_URL}/booking/confirmation?token=${signBookingToken(booking.id)}`;
+    } else {
+      const lineItems = quote.lineItems!.flatMap((item) => [
+        ...(item.earlyBirdQuantity > 0 ? [{ name: `${item.ticketTierName} (Early Bird)`, unitAmountMinor: item.discountedEarlyBirdUnitPriceAmountMinor ?? item.earlyBirdUnitPriceAmountMinor, quantity: item.earlyBirdQuantity }] : []),
+        ...(item.standardQuantity > 0 ? [{ name: item.ticketTierName, unitAmountMinor: item.discountedStandardUnitPriceAmountMinor ?? item.standardUnitPriceAmountMinor, quantity: item.standardQuantity }] : []),
+      ]);
+      const session = await createCheckoutSession({
+        bookingId: booking.id, eventId: event.id, eventTitle: event.title,
+        lineItems, currency: quote.currency, buyerEmail,
+        successUrl: `${FRONTEND_URL}/booking/confirmation?bookingReference=${booking.bookingReference}&session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${FRONTEND_URL}/events/${event.slug}?checkout=cancelled`,
+      });
+      booking.paymentProviderSessionId = session.sessionId;
+      await db.put('bookings', booking);
+      checkoutUrl = session.checkoutUrl;
+    }
+  } catch (err) {
+    if (booking.bookingStatus === 'RESERVED_PENDING_PAYMENT') {
+      await releaseBookingInventory(booking);
+      booking.bookingStatus = 'PAYMENT_FAILED';
+      booking.paymentStatus = 'FAILED';
+      await db.put('bookings', booking);
+    }
+    console.error('[Checkout] Failed to start checkout:', err);
+    res.status(502).json({ success: false, error: 'Failed to start checkout. Please try again.' });
+    return;
+  }
 
+  try {
     if (marketingConsent) {
       const existingSub = await db.findBy('subscribers', 'normalizedEmail', booking.normalizedBuyerEmail);
       if (!existingSub) {
@@ -211,16 +192,10 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
       }
     }
 
-    res.json({
-      success: true,
-      data: { checkoutUrl: session.checkoutUrl, bookingReference: booking.bookingReference },
-    });
   } catch (err) {
-    // Compensate: release the reservation since the Stripe session failed to create.
-    await releaseInventory(event.id, tier.id, qty).catch(() => {});
-    console.error('[Checkout] Failed to create Stripe session:', err);
-    res.status(502).json({ success: false, error: 'Failed to start checkout. Please try again.' });
+    console.error('[Checkout] Marketing subscription failed:', err);
   }
+  res.json({ success: true, data: { checkoutUrl, bookingReference: booking.bookingReference } });
 });
 
 export default router;

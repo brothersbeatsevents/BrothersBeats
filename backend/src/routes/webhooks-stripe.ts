@@ -4,107 +4,26 @@
 // ──────────────────────────────────────────
 
 import { Router, Request, Response } from 'express';
-import { v4 as uuid } from 'uuid';
 import Stripe from 'stripe';
 import { db } from '../store';
 import { verifyWebhookSignature } from '../services/stripe';
-import { confirmInventory, releaseInventory, restoreInventoryOnRefund } from '../services/inventory';
-import {
-  generateTicketNumber,
-  generateAndStoreQrCode,
-  generateAndStoreTicketPdf,
-} from '../services/tickets';
-import {
-  sendBookingConfirmation,
-  sendTicketDelivery,
-  sendPaymentFailed,
-  sendReservationExpired,
-} from '../services/email';
+import { releaseBookingInventory, restoreBookingInventory } from '../services/inventory';
+import { fulfillBooking } from '../services/booking-fulfillment';
+import { sendPaymentFailed, sendReservationExpired } from '../services/email';
 import { BookingEntity, EventEntity, TicketEntity, WebhookEventEntity, RefundEntity } from '../types';
 
 const router = Router();
-
-function eventContext(event: EventEntity) {
-  return {
-    title: event.title,
-    startDateTime: event.startDateTime,
-    venueName: event.venueName,
-    city: event.city,
-    timezone: event.timezone,
-    slug: event.slug,
-  };
-}
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const bookingId = session.metadata?.bookingId;
   if (!bookingId) return;
   const booking = await db.get<BookingEntity>('bookings', bookingId);
   if (!booking || booking.bookingStatus !== 'RESERVED_PENDING_PAYMENT') return;
-
   const event = await db.get<EventEntity>('events', booking.eventId);
   if (!event) return;
-
-  await confirmInventory(booking.eventId, booking.ticketTierId, booking.quantity);
-
-  const now = new Date().toISOString();
-  booking.bookingStatus = 'CONFIRMED';
-  booking.paymentStatus = 'SUCCEEDED';
   booking.paymentProviderPaymentIntentId =
     typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
-  booking.confirmedAt = now;
-  booking.updated_at = now;
-  await db.put('bookings', booking);
-
-  // Ensure attendee count matches ticket quantity (pad with buyer info if needed)
-  const attendees = booking.attendees.length
-    ? booking.attendees
-    : Array.from({ length: booking.quantity }, () => ({
-        attendeeId: `att-${uuid()}`,
-        name: booking.buyerName,
-        email: booking.buyerEmail,
-      }));
-
-  const tickets: TicketEntity[] = [];
-  for (let i = 0; i < booking.quantity; i++) {
-    const attendee = attendees[i] || attendees[0];
-    const ticketId = `ticket-${uuid()}`;
-    const ticket: TicketEntity = {
-      id: ticketId,
-      bookingId: booking.id,
-      eventId: booking.eventId,
-      ticketTierId: booking.ticketTierId,
-      attendeeId: attendee.attendeeId,
-      attendeeName: attendee.name || booking.buyerName,
-      ticketNumber: generateTicketNumber(),
-      status: 'VALID',
-      qrCodeHash: '',
-      created_at: now,
-      updated_at: now,
-    };
-    try {
-      ticket.qrCodeImageS3Key = await generateAndStoreQrCode(ticketId);
-      ticket.ticketPdfS3Key = await generateAndStoreTicketPdf(ticket, event, booking.buyerName);
-    } catch (err) {
-      console.error('[Webhook] Failed to generate ticket assets:', err);
-    }
-    await db.put('tickets', ticket);
-    tickets.push(ticket);
-  }
-
-  await sendBookingConfirmation(
-    booking.buyerEmail,
-    booking.buyerName,
-    booking,
-    eventContext(event),
-  ).catch((err) => console.error('[Webhook] sendBookingConfirmation failed:', err));
-
-  await sendTicketDelivery(
-    booking.buyerEmail,
-    booking.buyerName,
-    tickets.map((t) => ({ ticketNumber: t.ticketNumber })),
-    eventContext(event),
-    booking.bookingReference,
-  ).catch((err) => console.error('[Webhook] sendTicketDelivery failed:', err));
+  await fulfillBooking(booking, event);
 }
 
 async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
@@ -113,7 +32,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   const booking = await db.get<BookingEntity>('bookings', bookingId);
   if (!booking || booking.bookingStatus !== 'RESERVED_PENDING_PAYMENT') return;
 
-  await releaseInventory(booking.eventId, booking.ticketTierId, booking.quantity);
+  await releaseBookingInventory(booking);
   booking.bookingStatus = 'EXPIRED';
   booking.updated_at = new Date().toISOString();
   await db.put('bookings', booking);
@@ -132,7 +51,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   const booking = await db.get<BookingEntity>('bookings', bookingId);
   if (!booking || booking.bookingStatus !== 'RESERVED_PENDING_PAYMENT') return;
 
-  await releaseInventory(booking.eventId, booking.ticketTierId, booking.quantity);
+  await releaseBookingInventory(booking);
   booking.bookingStatus = 'PAYMENT_FAILED';
   booking.paymentStatus = 'FAILED';
   booking.updated_at = new Date().toISOString();
@@ -161,6 +80,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   const refund = await db.findBy<RefundEntity>('refunds', 'bookingId', booking.id);
   const refundedAmount = charge.amount_refunded;
   const isFullRefund = refundedAmount >= booking.totalAmountMinor;
+  const alreadyRestored = ['REFUNDED', 'CANCELLED'].includes(booking.bookingStatus);
 
   booking.refundedAmountMinor = refundedAmount;
   booking.bookingStatus = isFullRefund ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
@@ -176,7 +96,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 
   if (isFullRefund) {
-    await restoreInventoryOnRefund(booking.eventId, booking.ticketTierId, booking.quantity);
+    if (!alreadyRestored) await restoreBookingInventory(booking);
     // Invalidate tickets so they no longer scan as valid at entry
     const tickets = await db.filterBy<TicketEntity>('tickets', 'bookingId', booking.id);
     for (const ticket of tickets) {

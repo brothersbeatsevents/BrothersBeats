@@ -26,6 +26,7 @@ const ENTITY_MAP: Record<string, dynamo.EntityType> = {
   galleryMedia: 'GALLERY_MEDIA',
   serviceEnquiries: 'EVENT_SERVICE_ENQUIRY',
   sponsors: 'SPONSOR',
+  discountCodes: 'DISCOUNT_CODE',
 };
 
 type CollectionName = keyof typeof ENTITY_MAP;
@@ -35,6 +36,13 @@ function getMap(collection: CollectionName): Map<string, any> {
 }
 
 export const db = {
+  async putIfAbsent(collection: CollectionName, item: Record<string, any>): Promise<boolean> {
+    if (USE_DYNAMO) return dynamo.putItemIfAbsent(ENTITY_MAP[collection], item);
+    const map = getMap(collection);
+    if (map.has(item.id)) return false;
+    map.set(item.id, item);
+    return true;
+  },
   /** Get a single item by ID */
   async get<T = any>(
     collection: CollectionName,

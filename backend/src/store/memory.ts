@@ -21,6 +21,7 @@ import {
   GalleryMediaEntity,
   EventServiceEnquiryEntity,
   SponsorEntity,
+  DiscountCodeEntity,
 } from '../types';
 
 class Store {
@@ -41,6 +42,7 @@ class Store {
   galleryMedia: Map<string, GalleryMediaEntity> = new Map();
   serviceEnquiries: Map<string, EventServiceEnquiryEntity> = new Map();
   sponsors: Map<string, SponsorEntity> = new Map();
+  discountCodes: Map<string, DiscountCodeEntity> = new Map();
 
   // Helper: get all values as array
   getAll<T>(map: Map<string, T>): T[] {
@@ -84,6 +86,7 @@ class Store {
     this.galleryMedia.clear();
     this.serviceEnquiries.clear();
     this.sponsors.clear();
+    this.discountCodes.clear();
   }
 }
 

@@ -119,6 +119,10 @@ export async function generateAndStoreTicketPdf(
     color: dark,
   });
 
+  if (ticket.ticketTierNameSnapshot) {
+    page.drawText(ticket.ticketTierNameSnapshot, { x: 20, y: 414, size: 11, font: bodyFont, color: dark });
+  }
+
   page.drawImage(qrImage, { x: 110, y: 190, width: 200, height: 200 });
   page.drawText('Present this QR code at entry', {
     x: 110,

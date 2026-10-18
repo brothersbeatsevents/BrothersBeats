@@ -104,6 +104,7 @@ export type TicketTierType =
   | 'EARLY_BIRD'
   | 'STANDARD'
   | 'GROUP'
+  | 'CHILD'
   | 'VIP'
   | 'COMPLIMENTARY'
   | 'CUSTOM';
@@ -170,6 +171,40 @@ export interface BookingAttendee {
   email?: string;
 }
 
+export interface TicketSelection {
+  ticketTierId: string;
+  quantity: number;
+}
+
+export interface BookingLineItem extends TicketSelection {
+  ticketTierName: string;
+  unitPriceAmountMinor: number;
+  subtotalAmountMinor: number;
+  earlyBirdQuantity: number;
+  earlyBirdUnitPriceAmountMinor: number;
+  standardQuantity: number;
+  standardUnitPriceAmountMinor: number;
+  discountAmountMinor?: number;
+  totalAmountMinor?: number;
+  discountedEarlyBirdUnitPriceAmountMinor?: number;
+  discountedStandardUnitPriceAmountMinor?: number;
+}
+
+export interface DiscountCodeEntity {
+  id: string;
+  code: string;
+  eventId: string;
+  ticketTierIds: string[]; // Empty means all ticket types in the event.
+  discountType: 'PERCENTAGE' | 'FIXED';
+  value: number; // Percentage, or minor currency units per ticket.
+  currency: string;
+  active: boolean;
+  expiresAt?: string;
+  createdBy: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BookingEntity {
   id: string; // bookingId
   bookingReference: string;
@@ -182,10 +217,13 @@ export interface BookingEntity {
 
   ticketTierId: string;
   ticketTierNameSnapshot: string;
+  lineItems?: BookingLineItem[];
 
   quantity: number;
   unitPriceAmountMinor: number;
   subtotalAmountMinor: number;
+  discountCode?: string;
+  discountAmountMinor?: number;
   feesAmountMinor: number;
   totalAmountMinor: number;
   refundedAmountMinor: number;
@@ -229,6 +267,7 @@ export interface BookingEntity {
 export type TicketStatus = 'VALID' | 'CHECKED_IN' | 'CANCELLED' | 'REFUNDED';
 
 export interface TicketEntity {
+  ticketTierNameSnapshot?: string;
   id: string; // ticketId
   bookingId: string;
   eventId: string;
@@ -565,6 +604,7 @@ export interface EventServiceEnquiryEntity {
 
 // ── Pricing ──
 export interface PriceQuote {
+  lineItems?: BookingLineItem[];
   quoteId: string;
   eventId: string;
   ticketTierId: string;
@@ -572,6 +612,8 @@ export interface PriceQuote {
   quantity: number;
   unitPriceAmountMinor: number;
   subtotalAmountMinor: number;
+  discountCode?: string;
+  discountAmountMinor?: number;
   feesAmountMinor: number;
   totalAmountMinor: number;
   currency: string;
