@@ -17,6 +17,7 @@ import galleryRoutes from './gallery';
 import serviceEnquiriesRoutes from './service-enquiries';
 import sponsorsRoutes from './sponsors';
 import checkinRoutes from './checkin';
+import discountCodesRoutes from './discount-codes';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use('/gallery', galleryRoutes);
 router.use('/service-enquiries', serviceEnquiriesRoutes);
 router.use('/sponsors', sponsorsRoutes);
 router.use('/checkin', checkinRoutes);
+router.use('/discount-codes', discountCodesRoutes);
 
 export default router;

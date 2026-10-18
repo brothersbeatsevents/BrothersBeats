@@ -80,6 +80,7 @@ Globals:
         S3_MEDIA_BUCKET: !Ref MediaBucket
         S3_MEDIA_REGION: !Ref 'AWS::Region'
         STRIPE_WEBHOOK_URL: !Ref StripeWebhookUrl
+        STRIPE_ENVIRONMENT: !If [IsProd, live, test]
         COGNITO_ADMIN_GROUP_NAME: ADMIN
         COGNITO_SUPER_ADMIN_GROUP_NAME: SUPER_ADMIN
         COGNITO_CUSTOMER_GROUP_NAME: CUSTOMER

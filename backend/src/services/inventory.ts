@@ -4,7 +4,8 @@
 // ──────────────────────────────────────────
 
 import { db } from '../store';
-import { EventEntity, TicketTierEntity } from '../types';
+import { BookingEntity, EventEntity, TicketSelection, TicketTierEntity } from '../types';
+import { bookingSelections } from './ticket-order';
 
 const USE_DYNAMO = !!process.env.USE_DYNAMODB;
 
@@ -144,10 +145,39 @@ export async function expireStaleReservations(eventId: string): Promise<void> {
       booking.reservedUntil &&
       new Date(booking.reservedUntil).getTime() < now
     ) {
-      await releaseInventory(booking.eventId, booking.ticketTierId, booking.quantity);
+      await releaseBookingInventory(booking);
       booking.bookingStatus = 'EXPIRED';
       booking.updated_at = new Date().toISOString();
       await db.put('bookings', booking);
     }
   }
+}
+
+/** Reserve every selected type, releasing earlier reservations if a later type fails. */
+export async function reserveOrderInventory(eventId: string, items: TicketSelection[]): Promise<void> {
+  const reserved: TicketSelection[] = [];
+  try {
+    for (const item of items) {
+      const event = await db.get<EventEntity>('events', eventId);
+      const tier = await db.get<TicketTierEntity>('ticketTiers', item.ticketTierId);
+      if (!event || !tier || tier.eventId !== eventId) throw new InventoryError('Ticket type not found');
+      await reserveInventory(event, tier, item.quantity);
+      reserved.push(item);
+    }
+  } catch (err) {
+    for (const item of reserved) await releaseInventory(eventId, item.ticketTierId, item.quantity);
+    throw err;
+  }
+}
+
+export async function releaseBookingInventory(booking: BookingEntity): Promise<void> {
+  for (const item of bookingSelections(booking)) await releaseInventory(booking.eventId, item.ticketTierId, item.quantity);
+}
+
+export async function confirmBookingInventory(booking: BookingEntity): Promise<void> {
+  for (const item of bookingSelections(booking)) await confirmInventory(booking.eventId, item.ticketTierId, item.quantity);
+}
+
+export async function restoreBookingInventory(booking: BookingEntity): Promise<void> {
+  for (const item of bookingSelections(booking)) await restoreInventoryOnRefund(booking.eventId, item.ticketTierId, item.quantity);
 }

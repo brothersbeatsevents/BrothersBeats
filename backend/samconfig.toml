@@ -21,4 +21,4 @@ resolve_s3 = true
 capabilities = "CAPABILITY_IAM"
 region = "eu-west-1"
 confirm_changeset = true
-parameter_overrides = "Environment=prod FrontendUrl=https://www.brothersbeats.events ExtraCorsOrigins=https://brothersbeats.events GoogleAuthEnabled=false"
+parameter_overrides = "Environment=prod FrontendUrl=https://brothersbeatsevents.com ExtraCorsOrigins=https://brothers-beats.vercel.app GoogleAuthEnabled=false SESFromEmail=brothersbeatsevents@gmail.com"

@@ -84,6 +84,10 @@ function ConfirmationContent() {
           <span className="text-bb-text-secondary">Tickets</span>
           <span className="font-semibold text-bb-text">{data.quantity}</span>
         </div>
+        {!!data.discountAmountMinor && <div className="flex justify-between gap-3 text-sm text-green-700">
+          <span>Discount ({data.discountCode})</span>
+          <span>−{formatMoney(data.discountAmountMinor, data.currency)}</span>
+        </div>}
         <div className="flex justify-between text-sm">
           <span className="text-bb-text-secondary">Total paid</span>
           <span className="font-semibold text-bb-text">{formatMoney(data.totalAmountMinor, data.currency)}</span>
@@ -97,7 +101,7 @@ function ConfirmationContent() {
             <div key={t.id} className="bg-bb-surface border border-bb-border rounded-xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-bb-text">Ticket #{t.ticketNumber}</p>
-                <p className="text-xs text-bb-text-secondary">{t.attendeeName}</p>
+                <p className="text-xs text-bb-text-secondary">{t.ticketTierName} · {t.attendeeName}</p>
               </div>
               {t.pdfDownloadUrl && (
                 <a href={t.pdfDownloadUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">

@@ -32,6 +32,11 @@ const LIFECYCLE_ACTIONS: Record<string, { action: any; label: string }[]> = {
   CANCELLED: [{ action: 'unpublish', label: 'Unpublish' }],
 };
 
+function toLocalInput(value: string): string {
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 export default function AdminEventDetailPage() {
   const { token } = useAuth();
   const router = useRouter();
@@ -42,10 +47,10 @@ export default function AdminEventDetailPage() {
   const [error, setError] = useState('');
   const [showAddTier, setShowAddTier] = useState(false);
   const [tierForm, setTierForm] = useState({
-    name: '', priceEuros: '0.00', maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD',
+    name: '', description: '', priceEuros: '0.00', maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD',
   });
   const [editingTierId, setEditingTierId] = useState<string | null>(null);
-  const [editTierForm, setEditTierForm] = useState({ priceEuros: '0.00', maxQuantity: 0 });
+  const [editTierForm, setEditTierForm] = useState({ name: '', description: '', priceEuros: '0.00', maxQuantity: 0, salesStartAt: '', salesEndAt: '' });
   const [uploadingImage, setUploadingImage] = useState(false);
 
   function load() {
@@ -122,6 +127,7 @@ export default function AdminEventDetailPage() {
         params.id,
         {
           name: tierForm.name,
+          description: tierForm.description,
           type: tierForm.type,
           priceAmountMinor: Math.round(Number(tierForm.priceEuros) * 100),
           maxQuantity: Number(tierForm.maxQuantity),
@@ -131,7 +137,7 @@ export default function AdminEventDetailPage() {
         token,
       );
       setShowAddTier(false);
-      setTierForm({ name: '', priceEuros: '0.00', maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD' });
+      setTierForm({ name: '', description: '', priceEuros: '0.00', maxQuantity: 50, salesStartAt: '', salesEndAt: '', type: 'STANDARD' });
       load();
     } catch (err: any) {
       setError(err.message || 'Failed to add ticket type.');
@@ -140,7 +146,7 @@ export default function AdminEventDetailPage() {
 
   function startEditTier(tier: any) {
     setEditingTierId(tier.id);
-    setEditTierForm({ priceEuros: (tier.priceAmountMinor / 100).toFixed(2), maxQuantity: tier.maxQuantity });
+    setEditTierForm({ name: tier.name, description: tier.description || '', priceEuros: (tier.priceAmountMinor / 100).toFixed(2), maxQuantity: tier.maxQuantity, salesStartAt: toLocalInput(tier.salesStartAt), salesEndAt: toLocalInput(tier.salesEndAt) });
   }
 
   async function handleSaveTier(tierId: string) {
@@ -150,6 +156,10 @@ export default function AdminEventDetailPage() {
         params.id,
         tierId,
         {
+          name: editTierForm.name,
+          description: editTierForm.description,
+          salesStartAt: new Date(editTierForm.salesStartAt).toISOString(),
+          salesEndAt: new Date(editTierForm.salesEndAt).toISOString(),
           priceAmountMinor: Math.round(Number(editTierForm.priceEuros) * 100),
           maxQuantity: Number(editTierForm.maxQuantity),
         },
@@ -291,20 +301,26 @@ export default function AdminEventDetailPage() {
             </div>
             <div className="col-span-2">
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Type</label>
-              <select value={tierForm.type} onChange={(e) => setTierForm((f) => ({ ...f, type: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm">
+              <select value={tierForm.type} onChange={(e) => setTierForm((f) => ({ ...f, type: e.target.value, ...(e.target.value === 'CHILD' ? { name: 'Child 0–12 yrs', priceEuros: '0.00' } : {}) }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm">
                 <option value="STANDARD">Standard</option>
                 <option value="EARLY_BIRD">Early Bird</option>
                 <option value="GROUP">Group</option>
+                <option value="CHILD">Child</option>
                 <option value="VIP">VIP</option>
                 <option value="COMPLIMENTARY">Complimentary</option>
                 <option value="CUSTOM">Custom</option>
               </select>
+              {tierForm.type === 'CHILD' && <p className="text-xs text-bb-text-muted mt-1">Set the age range in the ticket name. Free child tickets still count toward event capacity and attendance.</p>}
               {tierForm.type === 'EARLY_BIRD' && (
                 <p className="text-xs text-bb-text-muted mt-1">
                   Early Bird isn&apos;t shown as a selectable option — its price is applied automatically to the
                   first Standard tickets sold, up to this capacity.
                 </p>
               )}
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-bb-text-secondary mb-1">Description / age guidance</label>
+              <input value={tierForm.description} onChange={(e) => setTierForm((f) => ({ ...f, description: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Price (€ per ticket)</label>
@@ -333,6 +349,22 @@ export default function AdminEventDetailPage() {
             <div key={tier.id} className="border border-bb-border rounded-xl p-3">
               {editingTierId === tier.id ? (
                 <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-bb-text-secondary mb-1">Ticket name</label>
+                    <input value={editTierForm.name} onChange={(e) => setEditTierForm((f) => ({ ...f, name: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-bb-text-secondary mb-1">Description / age guidance</label>
+                    <input value={editTierForm.description} onChange={(e) => setEditTierForm((f) => ({ ...f, description: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-bb-text-secondary mb-1">Sales start</label>
+                    <input type="datetime-local" value={editTierForm.salesStartAt} onChange={(e) => setEditTierForm((f) => ({ ...f, salesStartAt: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-bb-text-secondary mb-1">Sales end</label>
+                    <input type="datetime-local" value={editTierForm.salesEndAt} onChange={(e) => setEditTierForm((f) => ({ ...f, salesEndAt: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
+                  </div>
                   <div>
                     <label className="block text-xs font-medium text-bb-text-secondary mb-1">Price (€ per ticket)</label>
                     <input
@@ -348,7 +380,7 @@ export default function AdminEventDetailPage() {
                     <label className="block text-xs font-medium text-bb-text-secondary mb-1">Capacity (tickets available)</label>
                     <input
                       type="number"
-                      min={tier.quantitySold}
+                      min={Math.max(1, tier.quantitySold + tier.quantityReserved)}
                       value={editTierForm.maxQuantity}
                       onChange={(e) => setEditTierForm((f) => ({ ...f, maxQuantity: Number(e.target.value) }))}
                       className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm"
@@ -368,7 +400,7 @@ export default function AdminEventDetailPage() {
                   <div>
                     <p className="font-semibold text-bb-text text-sm">{tier.name}</p>
                     <p className="text-xs text-bb-text-secondary">
-                      {formatMoney(tier.priceAmountMinor, tier.currency)} · {tier.quantitySold}/{tier.maxQuantity} sold
+                      {tier.priceAmountMinor === 0 ? 'Free' : formatMoney(tier.priceAmountMinor, tier.currency)} · {tier.quantitySold}/{tier.maxQuantity} booked · {tier.quantityReserved} reserved
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

@@ -5,6 +5,8 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { organizationJsonLd, JsonLd } from '@/lib/json-ld';
 import EventGrid from '@/components/ui/EventGrid';
 import SponsorGrid from '@/components/ui/SponsorGrid';
+import HeroCarousel from '@/components/ui/HeroCarousel';
+import { getHeroImages } from '@/lib/hero-images';
 
 export const metadata: Metadata = {
   title: `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`,
@@ -17,32 +19,14 @@ export default async function HomePage() {
   const upcoming = events.filter((e: any) => e.status === 'PUBLISHED' || e.status === 'SALES_PAUSED').slice(0, 6);
   const gallery = (await getGallerySSR()).slice(0, 8);
   const settings = await getSettingsSSR();
+  const heroImages = getHeroImages(settings);
   const sponsors = await getSponsorsSSR();
   return (
     <>
       <JsonLd data={organizationJsonLd()} />
 
-      {settings?.heroImageUrl ? (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-          <div className="relative aspect-video w-full overflow-hidden rounded-3xl bg-bb-ink">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={settings.heroImageUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{
-                objectPosition: settings.heroImagePosition || '50% 50%',
-                transform: `scale(${settings.heroImageZoom || 1})`,
-              }}
-            />
-            <Link
-              href="/events"
-              className="absolute right-5 bottom-5 sm:right-8 sm:bottom-8 bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
-            >
-              Explore Events
-            </Link>
-          </div>
-        </section>
+      {heroImages.length > 0 ? (
+        <HeroCarousel images={heroImages} />
       ) : (
         <section className="bg-bb-neutral">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">

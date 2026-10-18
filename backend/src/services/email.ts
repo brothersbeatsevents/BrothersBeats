@@ -468,7 +468,7 @@ export async function sendBookingConfirmation(
 export async function sendTicketDelivery(
   to: string,
   buyerName: string,
-  tickets: Array<{ ticketNumber: string }>,
+  tickets: Array<{ ticketNumber: string; ticketTierName?: string }>,
   event: { title: string; startDateTime: string; venueName: string; city: string; timezone: string; slug: string },
   bookingReference: string,
   isResend = false,
@@ -481,7 +481,7 @@ export async function sendTicketDelivery(
       <tr>
         <td width="8" bgcolor="${BRAND.gold}" style="width:8px; background:${BRAND.gold}; border-radius:13px 0 0 13px;">&nbsp;</td>
         <td style="padding:14px 18px;">
-          <p style="margin:0; font-family:${FONT_BODY}; font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:${BRAND.textMuted};">Admission &middot; Ticket ${i + 1} of ${tickets.length}</p>
+          <p style="margin:0; font-family:${FONT_BODY}; font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:${BRAND.textMuted};">${escapeHtml(t.ticketTierName || 'Admission')} &middot; Ticket ${i + 1} of ${tickets.length}</p>
           <p style="margin:4px 0 0; font-family:${FONT_MONO}; font-size:17px; font-weight:700; letter-spacing:0.06em; color:${BRAND.ink};">${escapeHtml(t.ticketNumber)}</p>
         </td>
         <td align="right" style="padding:14px 18px; font-family:${FONT_BODY}; font-size:12px; font-weight:700; letter-spacing:0.1em; color:${BRAND.goldDark}; white-space:nowrap;">ADMIT ONE</td>

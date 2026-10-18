@@ -7,6 +7,7 @@ export interface TicketCardData {
   ticketNumber: string;
   status: string;
   attendeeName?: string;
+  ticketTierName?: string;
   pdfDownloadUrl?: string;
 }
 
@@ -28,6 +29,7 @@ export default function TicketCard({
       </div>
       <div className="flex-1 min-w-0">
         {eventTitle && <p className="font-semibold text-bb-text truncate">{eventTitle}</p>}
+        {ticket.ticketTierName && <p className="text-sm font-semibold text-bb-text">{ticket.ticketTierName}</p>}
         <p className="text-sm text-bb-text-secondary">{ticket.attendeeName || 'Guest'}</p>
         <p className="text-xs text-bb-text-muted mt-0.5">Ticket #{ticket.ticketNumber}</p>
         {cancelled && (

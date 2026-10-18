@@ -47,7 +47,8 @@ export type EntityType =
   | 'ORG_SETTINGS'
   | 'GALLERY_MEDIA'
   | 'EVENT_SERVICE_ENQUIRY'
-  | 'SPONSOR';
+  | 'SPONSOR'
+  | 'DISCOUNT_CODE';
 
 // Fields that hold a slug for GSI1 (or another unique lookup key reused as "slug")
 const SLUG_ENTITIES = new Set<EntityType>(['USER', 'EVENT']);
@@ -107,6 +108,21 @@ function getGSI2Keys(
 
 // ── Core CRUD operations ──
 
+/** Atomically claim a unique ID, including when multiple admins create a code. */
+export async function putItemIfAbsent(entityType: EntityType, item: Record<string, unknown>): Promise<boolean> {
+  try {
+    await docClient.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: { ...item, PK: `ENTITY#${entityType}`, SK: item.id, entityType },
+      ConditionExpression: 'attribute_not_exists(PK)',
+    }));
+    return true;
+  } catch (err: any) {
+    if (err.name === 'ConditionalCheckFailedException') return false;
+    throw err;
+  }
+}
+
 export async function putItem(
   entityType: EntityType,
   item: Record<string, unknown>,
@@ -152,6 +168,8 @@ export async function getItem(
     new GetCommand({
       TableName: TABLE_NAME,
       Key: { PK: `ENTITY#${entityType}`, SK: id },
+      // Checkout must observe a code that an admin has just disabled.
+      ConsistentRead: entityType === 'DISCOUNT_CODE',
     }),
   );
   return result.Item ? stripDynamoKeys(result.Item) : null;

@@ -151,6 +151,7 @@ router.get('/bookings/:bookingReference', async (req: AuthRequest, res: Response
       ticketNumber: t.ticketNumber,
       status: t.status,
       attendeeName: t.attendeeName,
+      ticketTierName: t.ticketTierNameSnapshot,
       pdfDownloadUrl: t.ticketPdfS3Key ? await getSignedDownloadUrl(t.ticketPdfS3Key) : undefined,
     })),
   );
@@ -189,7 +190,7 @@ router.post('/bookings/:bookingReference/resend', async (req: AuthRequest, res: 
   await sendTicketDelivery(
     booking.buyerEmail,
     booking.buyerName,
-    tickets.map((t) => ({ ticketNumber: t.ticketNumber })),
+    tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
     { title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug },
     booking.bookingReference,
     true,

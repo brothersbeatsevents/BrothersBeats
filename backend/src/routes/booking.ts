@@ -78,6 +78,7 @@ router.get('/confirmation', async (req, res: Response): Promise<void> => {
       ticketNumber: t.ticketNumber,
       status: t.status,
       attendeeName: t.attendeeName,
+      ticketTierName: t.ticketTierNameSnapshot,
       pdfDownloadUrl: t.ticketPdfS3Key ? await getSignedDownloadUrl(t.ticketPdfS3Key) : undefined,
     })),
   );
@@ -90,6 +91,8 @@ router.get('/confirmation', async (req, res: Response): Promise<void> => {
       paymentStatus: booking.paymentStatus,
       quantity: booking.quantity,
       totalAmountMinor: booking.totalAmountMinor,
+      discountCode: booking.discountCode,
+      discountAmountMinor: booking.discountAmountMinor,
       currency: booking.currency,
       buyerName: booking.buyerName,
       buyerEmail: booking.buyerEmail,

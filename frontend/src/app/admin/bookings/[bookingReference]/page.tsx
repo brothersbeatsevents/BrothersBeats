@@ -85,6 +85,7 @@ export default function AdminBookingDetailPage() {
         <div><p className="text-bb-text-secondary">Email</p><p className="font-semibold text-bb-text">{booking.buyerEmail}</p></div>
         <div><p className="text-bb-text-secondary">Quantity</p><p className="font-semibold text-bb-text">{booking.quantity}</p></div>
         <div><p className="text-bb-text-secondary">Total</p><p className="font-semibold text-bb-text">{formatMoney(booking.totalAmountMinor, booking.currency)}</p></div>
+        {!!booking.discountAmountMinor && <div><p className="text-bb-text-secondary">Discount ({booking.discountCode})</p><p className="font-semibold text-green-700">−{formatMoney(booking.discountAmountMinor, booking.currency)}</p></div>}
         <div><p className="text-bb-text-secondary">Status</p><p className="font-semibold text-bb-text">{booking.bookingStatus}</p></div>
         <div><p className="text-bb-text-secondary">Payment</p><p className="font-semibold text-bb-text">{booking.paymentStatus} ({booking.paymentMethod})</p></div>
         {booking.refundedAmountMinor > 0 && (
@@ -97,7 +98,7 @@ export default function AdminBookingDetailPage() {
           <>
             <button onClick={() => handleResend('confirmation')} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Resend confirmation</button>
             <button onClick={() => handleResend('tickets')} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Resend tickets</button>
-            <button onClick={handleRefund} disabled={busy} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Issue refund</button>
+            <button onClick={handleRefund} disabled={busy || booking.totalAmountMinor === 0} className="text-sm font-semibold border border-bb-border rounded-full px-4 py-2 hover:border-bb-gold disabled:opacity-60">Issue refund</button>
           </>
         )}
         {!['CANCELLED', 'REFUNDED', 'EXPIRED'].includes(booking.bookingStatus) && (
@@ -111,7 +112,7 @@ export default function AdminBookingDetailPage() {
           <div className="space-y-2">
             {booking.tickets.map((t: any) => (
               <div key={t.id} className="flex items-center justify-between border border-bb-border rounded-xl p-3 text-sm">
-                <span>#{t.ticketNumber} — {t.attendeeName}</span>
+                <span>#{t.ticketNumber} — {t.ticketTierNameSnapshot || booking.ticketTierNameSnapshot} — {t.attendeeName}</span>
                 <span className="text-xs text-bb-text-secondary">{t.status}</span>
               </div>
             ))}

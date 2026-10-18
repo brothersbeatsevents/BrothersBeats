@@ -12,7 +12,7 @@ import { AuthRequest, authenticate, requireAdmin } from '../../middleware/auth';
 import { auditLog } from '../../middleware/audit';
 import { BookingEntity, RefundEntity, TicketEntity } from '../../types';
 import { createRefund } from '../../services/stripe';
-import { restoreInventoryOnRefund } from '../../services/inventory';
+import { restoreBookingInventory } from '../../services/inventory';
 import { sendRefundRequested, sendRefundCompleted, sendRefundFailed } from '../../services/email';
 
 const router = Router();
@@ -126,7 +126,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     await db.put('bookings', booking);
 
     if (isFullRefund) {
-      await restoreInventoryOnRefund(booking.eventId, booking.ticketTierId, booking.quantity);
+      await restoreBookingInventory(booking);
       const tickets = await db.filterBy<TicketEntity>('tickets', 'bookingId', booking.id);
       for (const ticket of tickets) {
         ticket.status = 'REFUNDED';

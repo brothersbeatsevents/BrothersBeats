@@ -3,6 +3,7 @@
 // ──────────────────────────────────────────
 
 import { Router, Response } from 'express';
+import { validateTicketTier } from '../../services/ticket-tier-validation';
 import { v4 as uuid } from 'uuid';
 import { db } from '../../store';
 import { AuthRequest, authenticate, requireAdmin } from '../../middleware/auth';
@@ -459,6 +460,11 @@ router.post('/:id/ticket-tiers', async (req: AuthRequest, res: Response): Promis
     created_at: now,
     updated_at: now,
   };
+  const validationError = validateTicketTier(tier);
+  if (validationError) {
+    res.status(400).json({ success: false, error: validationError });
+    return;
+  }
   await db.put('ticketTiers', tier);
   auditLog(req.user!.id, 'CREATE_TICKET_TIER', 'TICKET_TIER', tier.id, {
     actorRole: req.user!.role as any,
@@ -469,7 +475,8 @@ router.post('/:id/ticket-tiers', async (req: AuthRequest, res: Response): Promis
 });
 
 router.patch('/:id/ticket-tiers/:tierId', async (req: AuthRequest, res: Response): Promise<void> => {
-  const tier = await db.get<TicketTierEntity>('ticketTiers', req.params.tierId);
+  const existing = await db.get<TicketTierEntity>('ticketTiers', req.params.tierId);
+  const tier = existing ? { ...existing } : null;
   if (!tier || tier.eventId !== req.params.id) {
     res.status(404).json({ success: false, error: 'Ticket type not found' });
     return;
@@ -484,6 +491,11 @@ router.patch('/:id/ticket-tiers/:tierId', async (req: AuthRequest, res: Response
     return;
   }
   tier.updated_at = new Date().toISOString();
+  const validationError = validateTicketTier(tier);
+  if (validationError) {
+    res.status(400).json({ success: false, error: validationError });
+    return;
+  }
   await db.put('ticketTiers', tier);
   auditLog(req.user!.id, 'UPDATE_TICKET_TIER', 'TICKET_TIER', tier.id, { actorRole: req.user!.role as any, eventId: tier.eventId, summary: `Updated ticket type "${tier.name}"` });
   res.json({ success: true, data: tier });

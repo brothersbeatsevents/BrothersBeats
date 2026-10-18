@@ -12,8 +12,8 @@ export default function NewManualBookingPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [tiers, setTiers] = useState<any[]>([]);
   const [eventId, setEventId] = useState('');
-  const [ticketTierId, setTicketTierId] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const items = Object.entries(quantities).filter(([, quantity]) => quantity > 0).map(([ticketTierId, quantity]) => ({ ticketTierId, quantity }));
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
@@ -27,7 +27,7 @@ export default function NewManualBookingPage() {
   useEffect(() => {
     if (token && eventId) adminGetTicketTiers(eventId, token).then((res) => setTiers(res.data));
     else setTiers([]);
-    setTicketTierId('');
+    setQuantities({});
   }, [token, eventId]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -37,7 +37,7 @@ export default function NewManualBookingPage() {
     setError('');
     try {
       const res = await adminCreateManualBooking(
-        { eventId, ticketTierId, quantity, buyerName, buyerEmail, paymentMethod },
+        { eventId, items, buyerName, buyerEmail, paymentMethod },
         token,
       );
       router.push(`/admin/bookings/${res.data.bookingReference}`);
@@ -60,17 +60,15 @@ export default function NewManualBookingPage() {
             {events.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-bb-text mb-1">Ticket type</label>
-          <select required value={ticketTierId} onChange={(e) => setTicketTierId(e.target.value)} disabled={!eventId} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm disabled:bg-bb-neutral">
-            <option value="">Select a ticket type</option>
-            {tiers.map((t) => <option key={t.id} value={t.id}>{t.name} — {formatMoney(t.priceAmountMinor, t.currency)}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-bb-text mb-1">Quantity</label>
-          <input required type="number" min={1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
-        </div>
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-bb-text mb-1">Ticket types</legend>
+          {tiers.map((tier) => (
+            <label key={tier.id} className="flex items-center justify-between gap-3 text-sm text-bb-text">
+              <span>{tier.name} — {tier.priceAmountMinor === 0 ? 'Free' : formatMoney(tier.priceAmountMinor, tier.currency)}</span>
+              <input aria-label={`${tier.name} quantity`} type="number" min={0} max={tier.maxQuantity - tier.quantitySold - tier.quantityReserved} value={quantities[tier.id] || 0} onChange={(e) => setQuantities((current) => ({ ...current, [tier.id]: Number(e.target.value) }))} className="w-20 rounded-lg border border-bb-border px-3 py-2 text-sm" />
+            </label>
+          ))}
+        </fieldset>
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Buyer name</label>
           <input required value={buyerName} onChange={(e) => setBuyerName(e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
@@ -89,7 +87,7 @@ export default function NewManualBookingPage() {
           </select>
         </div>
         {error && <p className="text-sm text-bb-red">{error}</p>}
-        <button type="submit" disabled={saving} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
+        <button type="submit" disabled={saving || !items.length} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
           {saving ? 'Creating…' : 'Create booking'}
         </button>
       </form>
