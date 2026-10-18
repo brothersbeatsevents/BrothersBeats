@@ -7,6 +7,7 @@ import { db } from '../../store';
 import { AuthRequest, authenticate, requireAdmin } from '../../middleware/auth';
 import { auditLog } from '../../middleware/audit';
 import { OrgSettings } from '../../types';
+import { validateHeroImages } from '../../services/hero-images';
 
 const router = Router();
 router.use(authenticate, requireAdmin);
@@ -36,6 +37,13 @@ router.get('/', async (_req: AuthRequest, res: Response): Promise<void> => {
 
 // PUT /api/admin/settings
 router.put('/', async (req: AuthRequest, res: Response): Promise<void> => {
+  if (req.body.heroImages !== undefined) {
+    const error = validateHeroImages(req.body.heroImages);
+    if (error) {
+      res.status(400).json({ success: false, error });
+      return;
+    }
+  }
   const whatsappUrl = req.body.whatsappGroupUrl;
   if (typeof whatsappUrl === 'string' && whatsappUrl.trim()) {
     let protocol = '';
@@ -55,7 +63,7 @@ router.put('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const fields = [
     'organizationName', 'supportEmail', 'defaultCurrency', 'defaultTimezone',
     'defaultRefundPolicy', 'defaultTermsAndConditions', 'socialLinks', 'heroImageUrl', 'heroImagePosition', 'heroImageZoom',
-    'whatsappGroupUrl',
+    'whatsappGroupUrl', 'heroImages',
   ] as const;
   for (const field of fields) {
     if (req.body[field] !== undefined) (settings as any)[field] = req.body[field];

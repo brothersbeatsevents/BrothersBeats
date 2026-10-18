@@ -5,6 +5,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../store';
 import { OrgSettings } from '../types';
+import { getHeroImages } from '../services/hero-images';
 
 const router = Router();
 
@@ -16,6 +17,9 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
     data: {
       organizationName: settings?.organizationName || 'Brothers Beats Events',
       heroImageUrl: settings?.heroImageUrl || null,
+      heroImagePosition: settings?.heroImagePosition || '50% 50%',
+      heroImageZoom: settings?.heroImageZoom || 1,
+      heroImages: getHeroImages(settings),
       whatsappGroupUrl: settings?.whatsappGroupUrl || null,
     },
   });

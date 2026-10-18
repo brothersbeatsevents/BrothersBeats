@@ -482,6 +482,13 @@ export interface EmailSuppression {
   created_at: string;
 }
 
+export interface HeroImage {
+  url: string;
+  position?: string;
+  zoom?: number;
+  alt?: string;
+}
+
 export interface OrgSettings {
   id: string; // fixed id: 'org-settings'
   organizationName: string;
@@ -491,6 +498,7 @@ export interface OrgSettings {
   defaultRefundPolicy?: string;
   defaultTermsAndConditions?: string;
   socialLinks?: Record<string, string>;
+  heroImages?: HeroImage[];
   heroImageUrl?: string;
   heroImagePosition?: string;
   heroImageZoom?: number;

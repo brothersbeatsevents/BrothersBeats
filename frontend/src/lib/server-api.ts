@@ -2,6 +2,7 @@
  * Server-side data fetching for SSR/SSG pages.
  * Runs on the server during render and calls the backend API directly.
  */
+import type { HeroSettings } from './hero-images';
 
 const API_URL =
   process.env.API_URL ||
@@ -47,7 +48,7 @@ export async function getSponsorsSSR() {
 }
 
 export async function getSettingsSSR() {
-  return serverFetch<{
+  return serverFetch<HeroSettings & {
     organizationName: string;
     heroImageUrl: string | null;
     heroImagePosition?: string;
