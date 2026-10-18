@@ -53,12 +53,44 @@ export async function getEvent(slug: string) {
   return apiFetch<{ success: boolean; data: any }>(`/events/${slug}`);
 }
 
+export interface TicketSelection { ticketTierId: string; quantity: number }
+
+export interface DiscountCode {
+  id: string;
+  code: string;
+  eventId: string;
+  ticketTierIds: string[];
+  discountType: 'PERCENTAGE' | 'FIXED';
+  value: number;
+  currency: string;
+  active: boolean;
+  expiresAt?: string;
+}
+
+export function adminGetDiscountCodes(token: string) {
+  return apiFetch<{ success: boolean; data: DiscountCode[] }>('/admin/discount-codes', { token });
+}
+
+export function adminCreateDiscountCode(data: {
+  code?: string; eventId: string; ticketTierIds: string[];
+  discountType: 'PERCENTAGE' | 'FIXED'; value: number; expiresAt?: string;
+}, token: string) {
+  return apiFetch<{ success: boolean; data: DiscountCode }>('/admin/discount-codes', { method: 'POST', body: data, token });
+}
+
+export function adminSetDiscountCodeActive(code: string, active: boolean, token: string) {
+  return apiFetch<{ success: boolean; data: DiscountCode }>(`/admin/discount-codes/${encodeURIComponent(code)}`,
+    { method: 'PATCH', body: { active }, token });
+}
+
 // ── Public: Pricing & Checkout ──
 
 export async function getPriceQuote(data: {
   eventId: string;
-  ticketTierId: string;
-  quantity: number;
+  ticketTierId?: string;
+  quantity?: number;
+  items?: TicketSelection[];
+  discountCode?: string;
 }) {
   return apiFetch<{ success: boolean; data: any }>('/pricing/quote', {
     method: 'POST',
@@ -69,8 +101,10 @@ export async function getPriceQuote(data: {
 export async function createCheckoutSession(
   data: {
     eventId: string;
-    ticketTierId: string;
-    quantity: number;
+    ticketTierId?: string;
+    quantity?: number;
+    items?: TicketSelection[];
+    discountCode?: string;
     buyerName: string;
     buyerEmail: string;
     buyerPhone?: string;

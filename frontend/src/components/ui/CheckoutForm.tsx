@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
-import { createCheckoutSession } from '@/lib/api';
+import { createCheckoutSession, TicketSelection } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
 const checkoutSchema = z.object({
@@ -21,12 +21,18 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export default function CheckoutForm({
   eventId,
-  ticketTierId,
-  quantity,
+  items,
+  free,
+  discountCode,
+  disabled,
+  onSubmittingChange,
 }: {
   eventId: string;
-  ticketTierId: string;
-  quantity: number;
+  items: TicketSelection[];
+  free: boolean;
+  discountCode?: string;
+  disabled?: boolean;
+  onSubmittingChange?: (submitting: boolean) => void;
 }) {
   const { user, token } = useAuth();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -47,14 +53,16 @@ export default function CheckoutForm({
   });
 
   async function onSubmit(values: CheckoutFormValues) {
+    if (disabled || submitting) return;
     setSubmitError(null);
     setSubmitting(true);
+    onSubmittingChange?.(true);
     try {
       const res = await createCheckoutSession(
         {
           eventId,
-          ticketTierId,
-          quantity,
+          items,
+          discountCode,
           buyerName: values.buyerName,
           buyerEmail: values.buyerEmail,
           buyerPhone: values.buyerPhone,
@@ -66,6 +74,7 @@ export default function CheckoutForm({
     } catch (err: any) {
       setSubmitError(err.message || 'Something went wrong. Please try again.');
       setSubmitting(false);
+      onSubmittingChange?.(false);
     }
   }
 
@@ -119,10 +128,10 @@ export default function CheckoutForm({
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || disabled}
         className="w-full bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold py-3 rounded-full transition-colors"
       >
-        {submitting ? 'Redirecting to secure payment…' : 'Continue to payment'}
+        {submitting ? 'Processing booking…' : free ? 'Confirm free booking' : 'Continue to payment'}
       </button>
     </form>
   );

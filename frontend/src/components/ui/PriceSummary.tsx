@@ -1,43 +1,53 @@
 import { formatMoney } from '@/lib/format';
 
-export interface PriceQuoteData {
+export interface PriceLineData {
   ticketTierName: string;
   quantity: number;
   unitPriceAmountMinor: number;
-  subtotalAmountMinor: number;
-  feesAmountMinor: number;
-  totalAmountMinor: number;
-  currency: string;
   earlyBirdQuantity?: number;
   earlyBirdUnitPriceAmountMinor?: number;
   standardQuantity?: number;
   standardUnitPriceAmountMinor?: number;
 }
 
+export interface PriceQuoteData extends PriceLineData {
+  lineItems?: PriceLineData[];
+  subtotalAmountMinor: number;
+  discountCode?: string;
+  discountAmountMinor?: number;
+  feesAmountMinor: number;
+  totalAmountMinor: number;
+  currency: string;
+}
+
 export default function PriceSummary({ quote }: { quote: PriceQuoteData }) {
-  const hasEarlyBird = !!quote.earlyBirdQuantity;
+  const lines = quote.lineItems?.length ? quote.lineItems : [quote];
+  const amount = (minor: number) => minor === 0 ? 'Free' : formatMoney(minor, quote.currency);
 
   return (
     <div className="bg-bb-neutral rounded-2xl p-5 space-y-2 text-sm">
-      {hasEarlyBird ? (
-        <>
-          <div className="flex justify-between text-bb-text-secondary">
-            <span>{quote.ticketTierName} (Early Bird) × {quote.earlyBirdQuantity}</span>
-            <span>{formatMoney((quote.earlyBirdUnitPriceAmountMinor || 0) * (quote.earlyBirdQuantity || 0), quote.currency)}</span>
-          </div>
-          {!!quote.standardQuantity && (
-            <div className="flex justify-between text-bb-text-secondary">
-              <span>{quote.ticketTierName} × {quote.standardQuantity}</span>
-              <span>{formatMoney((quote.standardUnitPriceAmountMinor || 0) * quote.standardQuantity, quote.currency)}</span>
+      {lines.map((line, index) => (
+        <div key={index} className="space-y-2">
+          {!!line.earlyBirdQuantity && (
+            <div className="flex justify-between gap-3 text-bb-text-secondary">
+              <span>{line.ticketTierName} (Early Bird) × {line.earlyBirdQuantity}</span>
+              <span>{amount((line.earlyBirdUnitPriceAmountMinor || 0) * line.earlyBirdQuantity)}</span>
             </div>
           )}
-        </>
-      ) : (
-        <div className="flex justify-between text-bb-text-secondary">
-          <span>
-            {quote.ticketTierName} × {quote.quantity}
-          </span>
-          <span>{formatMoney(quote.unitPriceAmountMinor * quote.quantity, quote.currency)}</span>
+          {(!line.earlyBirdQuantity || !!line.standardQuantity) && (
+            <div className="flex justify-between gap-3 text-bb-text-secondary">
+              <span>{line.ticketTierName} × {line.earlyBirdQuantity ? line.standardQuantity : line.quantity}</span>
+              <span>{amount(line.earlyBirdQuantity
+                ? (line.standardUnitPriceAmountMinor || 0) * (line.standardQuantity || 0)
+                : line.unitPriceAmountMinor * line.quantity)}</span>
+            </div>
+          )}
+        </div>
+      ))}
+      {!!quote.discountAmountMinor && (
+        <div className="flex justify-between gap-3 text-green-700">
+          <span>Discount ({quote.discountCode})</span>
+          <span>−{formatMoney(quote.discountAmountMinor, quote.currency)}</span>
         </div>
       )}
       {quote.feesAmountMinor > 0 && (

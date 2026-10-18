@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TicketTierData } from '@/components/ui/TicketTierCard';
 import TicketQuantitySelector from '@/components/ui/TicketQuantitySelector';
@@ -12,19 +12,19 @@ export default function EventDetailTiers({ event }: { event: any }) {
   const tiers: TicketTierData[] = event.ticketTiers || [];
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [quote, setQuote] = useState<any>(null);
+  const [quoteError, setQuoteError] = useState('');
   const [quoteLoading, setQuoteLoading] = useState(false);
 
   const soldOut = event.status === 'SOLD_OUT' || event.availableTickets <= 0;
   const salesClosed = event.isPast || event.status === 'CANCELLED' || event.status === 'COMPLETED' || event.status === 'SALES_PAUSED';
 
-  const selectedId = Object.keys(quantities).find((id) => quantities[id] > 0);
-  const selected = tiers.find((t) => t.id === selectedId);
-  const quantity = selected ? quantities[selected.id] : 0;
+  const items = useMemo(() => Object.entries(quantities)
+    .filter(([, quantity]) => quantity > 0)
+    .map(([ticketTierId, quantity]) => ({ ticketTierId, quantity })), [quantities]);
+  const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Only one ticket type can be purchased per order — picking a quantity for
-  // one tier clears any quantity set on the others.
   function setTierQuantity(tier: TicketTierData, next: number) {
-    setQuantities(next > 0 ? { [tier.id]: next } : {});
+    setQuantities((current) => ({ ...current, [tier.id]: next }));
   }
 
   function handleChange(tier: TicketTierData, next: number) {
@@ -33,8 +33,8 @@ export default function EventDetailTiers({ event }: { event: any }) {
       setTierQuantity(tier, 0);
     } else if (current === 0) {
       // Jump straight to the tier's minimum (e.g. group deals) instead of 1.
-      setTierQuantity(tier, Math.max(next, tier.minPerOrder));
-    } else if (next < tier.minPerOrder) {
+      setTierQuantity(tier, Math.max(next, tier.minPerOrder, tier.groupMinSize || 1));
+    } else if (next < Math.max(tier.minPerOrder, tier.groupMinSize || 1)) {
       setTierQuantity(tier, 0);
     } else {
       setTierQuantity(tier, next);
@@ -42,19 +42,25 @@ export default function EventDetailTiers({ event }: { event: any }) {
   }
 
   useEffect(() => {
-    if (!selected || quantity < 1) {
+    setQuoteError('');
+    if (quantity < 1) {
       setQuote(null);
+      setQuoteLoading(false);
       return;
     }
     let cancelled = false;
     setQuoteLoading(true);
+    setQuote(null);
     const timer = setTimeout(() => {
-      getPriceQuote({ eventId: event.id, ticketTierId: selected.id, quantity })
+      getPriceQuote({ eventId: event.id, items })
         .then((res) => {
           if (!cancelled) setQuote(res.data);
         })
-        .catch(() => {
-          if (!cancelled) setQuote(null);
+        .catch((err) => {
+          if (!cancelled) {
+            setQuote(null);
+            setQuoteError(err.message || 'Unable to check ticket availability');
+          }
         })
         .finally(() => {
           if (!cancelled) setQuoteLoading(false);
@@ -64,11 +70,12 @@ export default function EventDetailTiers({ event }: { event: any }) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [event.id, selected, quantity]);
+  }, [event.id, items, quantity]);
 
   function goToCheckout() {
-    if (!selected) return;
-    router.push(`/checkout/${event.id}?tier=${selected.id}&qty=${quantity}&slug=${event.slug}`);
+    if (!items.length) return;
+    const query = new URLSearchParams({ items: JSON.stringify(items), slug: event.slug });
+    router.push(`/checkout/${event.id}?${query}`);
   }
 
   if (soldOut) {
@@ -96,8 +103,8 @@ export default function EventDetailTiers({ event }: { event: any }) {
     );
   }
 
-  const subtotalAmountMinor = quote?.totalAmountMinor ?? (selected ? selected.priceAmountMinor * quantity : 0);
-  const currency = selected?.currency || tiers[0]?.currency || 'EUR';
+  const subtotalAmountMinor = quote?.totalAmountMinor ?? items.reduce((sum, item) => sum + (tiers.find((tier) => tier.id === item.ticketTierId)?.priceAmountMinor || 0) * item.quantity, 0);
+  const currency = tiers[0]?.currency || 'EUR';
 
   return (
     <div className="bg-bb-surface border border-bb-border rounded-2xl p-5 sticky top-24 space-y-1">
@@ -107,14 +114,16 @@ export default function EventDetailTiers({ event }: { event: any }) {
           const tierQty = quantities[tier.id] || 0;
           const tierSoldOut = tier.available <= 0;
           const disabled = tierSoldOut || !tier.onSale;
-          const max = disabled ? 0 : Math.min(tier.maxPerOrder, tier.available, event.perOrderLimit);
+          const availableMax = disabled ? 0 : Math.min(tier.maxPerOrder, tier.available, event.perOrderLimit - quantity + tierQty, event.availableTickets - quantity + tierQty);
+
+          const max = tierQty === 0 && availableMax < Math.max(tier.minPerOrder, tier.groupMinSize || 1) ? 0 : availableMax;
 
           return (
-            <div key={tier.id} className={`py-4 flex items-center justify-between gap-4 ${disabled ? 'opacity-50' : ''}`}>
+            <div key={tier.id} role="group" aria-label={tier.name} className={`py-4 flex items-center justify-between gap-4 ${disabled ? 'opacity-50' : ''}`}>
               <div className="min-w-0">
                 <p className="font-semibold text-bb-text">{tier.name}</p>
                 <p className="text-sm text-bb-text-secondary mt-0.5">
-                  {formatMoney(tier.priceAmountMinor, tier.currency)}
+                  {tier.priceAmountMinor === 0 ? 'Free' : formatMoney(tier.priceAmountMinor, tier.currency)}
                 </p>
                 {tier.description && (
                   <p className="text-xs text-bb-text-muted mt-1">{tier.description}</p>
@@ -153,9 +162,10 @@ export default function EventDetailTiers({ event }: { event: any }) {
             Early Bird price automatically applied to {quote.earlyBirdQuantity} of your tickets
           </p>
         )}
+        {quoteError && <p role="alert" className="text-xs text-bb-red">{quoteError}</p>}
         <button
           onClick={goToCheckout}
-          disabled={!selected || quantity < 1}
+          disabled={quantity < 1 || quantity > event.perOrderLimit || quoteLoading || !quote}
           className="w-full bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-40 disabled:cursor-not-allowed text-bb-ink font-semibold py-3 rounded-full transition-colors"
         >
           Next

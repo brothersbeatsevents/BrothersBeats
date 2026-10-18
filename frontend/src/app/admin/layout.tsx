@@ -9,6 +9,7 @@ const ADMIN_NAV = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/events', label: 'Events' },
   { href: '/admin/bookings', label: 'Bookings' },
+  { href: '/admin/discount-codes', label: 'Discount codes' },
   { href: '/admin/checkin', label: 'Check-in' },
   { href: '/admin/refunds', label: 'Refunds' },
   { href: '/admin/gallery', label: 'Gallery' },
