@@ -508,7 +508,7 @@ export interface OrgSettings {
 }
 
 // ── Gallery media (public photo/video showcase — admin-authored only) ──
-export type GalleryMediaType = 'IMAGE' | 'YOUTUBE_VIDEO';
+export type GalleryMediaType = 'IMAGE' | 'YOUTUBE_VIDEO' | 'INSTAGRAM_REEL';
 export type GalleryMediaStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export interface GalleryMediaEntity {
@@ -530,6 +530,8 @@ export interface GalleryMediaEntity {
 
   youtubeUrl?: string;
   youtubeVideoId?: string;
+  instagramUrl?: string;
+  instagramShortcode?: string;
 
   featured: boolean;
   sortOrder: number;

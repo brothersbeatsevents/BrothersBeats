@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import GalleryMediaThumbnail from '@/components/ui/GalleryMediaThumbnail';
 import {
   adminGetGallery,
   adminPublishGalleryItem,
@@ -89,7 +90,9 @@ export default function AdminGalleryPage() {
         <select value={type} onChange={(e) => setType(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm">
           <option value="">All types</option>
           <option value="IMAGE">Photos</option>
-          <option value="YOUTUBE_VIDEO">Videos</option>
+          <option value="VIDEO">Videos</option>
+          <option value="YOUTUBE_VIDEO">YouTube videos / Shorts</option>
+          <option value="INSTAGRAM_REEL">Instagram Reels</option>
         </select>
       </div>
 
@@ -102,19 +105,7 @@ export default function AdminGalleryPage() {
           {items.map((item) => (
             <div key={item.id} className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden">
               <Link href={`/admin/gallery/${item.id}`} className="block aspect-[4/3] bg-bb-neutral relative">
-                {item.type === 'IMAGE' && item.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.imageUrl} alt={item.altText || item.title} className="w-full h-full object-cover" />
-                ) : item.type === 'YOUTUBE_VIDEO' && item.youtubeVideoId ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`https://img.youtube.com/vi/${item.youtubeVideoId}/hqdefault.jpg`}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-bb-text-muted text-sm">No preview</div>
-                )}
+                <GalleryMediaThumbnail item={item} />
               </Link>
               <div className="p-3">
                 <p className="text-sm font-semibold text-bb-text line-clamp-1">{item.title}</p>

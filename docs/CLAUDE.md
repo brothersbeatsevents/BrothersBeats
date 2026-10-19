@@ -442,12 +442,13 @@ Each marketing email must include an unsubscribe link.
 
 1. Admin signs in.
 2. Admin opens **Gallery → Add media**.
-3. Admin chooses either:
+3. Admin chooses:
    - Event photo upload, or
-   - YouTube video link
+   - YouTube video or Shorts link, or
+   - Instagram Reel link
 4. For a photo, the admin uploads an approved image and provides title, alt text, caption, optional related event, and display order.
-5. For a YouTube video, the admin pastes a valid `youtube.com` or `youtu.be` URL and provides title, caption, optional related event, and display order.
-6. The backend validates and normalises the media record. It stores only the YouTube video ID and canonical URL; it never stores arbitrary iframe or script HTML.
+5. For a video, the admin pastes a valid YouTube video/Shorts or Instagram Reel URL and provides title, caption, optional related event, and display order.
+6. The backend validates and normalises the media record. It stores only the video ID or Reel shortcode and canonical URL; it never stores arbitrary iframe or script HTML.
 7. Admin previews the item.
 8. Admin publishes it.
 9. The item appears in the public gallery and, when linked, may appear on the related event page.
@@ -687,7 +688,7 @@ The `/gallery` page is a public showcase of Brothers Beats event memories and pr
 Must include:
 
 - Published photo cards
-- Published YouTube video cards with embedded playback
+- Published YouTube video/Shorts and Instagram Reel cards with embedded playback
 - Filter by related event, year, or media type where useful
 - Featured media section
 - Responsive masonry or balanced grid that remains accessible
@@ -711,10 +712,18 @@ YouTube requirements:
 - Render through a controlled reusable component using a privacy-enhanced YouTube embed where practical
 - Never render admin-supplied iframe HTML, scripts, or arbitrary embed code
 - Use a restrictive iframe `allow` list, descriptive `title`, lazy loading, and fullscreen support
-- Reject playlists, channels, shorts, live links, or other URL formats unless explicitly supported and tested
+- Accept `/shorts/<id>` links and preserve the Shorts URL for portrait playback
+- Reject playlists, channels, live links, or other URL formats unless explicitly supported and tested
 - Show a clear unavailable state when a video is removed or cannot load
 
 Only `PUBLISHED` gallery items are visible publicly. Draft, unpublished, and archived items must never appear in public responses.
+
+Instagram requirements:
+
+- Accept Reel links on `instagram.com`, `www.instagram.com`, or `m.instagram.com`; normalize `/reels/<shortcode>` to `/reel/<shortcode>/` and remove sharing parameters
+- Validate and store only the shortcode and canonical URL; build the iframe source in a controlled component
+- Use a portrait player with an external Instagram link; the account must be public with embedding enabled
+- Use a branded Reel tile in gallery grids without fetching remote thumbnail metadata
 
 ## 6.9 Paid event-management services and contact
 
@@ -1417,7 +1426,7 @@ interface PriceQuote {
 ## 9.4 Gallery media fields
 
 ```ts
-type GalleryMediaType = 'IMAGE' | 'YOUTUBE_VIDEO';
+type GalleryMediaType = 'IMAGE' | 'YOUTUBE_VIDEO' | 'INSTAGRAM_REEL';
 type GalleryMediaStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 interface GalleryMediaEntity {
@@ -1439,6 +1448,8 @@ interface GalleryMediaEntity {
 
   youtubeUrl?: string;
   youtubeVideoId?: string;
+  instagramUrl?: string;
+  instagramShortcode?: string;
 
   featured: boolean;
   sortOrder: number;
@@ -1454,7 +1465,7 @@ interface GalleryMediaEntity {
 Rules:
 
 1. `IMAGE` requires an approved S3 image key and alt text before publication unless marked decorative.
-2. `YOUTUBE_VIDEO` requires a validated canonical YouTube URL and video ID.
+2. `YOUTUBE_VIDEO` requires a validated canonical YouTube video or Shorts URL and video ID. `INSTAGRAM_REEL` requires a validated canonical Instagram Reel URL and shortcode. The `VIDEO` gallery filter includes both types.
 3. A media record must never store arbitrary HTML, iframe markup, JavaScript, or untrusted embed code.
 4. `eventId` is optional so the gallery may contain general Brothers Beats media as well as event-specific media.
 5. Only `PUBLISHED` records are returned by public APIs.
@@ -2532,7 +2543,7 @@ Test at minimum:
 - Use secure upload URLs.
 - Validate YouTube hostnames and video IDs server-side.
 - Never render arbitrary iframe HTML, scripts, or embed code supplied by an admin.
-- Restrict iframe sources through Content Security Policy to the approved YouTube domains used by the controlled embed component.
+- Restrict iframe sources through Content Security Policy to the approved YouTube and Instagram domains used by the controlled embed components.
 - Verify all Stripe webhooks.
 - Protect against webhook replay.
 - Use idempotency.

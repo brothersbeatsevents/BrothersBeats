@@ -9,10 +9,12 @@ export default function SafeYouTubeEmbed({
   videoId,
   title,
   className = '',
+  portrait = false,
 }: {
   videoId: string;
   title: string;
   className?: string;
+  portrait?: boolean;
 }) {
   if (!VIDEO_ID_PATTERN.test(videoId)) {
     return (
@@ -23,7 +25,7 @@ export default function SafeYouTubeEmbed({
   }
 
   return (
-    <div className={`aspect-video overflow-hidden rounded-xl bg-black ${className}`}>
+    <div className={`${portrait ? 'aspect-[9/16] mx-auto w-full max-w-[36.5625vh]' : 'aspect-video'} overflow-hidden rounded-xl bg-black ${className}`}>
       <iframe
         className="w-full h-full"
         src={`https://www.youtube-nocookie.com/embed/${videoId}`}

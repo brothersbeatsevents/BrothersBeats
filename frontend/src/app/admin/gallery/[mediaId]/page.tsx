@@ -11,7 +11,7 @@ import {
   adminArchiveGalleryItem,
   adminDeleteGalleryItem,
 } from '@/lib/api';
-import SafeYouTubeEmbed from '@/components/ui/SafeYouTubeEmbed';
+import GalleryVideoEmbed from '@/components/ui/GalleryVideoEmbed';
 
 export default function GalleryMediaDetailPage() {
   const { token } = useAuth();
@@ -100,7 +100,7 @@ export default function GalleryMediaDetailPage() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.imageUrl} alt={item.altText || item.title} className="w-full max-h-96 object-contain rounded-xl bg-bb-neutral" />
         ) : (
-          <SafeYouTubeEmbed videoId={item.youtubeVideoId} title={item.title} />
+          <GalleryVideoEmbed item={item} />
         )}
       </div>
 

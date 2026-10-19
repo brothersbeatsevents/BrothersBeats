@@ -11,12 +11,13 @@ export default function NewGalleryMediaPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [events, setEvents] = useState<any[]>([]);
-  const [mediaType, setMediaType] = useState<'IMAGE' | 'YOUTUBE_VIDEO'>('IMAGE');
+  const [mediaType, setMediaType] = useState<'IMAGE' | 'YOUTUBE_VIDEO' | 'INSTAGRAM_REEL'>('IMAGE');
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
   const [altText, setAltText] = useState('');
   const [eventId, setEventId] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
   const [featured, setFeatured] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<{ imageUrl: string; imageS3Key: string } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -66,6 +67,8 @@ export default function NewGalleryMediaPage() {
         payload.altText = altText;
         payload.imageUrl = uploadedImage.imageUrl;
         payload.imageS3Key = uploadedImage.imageS3Key;
+      } else if (mediaType === 'INSTAGRAM_REEL') {
+        payload.instagramUrl = instagramUrl;
       } else {
         payload.youtubeUrl = youtubeUrl;
       }
@@ -85,7 +88,7 @@ export default function NewGalleryMediaPage() {
       <form onSubmit={handleSubmit} className="space-y-4 bg-bb-surface border border-bb-border rounded-2xl p-6">
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Media type</label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setMediaType('IMAGE')}
@@ -98,7 +101,14 @@ export default function NewGalleryMediaPage() {
               onClick={() => setMediaType('YOUTUBE_VIDEO')}
               className={`px-4 py-2 rounded-full text-sm font-semibold ${mediaType === 'YOUTUBE_VIDEO' ? 'bg-bb-gold text-bb-ink' : 'bg-bb-neutral text-bb-text-secondary'}`}
             >
-              YouTube video
+              YouTube video / Short
+            </button>
+            <button
+              type="button"
+              onClick={() => setMediaType('INSTAGRAM_REEL')}
+              className={`px-4 py-2 rounded-full text-sm font-semibold ${mediaType === 'INSTAGRAM_REEL' ? 'bg-bb-gold text-bb-ink' : 'bg-bb-neutral text-bb-text-secondary'}`}
+            >
+              Instagram Reel
             </button>
           </div>
         </div>
@@ -135,9 +145,24 @@ export default function NewGalleryMediaPage() {
             <label className="block text-sm font-medium text-bb-text mt-3 mb-1">Alt text (required to publish)</label>
             <input value={altText} onChange={(e) => setAltText(e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" placeholder="Describe the image for screen readers" />
           </div>
+        ) : mediaType === 'INSTAGRAM_REEL' ? (
+          <div>
+            <label className="block text-sm font-medium text-bb-text mb-1">Instagram Reel URL</label>
+            <input
+              required
+              type="url"
+              value={instagramUrl}
+              onChange={(e) => setInstagramUrl(e.target.value)}
+              placeholder="https://www.instagram.com/reel/…/"
+              className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm"
+            />
+            <p className="text-xs text-bb-text-secondary mt-1">
+              Paste a Reel link from a public Instagram account with embedding enabled.
+            </p>
+          </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-bb-text mb-1">YouTube URL</label>
+            <label className="block text-sm font-medium text-bb-text mb-1">YouTube video or Shorts URL</label>
             <input
               required
               value={youtubeUrl}
@@ -146,7 +171,7 @@ export default function NewGalleryMediaPage() {
               className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm"
             />
             <p className="text-xs text-bb-text-secondary mt-1">
-              Only standard youtube.com or youtu.be video links are supported (no playlists, channels, shorts, or live links).
+              Supports youtube.com videos, YouTube Shorts, and youtu.be links. Playlists, channels, and live links are not supported.
             </p>
           </div>
         )}

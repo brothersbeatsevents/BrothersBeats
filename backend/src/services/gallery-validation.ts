@@ -4,6 +4,7 @@
 // ──────────────────────────────────────────
 
 import { GalleryMediaEntity } from '../types';
+import { normalizeInstagramReelUrl } from './instagram';
 
 /**
  * Returns a list of human-readable validation errors that must be resolved
@@ -23,6 +24,11 @@ export function validateGalleryMediaForPublish(item: GalleryMediaEntity): string
   } else if (item.type === 'YOUTUBE_VIDEO') {
     if (!item.youtubeVideoId || !item.youtubeUrl) {
       errors.push('A validated YouTube video is required');
+    }
+  } else if (item.type === 'INSTAGRAM_REEL') {
+    const normalized = normalizeInstagramReelUrl(item.instagramUrl || '');
+    if (!normalized || normalized.shortcode !== item.instagramShortcode) {
+      errors.push('A validated Instagram Reel is required');
     }
   } else {
     errors.push('Unknown media type');

@@ -51,6 +51,23 @@ test('filters by media type', () => {
   assert.deepEqual(result.map((i) => i.id), ['b']);
 });
 
+test('the Videos filter includes YouTube videos, Shorts, and Instagram Reels only when published', () => {
+  const items = [
+    makeItem({ id: 'photo' }),
+    makeItem({ id: 'youtube', type: 'YOUTUBE_VIDEO' }),
+    makeItem({ id: 'short', type: 'YOUTUBE_VIDEO', youtubeUrl: 'https://www.youtube.com/shorts/dQw4w9WgXcQ' }),
+    makeItem({ id: 'reel', type: 'INSTAGRAM_REEL', instagramUrl: 'https://www.instagram.com/reel/DA_12-abC3/', instagramShortcode: 'DA_12-abC3' }),
+    makeItem({ id: 'draft-reel', type: 'INSTAGRAM_REEL', status: 'DRAFT' }),
+    makeItem({ id: 'archived-reel', type: 'INSTAGRAM_REEL', status: 'ARCHIVED' }),
+  ];
+  assert.deepEqual(filterPublishedGallery(items, { type: 'VIDEO' }).map((item) => item.id), ['youtube', 'short', 'reel']);
+  assert.deepEqual(filterPublishedGallery(items, { type: 'INSTAGRAM_REEL' }).map((item) => item.id), ['reel']);
+  const reel = toPublicGalleryMedia(items[3]);
+  assert.equal(reel.instagramShortcode, 'DA_12-abC3');
+  assert.equal(reel.instagramUrl, 'https://www.instagram.com/reel/DA_12-abC3/');
+  assert.equal((reel as any).createdBy, undefined);
+});
+
 test('featured items always sort first regardless of sortOrder', () => {
   const items = [
     makeItem({ id: 'a', featured: false, sortOrder: 0 }),

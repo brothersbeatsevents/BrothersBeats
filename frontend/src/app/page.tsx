@@ -6,6 +6,7 @@ import { organizationJsonLd, JsonLd } from '@/lib/json-ld';
 import EventGrid from '@/components/ui/EventGrid';
 import SponsorGrid from '@/components/ui/SponsorGrid';
 import HeroCarousel from '@/components/ui/HeroCarousel';
+import GalleryMediaThumbnail from '@/components/ui/GalleryMediaThumbnail';
 import { getHeroImages } from '@/lib/hero-images';
 
 export const metadata: Metadata = {
@@ -66,13 +67,7 @@ export default async function HomePage() {
                 href="/gallery"
                 className="group relative block aspect-[4/3] overflow-hidden rounded-2xl border border-bb-border bg-bb-neutral"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.type === 'IMAGE' ? item.imageUrl : `https://img.youtube.com/vi/${item.youtubeVideoId}/hqdefault.jpg`}
-                  alt={item.altText || item.title}
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                <GalleryMediaThumbnail item={item} />
               </Link>
             ))}
           </div>
