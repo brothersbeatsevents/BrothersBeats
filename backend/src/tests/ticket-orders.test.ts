@@ -14,6 +14,7 @@ import { parseTicketSelections, quoteTicketOrder } from '../services/ticket-orde
 import { reserveOrderInventory, expireStaleReservations, releaseBookingInventory } from '../services/inventory';
 import checkoutRoutes from '../routes/checkout';
 import pricingRoutes from '../routes/pricing';
+import publicEventRoutes from '../routes/events';
 import webhookRoutes from '../routes/webhooks-stripe';
 import adminBookingRoutes from '../routes/admin/bookings';
 import adminEventRoutes from '../routes/admin/events';
@@ -28,6 +29,7 @@ process.env.STRIPE_WEBHOOK_SECRET = 'whsec_local_regression';
 const stripe = new Stripe('sk_test_local_regression');
 const sessionPrototype = Object.getPrototypeOf(stripe.checkout.sessions);
 let stripeLines: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+let stripePaymentMethods: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = [];
 let failStripe = false;
 let server: Server;
 let baseUrl: string;
@@ -46,12 +48,14 @@ before(async () => {
   mock.method(sessionPrototype, 'create', async (params: Stripe.Checkout.SessionCreateParams) => {
     if (failStripe) throw new Error('Simulated Stripe outage');
     stripeLines = params.line_items || [];
+    stripePaymentMethods = params.payment_method_types || [];
     return { id: 'cs_test_basket', url: 'https://checkout.stripe.test/basket' };
   });
   const app = express();
   app.use(express.json({ verify: (req, _res, body) => { (req as any).rawBody = body; } }));
   app.use('/checkout', checkoutRoutes);
   app.use('/pricing', pricingRoutes);
+  app.use('/events', publicEventRoutes);
   app.use('/webhook', webhookRoutes);
   app.use('/admin/bookings', adminBookingRoutes);
   app.use('/admin/events', adminEventRoutes);
@@ -91,6 +95,7 @@ beforeEach(async () => {
   const admin = Array.from(store.users.values()).find((user) => user.role === 'ADMIN') as User;
   adminToken = generateToken(admin);
   stripeLines = [];
+  stripePaymentMethods = [];
   failStripe = false;
 });
 
@@ -119,6 +124,8 @@ test('Standard, Group and free Child tickets share one quote and Stripe checkout
   assert.equal(preview.body.data.totalAmountMinor, 8000);
   assert.equal(preview.body.data.lineItems.length, 3);
   const booking = await startBasket();
+  // `card` also provides Apple Pay and Google Pay; no Link or other methods.
+  assert.deepEqual(stripePaymentMethods, ['card', 'revolut_pay']);
   assert.equal(booking.totalAmountMinor, preview.body.data.totalAmountMinor);
   assert.equal(event.totalTicketsReserved, 7);
   assert.deepEqual(stripeLines.map((line) => [line.quantity, line.price_data?.unit_amount]), [[1, 2000], [4, 1500], [2, 0]]);
@@ -165,6 +172,63 @@ test('mixed order enforces group minimum, aggregate order limit, and event capac
   event.capacity = 6;
   assert.equal((await request('/pricing/quote', { eventId: event.id, items: basket() })).status, 409);
   assert.equal((await request('/checkout/session', { eventId: event.id, items: basket(), ...buyer })).status, 409);
+});
+
+test('a four-ticket group can be quoted and reserved when six tickets remain', async () => {
+  event.capacity = 6;
+  group.maxQuantity = 6;
+  group.name = 'Group of 4';
+  const details = await request(`/events/${event.slug}`);
+  assert.equal(details.body.data.availableTickets, 6);
+  assert.equal(details.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 6);
+  const items = [{ ticketTierId: group.id, quantity: 4 }];
+  assert.equal((await request('/pricing/quote', { eventId: event.id, items })).status, 200);
+  assert.equal((await request('/checkout/session', { eventId: event.id, items, ...buyer })).status, 200);
+  assert.equal(group.quantityReserved, 4);
+  assert.equal(event.totalTicketsReserved, 4);
+  const updated = await request(`/events/${event.slug}`);
+  assert.equal(updated.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 2);
+});
+
+test('one Group of 4 selection stays one unit for group tickets configured with a minimum of one', async () => {
+  group.name = 'Group of 4';
+  group.minPerOrder = 1;
+  group.groupMinSize = undefined;
+  group.priceAmountMinor = 7000;
+  group.maxQuantity = 6;
+  const items = [{ ticketTierId: group.id, quantity: 1 }];
+  const quote = await request('/pricing/quote', { eventId: event.id, items });
+  assert.equal(quote.status, 200);
+  assert.equal(quote.body.data.quantity, 1);
+  assert.equal(quote.body.data.totalAmountMinor, 7000);
+  assert.equal((await request('/checkout/session', { eventId: event.id, items, ...buyer })).status, 200);
+  assert.equal(group.quantityReserved, 1);
+  assert.equal(event.totalTicketsReserved, 1);
+});
+
+test('a stale count of six is replaced by the current two remaining after another booking', async () => {
+  group.name = 'Group of 4';
+  group.minPerOrder = 1;
+  group.groupMinSize = undefined;
+  group.maxQuantity = 6;
+  const before = await request(`/events/${event.slug}`);
+  assert.equal(before.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 6);
+  const items = [{ ticketTierId: group.id, quantity: 4 }];
+  assert.equal((await request('/checkout/session', { eventId: event.id, items, ...buyer })).status, 200);
+  const rejected = await request('/pricing/quote', { eventId: event.id, items });
+  assert.equal(rejected.status, 409);
+  assert.match(rejected.body.error, /Group of 4\. Only 2 left/);
+  const after = await request(`/events/${event.slug}`);
+  assert.equal(after.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 2);
+  assert.equal((await request('/pricing/quote', { eventId: event.id, items: [{ ticketTierId: group.id, quantity: 1 }] })).status, 200);
+});
+
+test('ticket-type availability never exceeds the remaining event capacity', async () => {
+  event.capacity = 6;
+  event.totalTicketsSold = 4;
+  const details = await request(`/events/${event.slug}`);
+  assert.equal(details.body.data.availableTickets, 2);
+  assert(details.body.data.ticketTiers.every((tier: any) => tier.available <= 2));
 });
 
 test('duplicate, fractional, negative and empty selections are rejected', () => {

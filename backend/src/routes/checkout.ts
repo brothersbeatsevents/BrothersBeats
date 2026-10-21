@@ -13,6 +13,7 @@ import { fulfillBooking } from '../services/booking-fulfillment';
 import { signBookingToken } from '../services/booking-links';
 import { createCheckoutSession } from '../services/stripe';
 import { DiscountCodeError } from '../services/discount-codes';
+import { isValidOptionalPhone, PHONE_ERROR } from '../services/phone-validation';
 
 const router = Router();
 
@@ -39,6 +40,11 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
   if (typeof eventId !== 'string' || typeof buyerName !== 'string' || !buyerName.trim() ||
       typeof buyerEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
     res.status(400).json({ success: false, error: 'eventId, buyerName, and a valid buyerEmail are required' });
+    return;
+  }
+
+  if (!isValidOptionalPhone(buyerPhone)) {
+    res.status(400).json({ success: false, error: PHONE_ERROR });
     return;
   }
 
@@ -122,7 +128,7 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     buyerName,
     buyerEmail,
     normalizedBuyerEmail: buyerEmail.trim().toLowerCase(),
-    buyerPhone,
+    buyerPhone: buyerPhone?.trim(),
 
     attendees: bookingAttendees,
 

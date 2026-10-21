@@ -9,6 +9,7 @@ import {
   ReactNode,
 } from 'react';
 import { getMe, signIn as apiSignIn, getCognitoLoginUrl, exchangeCognitoCode } from './api';
+import { AUTH_RETURN_PATH_KEY, getAuthReturnPath } from './auth-redirect';
 
 export interface AuthUser {
   id: string;
@@ -27,7 +28,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  loginWithCognito: () => Promise<void>;
+  loginWithCognito: (returnTo?: string) => Promise<void>;
   handleCognitoCallback: (code: string) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
@@ -96,8 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (refresh_token) await establishSession(refresh_token);
   };
 
-  const loginWithCognito = async () => {
+  const loginWithCognito = async (returnTo?: string) => {
     const res = await getCognitoLoginUrl();
+    sessionStorage.setItem(AUTH_RETURN_PATH_KEY, getAuthReturnPath(returnTo));
     window.location.href = res.data.loginUrl;
   };
 

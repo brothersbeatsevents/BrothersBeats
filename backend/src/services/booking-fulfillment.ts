@@ -4,7 +4,7 @@ import { BookingEntity, EventEntity, TicketEntity } from '../types';
 import { confirmBookingInventory } from './inventory';
 import { bookingSelections } from './ticket-order';
 import { generateTicketNumber, generateAndStoreQrCode, generateAndStoreTicketPdf } from './tickets';
-import { sendBookingConfirmation, sendTicketDelivery } from './email';
+import { sendBookingConfirmation } from './email';
 
 function eventContext(event: EventEntity) {
   return {
@@ -72,13 +72,6 @@ export async function fulfillBooking(booking: BookingEntity, event: EventEntity)
     booking.buyerName,
     booking,
     eventContext(event),
-  ).catch((err) => console.error('[Webhook] sendBookingConfirmation failed:', err));
-
-  await sendTicketDelivery(
-    booking.buyerEmail,
-    booking.buyerName,
     tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
-    eventContext(event),
-    booking.bookingReference,
-  ).catch((err) => console.error('[Webhook] sendTicketDelivery failed:', err));
+  ).catch((err) => console.error('[Webhook] sendBookingConfirmation failed:', err));
 }

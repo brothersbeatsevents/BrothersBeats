@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signUp } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
 
-export default function SignUpPage() {
+function SignUpContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = getAuthReturnPath(searchParams.get('next'));
   const { loginWithCognito } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -25,10 +28,21 @@ export default function SignUpPage() {
     setLoading(true);
     try {
       await signUp(email, password, name);
-      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+      router.push(authPageUrl('/auth/verify-email', returnTo, { email }));
     } catch (err: any) {
       setError(err.message || 'Sign up failed. Please try again.');
     } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError('');
+    setLoading(true);
+    try {
+      await loginWithCognito(returnTo);
+    } catch (err: any) {
+      setError(err.message || 'Unable to start Google sign in.');
       setLoading(false);
     }
   }
@@ -39,7 +53,8 @@ export default function SignUpPage() {
         <h1 className="font-display font-bold text-3xl text-bb-text text-center mb-8">Create your account</h1>
 
         <button
-          onClick={() => loginWithCognito()}
+          onClick={handleGoogleSignIn}
+          disabled={loading}
           className="w-full border border-bb-border rounded-full py-3 font-semibold text-bb-text hover:border-bb-gold transition-colors mb-6"
         >
           Continue with Google
@@ -95,11 +110,19 @@ export default function SignUpPage() {
 
         <p className="text-center text-sm text-bb-text-secondary mt-6">
           Already have an account?{' '}
-          <Link href="/auth/sign-in" className="text-bb-gold font-semibold hover:text-bb-gold-dark">
+          <Link href={authPageUrl('/auth/sign-in', returnTo)} className="text-bb-gold font-semibold hover:text-bb-gold-dark">
             Sign in
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="py-16 text-center text-bb-text-secondary">Loading sign up…</div>}>
+      <SignUpContent />
+    </Suspense>
   );
 }

@@ -430,11 +430,32 @@ export async function sendPasswordReset(
   );
 }
 
+type EmailTicket = { ticketNumber: string; ticketTierName?: string };
+
+function ticketStubs(tickets: EmailTicket[]): string {
+  return tickets
+    .map(
+      (t, i) => `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px; border:1px solid ${BRAND.border}; border-radius:14px; border-collapse:separate;">
+      <tr>
+        <td width="8" bgcolor="${BRAND.gold}" style="width:8px; background:${BRAND.gold}; border-radius:13px 0 0 13px;">&nbsp;</td>
+        <td style="padding:14px 18px;">
+          <p style="margin:0; font-family:${FONT_BODY}; font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:${BRAND.textMuted};">${escapeHtml(t.ticketTierName || 'Admission')} &middot; Ticket ${i + 1} of ${tickets.length}</p>
+          <p style="margin:4px 0 0; font-family:${FONT_MONO}; font-size:17px; font-weight:700; letter-spacing:0.06em; color:${BRAND.ink};">${escapeHtml(t.ticketNumber)}</p>
+        </td>
+        <td align="right" style="padding:14px 18px; font-family:${FONT_BODY}; font-size:12px; font-weight:700; letter-spacing:0.1em; color:${BRAND.goldDark}; white-space:nowrap;">ADMIT ONE</td>
+      </tr>
+    </table>`,
+    )
+    .join('');
+}
+
 export async function sendBookingConfirmation(
   to: string,
   buyerName: string,
   booking: { bookingReference: string; quantity: number; totalAmountMinor: number; currency: string },
   event: { title: string; startDateTime: string; venueName: string; city: string; timezone: string; slug: string },
+  tickets: EmailTicket[],
 ): Promise<boolean> {
   const subject = `🎉 You're going! Booking confirmed for ${event.title}`;
   const calUrl = buildGoogleCalendarUrl(event);
@@ -448,11 +469,14 @@ export async function sendBookingConfirmation(
       ['Tickets', ticketLabel],
       ['Total paid', formatMoney(booking.totalAmountMinor, booking.currency)],
     ])}
-    ${callout('Your tickets with QR codes are on their way in a separate email, and they&rsquo;re always available in your account.')}
+    ${paragraph(`${tickets.length > 1 ? 'Your tickets are' : 'Your ticket is'} ready. Use the link below to view your QR codes and download your tickets.`)}
+    ${ticketStubs(tickets)}
+    ${callout('<strong>How entry works</strong><br>Open your tickets on your phone and show the QR code at the door &mdash; or download the PDF and bring it along. Each QR code can be scanned once.')}
     ${buttons(
-      ctaButton('View My Tickets', `${FRONTEND_URL}/account/tickets/${booking.bookingReference}`),
+      ctaButton('View & Download Tickets', `${FRONTEND_URL}/account/tickets/${booking.bookingReference}`),
       ctaButton('Add to Google Calendar', calUrl, 'secondary'),
     )}
+    ${finePrint(`Ticket link: <a href="${FRONTEND_URL}/account/tickets/${booking.bookingReference}" style="color:${BRAND.goldDark}; word-break:break-all;">${escapeHtml(`${FRONTEND_URL}/account/tickets/${booking.bookingReference}`)}</a>`)}
   `;
   return sendEmail(
     to,
@@ -468,32 +492,17 @@ export async function sendBookingConfirmation(
 export async function sendTicketDelivery(
   to: string,
   buyerName: string,
-  tickets: Array<{ ticketNumber: string; ticketTierName?: string }>,
+  tickets: EmailTicket[],
   event: { title: string; startDateTime: string; venueName: string; city: string; timezone: string; slug: string },
   bookingReference: string,
   isResend = false,
 ): Promise<boolean> {
   const subject = `🎟️ ${isResend ? 'Your tickets (resent)' : 'Your tickets are here'}: ${event.title}`;
-  const stubs = tickets
-    .map(
-      (t, i) => `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px; border:1px solid ${BRAND.border}; border-radius:14px; border-collapse:separate;">
-      <tr>
-        <td width="8" bgcolor="${BRAND.gold}" style="width:8px; background:${BRAND.gold}; border-radius:13px 0 0 13px;">&nbsp;</td>
-        <td style="padding:14px 18px;">
-          <p style="margin:0; font-family:${FONT_BODY}; font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:${BRAND.textMuted};">${escapeHtml(t.ticketTierName || 'Admission')} &middot; Ticket ${i + 1} of ${tickets.length}</p>
-          <p style="margin:4px 0 0; font-family:${FONT_MONO}; font-size:17px; font-weight:700; letter-spacing:0.06em; color:${BRAND.ink};">${escapeHtml(t.ticketNumber)}</p>
-        </td>
-        <td align="right" style="padding:14px 18px; font-family:${FONT_BODY}; font-size:12px; font-weight:700; letter-spacing:0.1em; color:${BRAND.goldDark}; white-space:nowrap;">ADMIT ONE</td>
-      </tr>
-    </table>`,
-    )
-    .join('');
   const content = `
     ${greeting(buyerName)}
     ${paragraph(`${tickets.length > 1 ? 'Your tickets are' : 'Your ticket is'} ready! Keep this email handy &mdash; it&rsquo;s your pass to a great night.`)}
     ${eventSummaryBlock(event)}
-    ${stubs}
+    ${ticketStubs(tickets)}
     <div style="height:12px; line-height:12px; font-size:0;">&nbsp;</div>
     ${callout('<strong>How entry works</strong><br>Open your tickets on your phone and show the QR code at the door &mdash; or download the PDF and bring it along. Each QR code can be scanned once.')}
     ${buttons(ctaButton('View & Download Tickets', `${FRONTEND_URL}/account/tickets/${bookingReference}`))}

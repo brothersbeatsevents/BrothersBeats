@@ -3,10 +3,12 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resetPassword } from '@/lib/api';
+import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const returnTo = getAuthReturnPath(searchParams.get('next'));
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -23,7 +25,7 @@ function ResetPasswordContent() {
     setLoading(true);
     try {
       await resetPassword(email.trim().toLowerCase(), code.trim(), newPassword);
-      router.push('/auth/sign-in?reset=1');
+      router.push(authPageUrl('/auth/sign-in', returnTo, { reset: '1' }));
     } catch (err: any) {
       setError(err.message || 'The reset code is invalid or has expired.');
     } finally {

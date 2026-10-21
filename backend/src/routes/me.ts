@@ -14,6 +14,7 @@ import { AuthRequest, authenticate } from '../middleware/auth';
 import { BookingEntity, EventEntity, TicketEntity, User } from '../types';
 import { sendTicketDelivery } from '../services/email';
 import { getSignedDownloadUrl } from '../services/s3';
+import { isValidOptionalPhone, PHONE_ERROR } from '../services/phone-validation';
 
 const router = Router();
 
@@ -43,6 +44,11 @@ router.patch('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const user = req.user!;
   const { display_name, phone } = req.body;
 
+  if (!isValidOptionalPhone(phone)) {
+    res.status(400).json({ success: false, error: PHONE_ERROR });
+    return;
+  }
+
   if (display_name !== undefined) {
     if (typeof display_name !== 'string' || !display_name.trim()) {
       res.status(400).json({ success: false, error: 'display_name must be a non-empty string' });
@@ -51,11 +57,7 @@ router.patch('/', async (req: AuthRequest, res: Response): Promise<void> => {
     user.display_name = display_name.trim().slice(0, 100);
   }
   if (phone !== undefined) {
-    if (typeof phone !== 'string') {
-      res.status(400).json({ success: false, error: 'phone must be a string' });
-      return;
-    }
-    user.phone = phone.trim().slice(0, 30);
+    user.phone = phone.trim();
   }
 
   user.updated_at = new Date().toISOString();

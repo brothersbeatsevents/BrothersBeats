@@ -1,17 +1,24 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import { AUTH_RETURN_PATH_KEY, authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
 
 function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { handleCognitoCallback } = useAuth();
   const [error, setError] = useState('');
+  const [returnTo, setReturnTo] = useState('/account');
+  const started = useRef(false);
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    const nextPath = getAuthReturnPath(sessionStorage.getItem(AUTH_RETURN_PATH_KEY));
+    setReturnTo(nextPath);
     const code = searchParams.get('code');
     const errorParam = searchParams.get('error');
     const errorDesc = searchParams.get('error_description');
@@ -26,7 +33,10 @@ function CallbackHandler() {
     }
 
     handleCognitoCallback(code)
-      .then(() => router.replace('/account'))
+      .then(() => {
+        sessionStorage.removeItem(AUTH_RETURN_PATH_KEY);
+        router.replace(nextPath);
+      })
       .catch((err) => setError(err.message || 'Authentication failed'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -37,7 +47,7 @@ function CallbackHandler() {
         <div className="max-w-md w-full bg-bb-surface border border-bb-border rounded-2xl p-8 text-center">
           <h2 className="font-display text-xl font-bold text-bb-text mb-2">Sign in failed</h2>
           <p className="text-sm text-bb-text-secondary mb-6">{error}</p>
-          <Link href="/auth/sign-in" className="inline-block bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full">
+          <Link href={authPageUrl('/auth/sign-in', returnTo)} className="inline-block bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full">
             Try again
           </Link>
         </div>

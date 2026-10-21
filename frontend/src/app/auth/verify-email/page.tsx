@@ -3,10 +3,12 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { confirmEmail, resendCode } from '@/lib/api';
+import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const returnTo = getAuthReturnPath(searchParams.get('next'));
   const email = searchParams.get('email') || '';
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +21,7 @@ function VerifyEmailContent() {
     setLoading(true);
     try {
       await confirmEmail(email, code);
-      router.push('/auth/sign-in?verified=1');
+      router.push(authPageUrl('/auth/sign-in', returnTo, { verified: '1' }));
     } catch (err: any) {
       setError(err.message || 'Invalid or expired code.');
     } finally {

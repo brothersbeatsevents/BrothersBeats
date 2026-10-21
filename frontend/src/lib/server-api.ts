@@ -11,9 +11,9 @@ const API_URL =
 
 async function serverFetch<T>(endpoint: string, revalidate?: number): Promise<T | null> {
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
-      next: { revalidate: revalidate ?? 60 },
-    });
+    const res = await fetch(`${API_URL}${endpoint}`, revalidate === 0
+      ? { cache: 'no-store' }
+      : { next: { revalidate: revalidate ?? 60 } });
     if (!res.ok) return null;
     const json = await res.json();
     return json.data ?? null;
@@ -33,7 +33,8 @@ export async function getEventsSSR(params?: { category?: string; city?: string; 
 }
 
 export async function getEventSSR(slug: string) {
-  return serverFetch<any>(`/events/${slug}`);
+  // Ticket availability must reflect current bookings, not a cached page.
+  return serverFetch<any>(`/events/${slug}`, 0);
 }
 
 export async function getGallerySSR(params?: { featured?: boolean }) {

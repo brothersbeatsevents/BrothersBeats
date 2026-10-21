@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { updateMe, getPresignedAvatarUpload, uploadToPresignedUrl } from '@/lib/api';
+import { updateMe } from '@/lib/api';
+import { phoneInputProps } from '@/lib/phone';
 
 export default function ProfilePage() {
   const { user, token, refreshUser } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState('');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,49 +37,9 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !token) return;
-    setUploading(true);
-    setError('');
-    try {
-      const { data } = await getPresignedAvatarUpload(file.type, token);
-      await uploadToPresignedUrl(data.uploadUrl, file);
-      await refreshUser();
-    } catch (err: any) {
-      setError(err.message || 'Failed to upload avatar.');
-    } finally {
-      setUploading(false);
-    }
-  }
-
   return (
     <div>
       <h1 className="font-display font-bold text-3xl text-bb-text mb-8">Profile</h1>
-
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-20 h-20 rounded-full bg-bb-neutral overflow-hidden flex items-center justify-center">
-          {user?.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.avatar_url} alt={user.display_name} className="w-full h-full object-cover" />
-          ) : (
-            <span className="font-display font-bold text-2xl text-bb-text-muted">
-              {user?.display_name?.[0]?.toUpperCase()}
-            </span>
-          )}
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark border border-bb-gold rounded-full px-4 py-2 transition-colors disabled:opacity-60"
-          >
-            {uploading ? 'Uploading…' : 'Change photo'}
-          </button>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-        </div>
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <div>
@@ -103,6 +62,7 @@ export default function ProfilePage() {
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Phone (optional)</label>
           <input
+            {...phoneInputProps}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"

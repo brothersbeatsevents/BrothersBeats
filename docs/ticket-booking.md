@@ -6,6 +6,12 @@ Every free child admission creates an individual ticket with a QR code and PDF. 
 
 Customers and admins making manual bookings can select multiple ticket types in one booking. Public checkout enforces each type’s limits, the Group minimum, and the event’s combined per-order limit and capacity. Early Bird remains an automatic discount on Standard tickets.
 
+After selecting tickets and clicking **Next**, signed-out visitors can **Sign in**, **Sign up**, or **Continue as guest** when the event permits guest checkout. The selected ticket types and quantities stay in the checkout URL through sign-in, account verification, Google sign-in, and password reset. Signed-in customers proceed directly to their booking details.
+
+Event details use uncached availability. The ticket selector refreshes counts every 30 seconds while visible, when visitors return to the tab, and after a failed price check. Counts respect both ticket-type and event capacity. If another booking reduces stock, the selector retains the visitor's selection and shows the current count so they can adjust it.
+
+Online, free, and manual bookings send one confirmation email after tickets are generated. It includes the booking summary, every ticket number and type, and a **View & Download Tickets** link. There is no separate automatic ticket-delivery email. Requested resends still send one email per request; resending a confirmation includes its tickets.
+
 The pricing and checkout endpoints accept `items: [{ ticketTierId, quantity }]`. Admin manual bookings accept the same shape. Existing requests with `ticketTierId` and `quantity`, and stored bookings without `lineItems`, remain supported. Prices are always calculated by the backend.
 
 Run `npm test --prefix backend` for the regression suite. Stripe, email and S3 calls in the integration tests are mocked; tests do not make real payments or send emails.

@@ -12,6 +12,7 @@ import { reserveOrderInventory, confirmBookingInventory, releaseBookingInventory
 import { bookingSelections, parseTicketSelections, TicketOrderError } from '../../services/ticket-order';
 import { generateTicketNumber, generateAndStoreQrCode, generateAndStoreTicketPdf } from '../../services/tickets';
 import { sendBookingConfirmation, sendTicketDelivery } from '../../services/email';
+import { isValidOptionalPhone, PHONE_ERROR } from '../../services/phone-validation';
 
 const router = Router();
 router.use(authenticate, requireAdmin);
@@ -99,6 +100,10 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     });
     return;
   }
+  if (!isValidOptionalPhone(buyerPhone)) {
+    res.status(400).json({ success: false, error: PHONE_ERROR });
+    return;
+  }
   if (!['CASH', 'BANK_TRANSFER', 'COMPLIMENTARY', 'EXTERNAL'].includes(paymentMethod)) {
     res.status(400).json({ success: false, error: 'paymentMethod must be CASH, BANK_TRANSFER, COMPLIMENTARY, or EXTERNAL' });
     return;
@@ -163,7 +168,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     buyerName,
     buyerEmail,
     normalizedBuyerEmail: buyerEmail.trim().toLowerCase(),
-    buyerPhone,
+    buyerPhone: buyerPhone?.trim(),
     attendees: bookingAttendees,
     source: 'ADMIN_MANUAL',
     paymentMethod,
@@ -200,12 +205,8 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
   await sendBookingConfirmation(buyerEmail, buyerName, booking, {
     title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug,
-  }).catch((err) => console.error('[Admin] sendBookingConfirmation failed:', err));
-  await sendTicketDelivery(
-    buyerEmail, buyerName, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
-    { title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug },
-    booking.bookingReference,
-  ).catch((err) => console.error('[Admin] sendTicketDelivery failed:', err));
+  }, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })))
+    .catch((err) => console.error('[Admin] sendBookingConfirmation failed:', err));
 
   auditLog(req.user!.id, 'CREATE_MANUAL_BOOKING', 'BOOKING', booking.id, {
     actorRole: req.user!.role as any,
@@ -262,18 +263,19 @@ router.post('/:bookingReference/cancel', async (req: AuthRequest, res: Response)
 // POST /api/admin/bookings/:bookingReference/resend-confirmation
 router.post('/:bookingReference/resend-confirmation', async (req: AuthRequest, res: Response): Promise<void> => {
   const booking = await db.findBy<BookingEntity>('bookings', 'bookingReference', req.params.bookingReference);
-  if (!booking) {
-    res.status(404).json({ success: false, error: 'Booking not found' });
+  if (!booking || booking.bookingStatus !== 'CONFIRMED') {
+    res.status(404).json({ success: false, error: 'Confirmed booking not found' });
     return;
   }
   const event = await db.get<EventEntity>('events', booking.eventId);
-  if (!event) {
-    res.status(404).json({ success: false, error: 'Event not found' });
+  const tickets = await db.filterBy<TicketEntity>('tickets', 'bookingId', booking.id);
+  if (!event || tickets.length === 0) {
+    res.status(404).json({ success: false, error: 'No tickets found' });
     return;
   }
   await sendBookingConfirmation(booking.buyerEmail, booking.buyerName, booking, {
     title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug,
-  });
+  }, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })));
   auditLog(req.user!.id, 'RESEND_CONFIRMATION', 'BOOKING', booking.id, { actorRole: req.user!.role as any, bookingId: booking.id, summary: `Resent confirmation for ${booking.bookingReference}` });
   res.json({ success: true, message: 'Confirmation email resent' });
 });

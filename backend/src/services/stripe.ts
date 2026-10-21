@@ -135,6 +135,9 @@ export async function createCheckoutSession(
   const session = await stripe.checkout.sessions.create(
     {
       mode: 'payment',
+      // Apple Pay and Google Pay use `card` and appear on eligible devices.
+      // Keep this explicit so Dashboard defaults cannot add other methods.
+      payment_method_types: ['card', 'revolut_pay'],
       customer_email: input.buyerEmail,
       line_items: input.lineItems.map((item) => ({
         price_data: {

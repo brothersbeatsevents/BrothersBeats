@@ -39,9 +39,9 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
   if (!images.length) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8" aria-label="Featured events">
+    <div>
       <div
-        className="relative aspect-video w-full overflow-hidden rounded-3xl bg-bb-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bb-gold"
+        className="relative aspect-[2/1] sm:aspect-[3/1] lg:aspect-[4/1] w-full overflow-hidden rounded-3xl bg-bb-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bb-gold"
         role="region"
         aria-roledescription={multiple ? 'carousel' : undefined}
         aria-label="Homepage highlights"
@@ -121,11 +121,11 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
         )}
         <Link
           href="/events"
-          className={`absolute right-2 ${multiple ? 'bottom-16' : 'bottom-2'} sm:right-8 sm:bottom-8 bg-bb-gold text-bb-ink text-xs sm:text-base font-semibold px-3 sm:px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors`}
+          className="absolute right-3 top-3 sm:right-6 sm:top-6 bg-bb-gold text-bb-ink text-xs sm:text-base font-semibold px-3 sm:px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
         >
           Explore Events
         </Link>
       </div>
-    </section>
+    </div>
   );
 }

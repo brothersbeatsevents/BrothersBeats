@@ -100,6 +100,8 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
     return;
   }
 
+  const { available, badge } = availability(event);
+
   const tiers = (
     await db.filterBy<TicketTierEntity>('ticketTiers', 'eventId', event.id)
   )
@@ -120,7 +122,7 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
         description: t.description,
         priceAmountMinor: t.priceAmountMinor,
         currency: t.currency,
-        available: Math.max(0, t.maxQuantity - t.quantitySold - t.quantityReserved),
+        available: Math.max(0, Math.min(available, t.maxQuantity - t.quantitySold - t.quantityReserved)),
         minPerOrder: t.minPerOrder,
         maxPerOrder: t.maxPerOrder,
         groupMinSize: t.groupMinSize,
@@ -129,8 +131,6 @@ router.get('/:slug', async (req, res: Response): Promise<void> => {
         salesEndAt: t.salesEndAt,
       };
     });
-
-  const { available, badge } = availability(event);
 
   const sponsors = (await db.filterBy<SponsorEntity>('sponsors', 'eventId', event.id))
     .filter((s) => s.scope === 'EVENT' && s.active)

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { submitServiceEnquiry } from '@/lib/api';
 import { EVENT_SERVICE_TYPES, EVENT_SERVICE_TYPE_LABELS } from '@/lib/site-config';
+import { phoneInputProps } from '@/lib/phone';
+import { getEnquiryDateError, getTodayInDublin } from '@/lib/enquiry-date';
 
 export default function EventServiceEnquiryForm({
   source = 'SERVICES_PAGE',
@@ -24,6 +26,11 @@ export default function EventServiceEnquiryForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const dateError = getEnquiryDateError(preferredDate);
+    if (dateError) {
+      setError(dateError);
+      return;
+    }
     if (!consentToContact) {
       setError('Please confirm we can contact you about this enquiry.');
       return;
@@ -102,7 +109,7 @@ export default function EventServiceEnquiryForm({
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Phone (optional)</label>
           <input
-            type="tel"
+            {...phoneInputProps}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
@@ -112,6 +119,8 @@ export default function EventServiceEnquiryForm({
           <label className="block text-sm font-medium text-bb-text mb-1">Preferred date (optional)</label>
           <input
             type="date"
+            min={getTodayInDublin()}
+            max="9999-12-31"
             value={preferredDate}
             onChange={(e) => setPreferredDate(e.target.value)}
             className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
