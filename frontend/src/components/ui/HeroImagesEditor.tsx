@@ -45,7 +45,7 @@ export default function HeroImagesEditor({ images, onChange, token, disabled, on
     if (!files.length || uploading || disabled) return;
     setError('');
     if (!replace && images.length + files.length > MAX_HERO_IMAGES) {
-      setError(`You can have up to ${MAX_HERO_IMAGES} hero images. Choose ${MAX_HERO_IMAGES - images.length} or fewer files.`);
+      setError(`You already have ${images.length} of ${MAX_HERO_IMAGES} images. You can add ${Math.max(0, MAX_HERO_IMAGES - images.length)} more. Remove an existing image to make room for more uploads.`);
       return;
     }
     if (files.some((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
@@ -76,7 +76,7 @@ export default function HeroImagesEditor({ images, onChange, token, disabled, on
   return (
     <fieldset disabled={disabled || uploading} className="min-w-0 space-y-3">
       <legend className="text-sm font-medium text-bb-text">Homepage hero images ({images.length}/{MAX_HERO_IMAGES})</legend>
-      <p className="text-xs text-bb-text-muted">Upload 1–6 images. Multiple images rotate every 5 seconds until a visitor interacts or pauses.</p>
+      <p className="text-xs text-bb-text-muted">Add up to {MAX_HERO_IMAGES} images in total, including your existing banner. Multiple images rotate every 5 seconds until a visitor interacts or pauses.</p>
       {images.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2" role="group" aria-label="Select a hero image to edit">
           {images.map((item, i) => (

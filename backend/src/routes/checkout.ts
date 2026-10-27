@@ -10,7 +10,7 @@ import { EventEntity, BookingEntity, BookingAttendee } from '../types';
 import { reserveOrderInventory, releaseBookingInventory, expireStaleReservations, InventoryError } from '../services/inventory';
 import { parseTicketSelections, quoteTicketOrder, TicketOrderError } from '../services/ticket-order';
 import { fulfillBooking } from '../services/booking-fulfillment';
-import { signBookingToken } from '../services/booking-links';
+import { createBookingTicketUrl } from '../services/booking-links';
 import { createCheckoutSession } from '../services/stripe';
 import { DiscountCodeError } from '../services/discount-codes';
 import { isValidOptionalPhone, PHONE_ERROR } from '../services/phone-validation';
@@ -136,7 +136,7 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     paymentMethod: quote.totalAmountMinor === 0 ? 'COMPLIMENTARY' : 'STRIPE',
     paymentProvider: quote.totalAmountMinor === 0 ? undefined : 'STRIPE',
 
-    reservedUntil: new Date(now + 30 * 60 * 1000).toISOString(),
+    reservedUntil: new Date(now + 15 * 60 * 1000).toISOString(),
 
     createdBy: req.user?.id,
     created_at: nowIso,
@@ -148,7 +148,7 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
     await db.put('bookings', booking);
     if (booking.totalAmountMinor === 0) {
       await fulfillBooking(booking, refreshedEvent);
-      checkoutUrl = `${FRONTEND_URL}/booking/confirmation?token=${signBookingToken(booking.id)}`;
+      checkoutUrl = await createBookingTicketUrl(booking.id, event.startDateTime);
     } else {
       const lineItems = quote.lineItems!.flatMap((item) => [
         ...(item.earlyBirdQuantity > 0 ? [{ name: `${item.ticketTierName} (Early Bird)`, unitAmountMinor: item.discountedEarlyBirdUnitPriceAmountMinor ?? item.earlyBirdUnitPriceAmountMinor, quantity: item.earlyBirdQuantity }] : []),
@@ -157,7 +157,7 @@ router.post('/session', optionalAuth, async (req: AuthRequest, res: Response): P
       const session = await createCheckoutSession({
         bookingId: booking.id, eventId: event.id, eventTitle: event.title,
         lineItems, currency: quote.currency, buyerEmail,
-        successUrl: `${FRONTEND_URL}/booking/confirmation?bookingReference=${booking.bookingReference}&session_id={CHECKOUT_SESSION_ID}`,
+        successUrl: await createBookingTicketUrl(booking.id, event.startDateTime),
         cancelUrl: `${FRONTEND_URL}/events/${event.slug}?checkout=cancelled`,
       });
       booking.paymentProviderSessionId = session.sessionId;

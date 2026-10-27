@@ -178,7 +178,7 @@ function CheckoutPageContent() {
             {discountError && <p id="discount-error" role="alert" className="mt-2 text-bb-red">{discountError}</p>}
           </div>
           {quote.totalAmountMinor > 0 && <p className="text-xs text-bb-text-muted mt-3">
-            Your tickets are reserved for 30 minutes while you complete payment.
+            Your tickets are reserved for 15 minutes while you complete payment.
           </p>}
         </div>
       </div>

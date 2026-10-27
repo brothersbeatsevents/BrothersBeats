@@ -64,13 +64,26 @@ test('carousel order, individual crops, and descriptions survive admin save and 
   assert.deepEqual((await read()).heroImages, reversed);
 });
 
-test('a seventh image is rejected without changing the saved carousel or other settings', async () => {
+test('an eighth image is rejected without changing the saved carousel or other settings', async () => {
   assert.equal((await save({ heroImages: slides, organizationName: 'Original name' })).status, 200);
-  const response = await save({ heroImages: Array.from({ length: 7 }, () => slides[0]), organizationName: 'Rejected name' });
+  const response = await save({ heroImages: Array.from({ length: 8 }, () => slides[0]), organizationName: 'Rejected name' });
   assert.equal(response.status, 400);
   const settings = await read();
   assert.deepEqual(settings.heroImages, slides);
   assert.equal(settings.organizationName, 'Original name');
+});
+
+test('an existing banner and six additional images save and reload as a seven-image carousel', async () => {
+  assert.equal((await save({ heroImageUrl: slides[0].url, heroImagePosition: slides[0].position, heroImageZoom: slides[0].zoom })).status, 200);
+  const existing = (await read()).heroImages!;
+  const additional = Array.from({ length: 6 }, (_, index) => ({
+    url: `https://images.example.com/generated-${index + 1}.png`, position: '50% 50%', zoom: 1,
+  }));
+  const carousel = [...existing, ...additional];
+  assert.equal(carousel.length, 7);
+  assert.equal((await save({ heroImages: carousel })).status, 200);
+  assert.deepEqual((await read()).heroImages, carousel);
+  assert.deepEqual((await read('/admin/settings', true)).heroImages, carousel);
 });
 
 test('legacy banner retains its crop, and removing all slides hides the banner', async () => {

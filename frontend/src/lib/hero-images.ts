@@ -1,4 +1,4 @@
-export const MAX_HERO_IMAGES = 6;
+export const MAX_HERO_IMAGES = 7;
 
 export interface HeroImage {
   url: string;

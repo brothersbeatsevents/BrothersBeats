@@ -414,6 +414,13 @@ export interface WebhookEventEntity {
   created_at: string;
 }
 
+export interface BookingAccessTokenEntity {
+  id: string; // SHA-256 of the bearer token, never the token itself
+  bookingId: string;
+  expiresAt: number;
+  ttl: number;
+}
+
 export type EmailMessageType =
   | 'VERIFY_EMAIL'
   | 'PASSWORD_RESET'

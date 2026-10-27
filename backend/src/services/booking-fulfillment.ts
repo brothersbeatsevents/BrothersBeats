@@ -72,6 +72,6 @@ export async function fulfillBooking(booking: BookingEntity, event: EventEntity)
     booking.buyerName,
     booking,
     eventContext(event),
-    tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
+    tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot, ticketPdfS3Key: t.ticketPdfS3Key })),
   ).catch((err) => console.error('[Webhook] sendBookingConfirmation failed:', err));
 }

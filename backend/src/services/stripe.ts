@@ -174,14 +174,10 @@ export async function createCheckoutSession(
 
 export async function expireCheckoutSession(
   providerSessionId: string,
-): Promise<void> {
+): Promise<Stripe.Checkout.Session> {
   const stripe = await getStripeClient();
-  try {
-    await stripe.checkout.sessions.expire(providerSessionId);
-  } catch (err) {
-    // Already expired/completed — non-fatal
-    console.warn('[Stripe] expireCheckoutSession:', err);
-  }
+  // The caller must verify expiry before returning reserved tickets to sale.
+  return stripe.checkout.sessions.expire(providerSessionId);
 }
 
 export async function retrieveCheckoutSession(

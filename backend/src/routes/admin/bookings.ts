@@ -205,7 +205,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
   await sendBookingConfirmation(buyerEmail, buyerName, booking, {
     title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug,
-  }, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })))
+  }, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot, ticketPdfS3Key: t.ticketPdfS3Key })))
     .catch((err) => console.error('[Admin] sendBookingConfirmation failed:', err));
 
   auditLog(req.user!.id, 'CREATE_MANUAL_BOOKING', 'BOOKING', booking.id, {
@@ -273,11 +273,15 @@ router.post('/:bookingReference/resend-confirmation', async (req: AuthRequest, r
     res.status(404).json({ success: false, error: 'No tickets found' });
     return;
   }
-  await sendBookingConfirmation(booking.buyerEmail, booking.buyerName, booking, {
+  const sent = await sendBookingConfirmation(booking.buyerEmail, booking.buyerName, booking, {
     title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug,
-  }, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })));
+  }, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot, ticketPdfS3Key: t.ticketPdfS3Key })));
+  if (!sent) {
+    res.status(502).json({ success: false, error: 'Confirmation email could not be sent. Check the email delivery logs and recipient suppression status.' });
+    return;
+  }
   auditLog(req.user!.id, 'RESEND_CONFIRMATION', 'BOOKING', booking.id, { actorRole: req.user!.role as any, bookingId: booking.id, summary: `Resent confirmation for ${booking.bookingReference}` });
-  res.json({ success: true, message: 'Confirmation email resent' });
+  res.json({ success: true, message: 'Confirmation email submitted for delivery. Check the inbox and junk folder.' });
 });
 
 // POST /api/admin/bookings/:bookingReference/resend-tickets
@@ -293,13 +297,17 @@ router.post('/:bookingReference/resend-tickets', async (req: AuthRequest, res: R
     res.status(404).json({ success: false, error: 'No tickets found' });
     return;
   }
-  await sendTicketDelivery(
-    booking.buyerEmail, booking.buyerName, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
+  const sent = await sendTicketDelivery(
+    booking.buyerEmail, booking.buyerName, tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot, ticketPdfS3Key: t.ticketPdfS3Key })),
     { title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug },
-    booking.bookingReference, true,
+    booking, true,
   );
+  if (!sent) {
+    res.status(502).json({ success: false, error: 'Ticket email could not be sent. Check the email delivery logs and recipient suppression status.' });
+    return;
+  }
   auditLog(req.user!.id, 'RESEND_TICKETS', 'BOOKING', booking.id, { actorRole: req.user!.role as any, bookingId: booking.id, summary: `Resent tickets for ${booking.bookingReference}` });
-  res.json({ success: true, message: 'Tickets resent' });
+  res.json({ success: true, message: 'Ticket email submitted for delivery. Check the inbox and junk folder.' });
 });
 
 export default router;

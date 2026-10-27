@@ -17,6 +17,7 @@ export default function BookingDetailPage() {
   const [error, setError] = useState('');
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  const [resendError, setResendError] = useState('');
 
   useEffect(() => {
     if (!token) return;
@@ -29,9 +30,13 @@ export default function BookingDetailPage() {
   async function handleResend() {
     if (!token) return;
     setResending(true);
+    setResent(false);
+    setResendError('');
     try {
       await resendMyTickets(params.bookingReference, token);
       setResent(true);
+    } catch (err: unknown) {
+      setResendError(err instanceof Error ? err.message : 'Ticket email could not be sent. Please try again.');
     } finally {
       setResending(false);
     }
@@ -78,8 +83,10 @@ export default function BookingDetailPage() {
             disabled={resending}
             className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark border border-bb-gold rounded-full px-5 py-2 transition-colors disabled:opacity-60"
           >
-            {resending ? 'Sending…' : resent ? 'Tickets resent!' : 'Resend tickets by email'}
+            {resending ? 'Sending…' : 'Resend tickets by email'}
           </button>
+          {resent && <p role="status" className="mt-3 text-sm text-bb-green">Ticket email submitted for delivery. Check your inbox and junk folder.</p>}
+          {resendError && <p role="alert" className="mt-3 text-sm text-bb-red">{resendError}</p>}
         </div>
       )}
 

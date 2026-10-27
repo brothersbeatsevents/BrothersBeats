@@ -11,7 +11,7 @@ import { seedStore } from '../seed/data';
 import { BookingEntity, EventEntity, TicketTierEntity, User } from '../types';
 import { generateToken } from '../middleware/auth';
 import { parseTicketSelections, quoteTicketOrder } from '../services/ticket-order';
-import { reserveOrderInventory, expireStaleReservations, releaseBookingInventory } from '../services/inventory';
+import { reserveOrderInventory, expireStaleReservations, expirePendingReservations, releaseBookingInventory } from '../services/inventory';
 import checkoutRoutes from '../routes/checkout';
 import pricingRoutes from '../routes/pricing';
 import publicEventRoutes from '../routes/events';
@@ -31,6 +31,9 @@ const sessionPrototype = Object.getPrototypeOf(stripe.checkout.sessions);
 let stripeLines: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 let stripePaymentMethods: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = [];
 let failStripe = false;
+let failStripeExpiry = false;
+let stripeSessionStatus = 'expired';
+const expiredSessions: string[] = [];
 let server: Server;
 let baseUrl: string;
 let event: EventEntity;
@@ -51,6 +54,12 @@ before(async () => {
     stripePaymentMethods = params.payment_method_types || [];
     return { id: 'cs_test_basket', url: 'https://checkout.stripe.test/basket' };
   });
+  mock.method(sessionPrototype, 'expire', async (id: string) => {
+    expiredSessions.push(id);
+    if (failStripeExpiry) throw new Error('Stripe expiry failed');
+    return { id, status: 'expired' };
+  });
+  mock.method(sessionPrototype, 'retrieve', async (id: string) => ({ id, status: stripeSessionStatus }));
   const app = express();
   app.use(express.json({ verify: (req, _res, body) => { (req as any).rawBody = body; } }));
   app.use('/checkout', checkoutRoutes);
@@ -97,6 +106,9 @@ beforeEach(async () => {
   stripeLines = [];
   stripePaymentMethods = [];
   failStripe = false;
+  failStripeExpiry = false;
+  stripeSessionStatus = 'expired';
+  expiredSessions.length = 0;
 });
 
 const basket = () => [{ ticketTierId: standard.id, quantity: 1 }, { ticketTierId: group.id, quantity: 4 }, { ticketTierId: child.id, quantity: 2 }];
@@ -143,12 +155,12 @@ test('Standard, Group and free Child tickets share one quote and Stripe checkout
   assert.deepEqual(report.body.data.byTicketTier.map((line: any) => [line.name, line.quantity, line.grossMinor]), [['Standard', 1, 2000], ['Group', 4, 6000], ['Child 0–12 yrs', 2, 0]]);
 });
 
-test('free child-only booking issues tickets immediately and returns a signed confirmation link', async () => {
+test('free child-only booking issues tickets immediately and returns a secure confirmation link', async () => {
   const result = await request('/checkout/session', { eventId: event.id, items: [{ ticketTierId: child.id, quantity: 3 }], ...buyer });
   assert.equal(result.status, 200);
   assert.equal(stripeLines.length, 0);
   const url = new URL(result.body.data.checkoutUrl);
-  const verified = verifyBookingToken(url.searchParams.get('token')!);
+  const verified = await verifyBookingToken(url.searchParams.get('token')!);
   assert(verified);
   const booking = await db.get<BookingEntity>('bookings', verified.bookingId);
   assert.equal(booking?.paymentStatus, 'NOT_REQUIRED');
@@ -292,6 +304,68 @@ test('expiry and payment failure release every type exactly once', async () => {
   await expireStaleReservations(event.id);
   assert.equal(stale.bookingStatus, 'EXPIRED');
   assert.equal(event.totalTicketsReserved, 0);
+});
+
+test('checkout holds tickets for 15 minutes and the scheduler closes the session before release', async () => {
+  const started = Date.now();
+  const booking = await startBasket();
+  const deadline = Date.parse(booking.reservedUntil!);
+  assert(deadline >= started + 15 * 60 * 1000);
+  assert(deadline <= Date.now() + 15 * 60 * 1000);
+  await expirePendingReservations();
+  assert.equal(booking.bookingStatus, 'RESERVED_PENDING_PAYMENT');
+  assert.equal(expiredSessions.length, 0);
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  await expirePendingReservations();
+  assert.deepEqual(expiredSessions, [booking.paymentProviderSessionId]);
+  assert.equal(booking.bookingStatus, 'EXPIRED');
+  assert.equal(event.totalTicketsReserved, 0);
+  for (const tier of [standard, group, child]) assert.equal(tier.quantityReserved, 0);
+  await expirePendingReservations();
+  await webhook('checkout.session.expired', { metadata: { bookingId: booking.id } }, 'evt_after_scheduled_expiry');
+  assert.equal(event.totalTicketsReserved, 0);
+  assert.equal(expiredSessions.length, 1);
+});
+
+test('completed Stripe checkout keeps its reservation until payment fulfillment arrives', async () => {
+  const booking = await startBasket();
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  failStripeExpiry = true;
+  stripeSessionStatus = 'complete';
+  await expirePendingReservations();
+  assert.equal(booking.bookingStatus, 'RESERVED_PENDING_PAYMENT');
+  assert.equal(event.totalTicketsReserved, booking.quantity);
+  await webhook('checkout.session.completed', { metadata: { bookingId: booking.id }, payment_intent: 'pi_before_expiry' });
+  assert.equal(booking.bookingStatus, 'CONFIRMED');
+  assert.equal(event.totalTicketsSold, booking.quantity);
+});
+
+test('a session still open after failed expiry retains its inventory for retry', async () => {
+  const booking = await startBasket();
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  failStripeExpiry = true;
+  stripeSessionStatus = 'open';
+  const expectedError = mock.method(console, 'error', () => {});
+  await assert.rejects(expirePendingReservations(), /retry required/);
+  expectedError.mock.restore();
+  assert.equal(booking.bookingStatus, 'RESERVED_PENDING_PAYMENT');
+  assert.equal(event.totalTicketsReserved, booking.quantity);
+  failStripeExpiry = false;
+  await expirePendingReservations();
+  assert.equal(booking.bookingStatus, 'EXPIRED');
+  assert.equal(event.totalTicketsReserved, 0);
+});
+
+test('overlapping expiry workers release a stale reservation only once', async () => {
+  const booking = await startBasket();
+  const fresh = await startBasket();
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  await Promise.all([expirePendingReservations(), expireStaleReservations(event.id)]);
+  assert.equal(booking.bookingStatus, 'EXPIRED');
+  assert.equal(event.totalTicketsReserved, fresh.quantity);
+  assert.equal(standard.quantityReserved, 1);
+  assert.equal(group.quantityReserved, 4);
+  assert.equal(child.quantityReserved, 2);
 });
 
 test('admin cancellation and full refund return inventory for every type', async () => {

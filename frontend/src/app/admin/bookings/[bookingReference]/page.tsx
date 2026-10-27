@@ -14,6 +14,7 @@ export default function AdminBookingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [resendError, setResendError] = useState('');
 
   function load() {
     if (!token) return;
@@ -40,10 +41,15 @@ export default function AdminBookingDetailPage() {
   async function handleResend(type: 'confirmation' | 'tickets') {
     if (!token) return;
     setBusy(true);
+    setMessage('');
+    setResendError('');
     try {
-      if (type === 'confirmation') await adminResendConfirmation(params.bookingReference, token);
-      else await adminResendTickets(params.bookingReference, token);
-      setMessage(`Resent ${type}.`);
+      const result = type === 'confirmation'
+        ? await adminResendConfirmation(params.bookingReference, token)
+        : await adminResendTickets(params.bookingReference, token);
+      setMessage(result.message);
+    } catch (err: unknown) {
+      setResendError(err instanceof Error ? err.message : 'Email could not be sent. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -79,6 +85,7 @@ export default function AdminBookingDetailPage() {
       <p className="text-bb-text-secondary mb-6">{booking.eventTitleSnapshot}</p>
 
       {message && <p className="text-sm text-bb-green mb-4">{message}</p>}
+      {resendError && <p role="alert" className="text-sm text-bb-red mb-4">{resendError}</p>}
 
       <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 mb-6 grid grid-cols-2 gap-4 text-sm">
         <div><p className="text-bb-text-secondary">Buyer</p><p className="font-semibold text-bb-text">{booking.buyerName}</p></div>

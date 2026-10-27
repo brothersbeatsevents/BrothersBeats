@@ -26,6 +26,7 @@ if (
 
 export interface AuthRequest extends Request {
   user?: User;
+  verifiedEmail?: string;
 }
 
 // Generate a mock JWT for local dev (only used when Cognito is not configured)
@@ -61,12 +62,13 @@ async function resolveUser(sub: string, email?: string): Promise<User | null> {
 // ── Token verification (Cognito or local JWT) ──
 async function verifyToken(
   token: string,
-): Promise<{ sub: string; email?: string; groups?: string[] }> {
+): Promise<{ sub: string; email?: string; emailVerified: boolean; groups?: string[] }> {
   if (USE_COGNITO && cognitoConfigured()) {
     const payload = await verifyCognitoToken(token);
     return {
       sub: payload.sub,
       email: payload.email,
+      emailVerified: payload.email_verified === true,
       groups: payload['cognito:groups'],
     };
   }
@@ -77,7 +79,7 @@ async function verifyToken(
     email: string;
     role: string;
   };
-  return { sub: decoded.sub, email: decoded.email, groups: [decoded.role] };
+  return { sub: decoded.sub, email: decoded.email, emailVerified: true, groups: [decoded.role] };
 }
 
 // Derive the application role from Cognito group membership (source of truth
@@ -119,6 +121,9 @@ export async function authenticate(
     }
     const effectiveRole = resolveRoleFromGroups(decoded.groups, user.role);
     req.user = effectiveRole === user.role ? user : { ...user, role: effectiveRole };
+    if (decoded.emailVerified && decoded.email?.trim().toLowerCase() === user.email.trim().toLowerCase()) {
+      req.verifiedEmail = user.email.trim().toLowerCase();
+    }
     next();
   } catch {
     res.status(401).json({ success: false, error: 'Invalid token' });
@@ -140,6 +145,9 @@ export async function optionalAuth(
       if (user && !user.disabled) {
         const effectiveRole = resolveRoleFromGroups(decoded.groups, user.role);
         req.user = effectiveRole === user.role ? user : { ...user, role: effectiveRole };
+        if (decoded.emailVerified && decoded.email?.trim().toLowerCase() === user.email.trim().toLowerCase()) {
+          req.verifiedEmail = user.email.trim().toLowerCase();
+        }
       }
     } catch {
       // silently continue without auth

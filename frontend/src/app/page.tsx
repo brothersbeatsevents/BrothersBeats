@@ -8,7 +8,6 @@ import SponsorGrid from '@/components/ui/SponsorGrid';
 import HeroCarousel from '@/components/ui/HeroCarousel';
 import GalleryMediaThumbnail from '@/components/ui/GalleryMediaThumbnail';
 import { getHeroImages } from '@/lib/hero-images';
-import { formatEventDate } from '@/lib/format';
 import type { EventCardData } from '@/components/ui/EventCard';
 
 export const metadata: Metadata = {
@@ -43,34 +42,6 @@ export default async function HomePage() {
               </p>
             </div>
           </div>
-        )}
-        {upcoming.length > 0 && (
-          <nav className="mt-4" aria-labelledby="hero-events-heading">
-            <div className="flex items-center justify-between gap-4 mb-3">
-              <h2 id="hero-events-heading" className="font-display font-bold text-lg text-bb-text">Coming up next</h2>
-              <Link href="/events" className="shrink-0 text-sm font-semibold text-bb-text-secondary hover:text-bb-text">
-                All events &rarr;
-              </Link>
-            </div>
-            <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-              {upcoming.slice(0, 3).map((event) => (
-                <li key={event.id} className="min-w-0">
-                  <Link
-                    href={`/events/${event.slug}`}
-                    className="group flex h-full items-center justify-between gap-3 rounded-xl border border-bb-border bg-bb-neutral px-4 py-3 transition-colors hover:border-bb-gold hover:bg-bb-ivory focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bb-gold"
-                  >
-                    <div className="min-w-0">
-                      <h3 className="line-clamp-1 font-display font-bold text-sm text-bb-text">{event.title}</h3>
-                      <p className="mt-1 text-xs text-bb-text-secondary">
-                        <time dateTime={event.startDateTime}>{formatEventDate(event.startDateTime, event.timezone)}</time>
-                      </p>
-                    </div>
-                    <span aria-hidden="true" className="shrink-0 text-xl text-bb-text-secondary group-hover:text-bb-text">&rarr;</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
         )}
       </section>
 

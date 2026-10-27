@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signUp } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 function SignUpContent() {
   const router = useRouter();
@@ -87,9 +88,10 @@ function SignUpContent() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-bb-text mb-1">Password</label>
-            <input
-              type="password"
+            <label htmlFor="sign-up-password" className="block text-sm font-medium text-bb-text mb-1">Password</label>
+            <PasswordInput
+              id="sign-up-password"
+              autoComplete="new-password"
               required
               minLength={8}
               value={password}

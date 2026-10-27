@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getBookingConfirmation } from '@/lib/api';
 import ErrorState from '@/components/ui/ErrorState';
+import TicketCard, { TicketCardData } from '@/components/ui/TicketCard';
 import { formatMoney } from '@/lib/format';
 
 function ConfirmationContent() {
@@ -18,14 +19,32 @@ function ConfirmationContent() {
 
   useEffect(() => {
     if (!token) return;
-    getBookingConfirmation(token)
-      .then((res) => setData(res.data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    setLoading(true);
+    setError(null);
+    async function loadBooking() {
+      try {
+        const result = await getBookingConfirmation(token!);
+        if (cancelled) return;
+        setData(result.data);
+        const waitingForTickets = result.data.bookingStatus === 'RESERVED_PENDING_PAYMENT' ||
+          (result.data.bookingStatus === 'CONFIRMED' && result.data.tickets.length < result.data.quantity);
+        if (waitingForTickets && ++attempts < 15) {
+          timer = setTimeout(loadBooking, 2000);
+        }
+      } catch (err: unknown) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Unable to load your booking.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void loadBooking();
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [token]);
 
-  // Fresh redirect straight from Stripe checkout — no signed token yet.
-  // One confirmation email containing the tickets is sent by the Stripe webhook.
+  // Older checkout redirects carry only a reference; recover through guest lookup.
   if (!token && bookingReference) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
@@ -70,8 +89,16 @@ function ConfirmationContent() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16">
-      <h1 className="font-display font-bold text-3xl text-bb-text mb-1">Booking confirmed</h1>
+      <h1 className="font-display font-bold text-3xl text-bb-text mb-1">
+        {data.bookingStatus === 'CONFIRMED' ? 'Your booking and tickets' : data.bookingStatus === 'RESERVED_PENDING_PAYMENT' ? 'Confirming your booking' : 'Your booking'}
+      </h1>
       <p className="text-bb-text-secondary mb-8">Reference: {data.bookingReference}</p>
+      {data.bookingStatus === 'RESERVED_PENDING_PAYMENT' && (
+        <p role="status" className="text-sm text-bb-text-secondary mb-6">We&apos;re confirming your payment. Your tickets will appear here when they&apos;re ready. You can also use the link in your confirmation email.</p>
+      )}
+      {data.bookingStatus === 'CONFIRMED' && data.tickets.length < data.quantity && (
+        <p role="status" className="text-sm text-bb-text-secondary mb-6">We&apos;re preparing your tickets. They&apos;ll appear here shortly. You can also use the link in your confirmation email.</p>
+      )}
 
       <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 space-y-4">
         <div>
@@ -89,7 +116,7 @@ function ConfirmationContent() {
           <span>−{formatMoney(data.discountAmountMinor, data.currency)}</span>
         </div>}
         <div className="flex justify-between text-sm">
-          <span className="text-bb-text-secondary">Total paid</span>
+          <span className="text-bb-text-secondary">{data.bookingStatus === 'CONFIRMED' ? 'Total paid' : 'Total'}</span>
           <span className="font-semibold text-bb-text">{formatMoney(data.totalAmountMinor, data.currency)}</span>
         </div>
       </div>
@@ -97,18 +124,8 @@ function ConfirmationContent() {
       {data.tickets && data.tickets.length > 0 && (
         <div className="mt-8 space-y-3">
           <h2 className="font-display font-bold text-lg text-bb-text">Your tickets</h2>
-          {data.tickets.map((t: any) => (
-            <div key={t.id} className="bg-bb-surface border border-bb-border rounded-xl p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-bb-text">Ticket #{t.ticketNumber}</p>
-                <p className="text-xs text-bb-text-secondary">{t.ticketTierName} · {t.attendeeName}</p>
-              </div>
-              {t.pdfDownloadUrl && (
-                <a href={t.pdfDownloadUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
-                  Download
-                </a>
-              )}
-            </div>
+          {data.tickets.map((ticket: TicketCardData) => (
+            <TicketCard key={ticket.id} ticket={ticket} eventTitle={data.event?.title} />
           ))}
         </div>
       )}

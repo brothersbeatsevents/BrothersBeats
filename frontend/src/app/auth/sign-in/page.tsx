@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 function SignInContent() {
   const router = useRouter();
@@ -72,9 +73,10 @@ function SignInContent() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-bb-text mb-1">Password</label>
-            <input
-              type="password"
+            <label htmlFor="sign-in-password" className="block text-sm font-medium text-bb-text mb-1">Password</label>
+            <PasswordInput
+              id="sign-in-password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}

@@ -4,6 +4,7 @@
 
 import * as dynamo from './dynamodb';
 import { store as memoryStore } from './memory';
+import type { BookingEntity, TicketSelection } from '../types';
 
 const USE_DYNAMO = !!process.env.USE_DYNAMODB;
 
@@ -13,6 +14,7 @@ const ENTITY_MAP: Record<string, dynamo.EntityType> = {
   events: 'EVENT',
   ticketTiers: 'TICKET_TIER',
   bookings: 'BOOKING',
+  bookingAccessTokens: 'BOOKING_ACCESS_TOKEN',
   tickets: 'TICKET',
   refunds: 'REFUND',
   subscribers: 'SUBSCRIBER',
@@ -145,6 +147,27 @@ export const db = {
 
   // ── Inventory reservation guards (DynamoDB conditional updates; memory
   // falls back to a no-op since local dev uses optimistic read-checks) ──
+  async expireBookingReservation(booking: BookingEntity, items: TicketSelection[]): Promise<boolean> {
+    if (USE_DYNAMO) return dynamo.expireBookingReservation(booking, items);
+    const current = memoryStore.bookings.get(booking.id);
+    if (!current || current.bookingStatus !== 'RESERVED_PENDING_PAYMENT') return false;
+    const event = memoryStore.events.get(current.eventId);
+    const now = new Date().toISOString();
+    if (event) {
+      event.totalTicketsReserved = Math.max(0, event.totalTicketsReserved - current.quantity);
+      event.updated_at = now;
+    }
+    for (const item of items) {
+      const tier = memoryStore.ticketTiers.get(item.ticketTierId);
+      if (tier) {
+        tier.quantityReserved = Math.max(0, tier.quantityReserved - item.quantity);
+        tier.updated_at = now;
+      }
+    }
+    current.bookingStatus = 'EXPIRED';
+    current.updated_at = now;
+    return true;
+  },
   async reserveEventInventory(eventId: string, qty: number, capacity: number) {
     if (USE_DYNAMO) return dynamo.reserveEventInventory(eventId, qty, capacity);
   },

@@ -3,8 +3,10 @@
 // Free tier: 62,000 emails/month when sent from Lambda
 // ──────────────────────────────────────────
 
-import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
+import { SESv2Client, SendEmailCommand, type Attachment } from '@aws-sdk/client-sesv2';
 import { db } from '../store';
+import { createBookingTicketUrl } from './booking-links';
+import { downloadBuffer } from './s3';
 
 const REGION =
   process.env.AWS_REGION || process.env.AWS_REGION_OVERRIDE || 'eu-west-1';
@@ -24,6 +26,7 @@ async function sendEmail(
   subject: string,
   htmlBody: string,
   textBody?: string,
+  loadAttachments?: () => Promise<Attachment[]>,
 ): Promise<boolean> {
   if (!FROM_EMAIL) {
     console.warn('[SES] SES_FROM_EMAIL not set — skipping email');
@@ -45,12 +48,14 @@ async function sendEmail(
   }
 
   try {
-    await sesClient.send(
+    const result = await sesClient.send(
       new SendEmailCommand({
         FromEmailAddress: FROM_EMAIL,
+        ReplyToAddresses: [SUPPORT_EMAIL],
         Destination: { ToAddresses: [to] },
         Content: {
           Simple: {
+            ...(loadAttachments ? { Attachments: await loadAttachments() } : {}),
             Subject: { Data: subject, Charset: 'UTF-8' },
             Body: {
               Html: { Data: await fillWhatsappSlot(htmlBody), Charset: 'UTF-8' },
@@ -63,6 +68,7 @@ async function sendEmail(
         ...(CONFIG_SET ? { ConfigurationSetName: CONFIG_SET } : {}),
       }),
     );
+    console.info('[SES] Email accepted for delivery:', { to, messageId: result.MessageId });
     return true;
   } catch (error) {
     console.error('[SES] Failed to send email:', error);
@@ -430,7 +436,20 @@ export async function sendPasswordReset(
   );
 }
 
-type EmailTicket = { ticketNumber: string; ticketTierName?: string };
+type EmailTicket = { ticketNumber: string; ticketTierName?: string; ticketPdfS3Key?: string };
+
+async function ticketAttachments(tickets: EmailTicket[]): Promise<Attachment[]> {
+  return Promise.all(tickets.map(async (ticket) => {
+    if (!ticket.ticketPdfS3Key) throw new Error(`PDF unavailable for ticket ${ticket.ticketNumber}`);
+    return {
+      FileName: `${ticket.ticketNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`,
+      ContentType: 'application/pdf',
+      ContentDisposition: 'ATTACHMENT' as const,
+      ContentTransferEncoding: 'BASE64' as const,
+      RawContent: await downloadBuffer(ticket.ticketPdfS3Key),
+    };
+  }));
+}
 
 function ticketStubs(tickets: EmailTicket[]): string {
   return tickets
@@ -453,11 +472,12 @@ function ticketStubs(tickets: EmailTicket[]): string {
 export async function sendBookingConfirmation(
   to: string,
   buyerName: string,
-  booking: { bookingReference: string; quantity: number; totalAmountMinor: number; currency: string },
+  booking: { id: string; bookingReference: string; quantity: number; totalAmountMinor: number; currency: string },
   event: { title: string; startDateTime: string; venueName: string; city: string; timezone: string; slug: string },
   tickets: EmailTicket[],
 ): Promise<boolean> {
   const subject = `🎉 You're going! Booking confirmed for ${event.title}`;
+  const ticketUrl = await createBookingTicketUrl(booking.id, event.startDateTime);
   const calUrl = buildGoogleCalendarUrl(event);
   const ticketLabel = `${booking.quantity} ticket${booking.quantity > 1 ? 's' : ''}`;
   const content = `
@@ -469,14 +489,14 @@ export async function sendBookingConfirmation(
       ['Tickets', ticketLabel],
       ['Total paid', formatMoney(booking.totalAmountMinor, booking.currency)],
     ])}
-    ${paragraph(`${tickets.length > 1 ? 'Your tickets are' : 'Your ticket is'} ready. Use the link below to view your QR codes and download your tickets.`)}
+    ${paragraph(`${tickets.length > 1 ? 'Your ticket PDFs are' : 'Your ticket PDF is'} attached to this email. Save ${tickets.length > 1 ? 'them' : 'it'} to your phone or print ${tickets.length > 1 ? 'them' : 'it'} for entry. You can also use the link below to view your QR codes and download your tickets.`)}
     ${ticketStubs(tickets)}
     ${callout('<strong>How entry works</strong><br>Open your tickets on your phone and show the QR code at the door &mdash; or download the PDF and bring it along. Each QR code can be scanned once.')}
     ${buttons(
-      ctaButton('View & Download Tickets', `${FRONTEND_URL}/account/tickets/${booking.bookingReference}`),
+      ctaButton('View & Download Tickets', ticketUrl),
       ctaButton('Add to Google Calendar', calUrl, 'secondary'),
     )}
-    ${finePrint(`Ticket link: <a href="${FRONTEND_URL}/account/tickets/${booking.bookingReference}" style="color:${BRAND.goldDark}; word-break:break-all;">${escapeHtml(`${FRONTEND_URL}/account/tickets/${booking.bookingReference}`)}</a>`)}
+    ${finePrint(`Ticket link: <a href="${ticketUrl}" style="color:${BRAND.goldDark}; word-break:break-all;">${escapeHtml(ticketUrl)}</a>`)}
   `;
   return sendEmail(
     to,
@@ -486,6 +506,15 @@ export async function sendBookingConfirmation(
       eyebrow: 'Booking confirmed',
       headline: 'You’re going! 🎉',
     }),
+    `Hi ${buyerName},\n\nYour booking for ${event.title} is confirmed.\n` +
+      `${formatEventDate(event.startDateTime, event.timezone)} at ${formatEventTime(event.startDateTime, event.timezone)}\n` +
+      `${event.venueName}, ${event.city}\n\nBooking reference: ${booking.bookingReference}\n` +
+      `Tickets: ${ticketLabel}\nTotal paid: ${formatMoney(booking.totalAmountMinor, booking.currency)}\n\n` +
+      tickets.map((ticket) => `${ticket.ticketNumber} — ${ticket.ticketTierName || 'Admission'}`).join('\n') +
+      `\n\nView and download tickets: ${ticketUrl}\n` +
+      `Your ticket PDFs are attached. Save them to your phone or print them for entry.\n` +
+      `Show each ticket's QR code at the door. Each QR code can be scanned once.\n\nNeed help? ${SUPPORT_EMAIL}`,
+    () => ticketAttachments(tickets),
   );
 }
 
@@ -494,18 +523,20 @@ export async function sendTicketDelivery(
   buyerName: string,
   tickets: EmailTicket[],
   event: { title: string; startDateTime: string; venueName: string; city: string; timezone: string; slug: string },
-  bookingReference: string,
+  booking: { id: string; bookingReference: string },
   isResend = false,
 ): Promise<boolean> {
+  const { bookingReference } = booking;
+  const ticketUrl = await createBookingTicketUrl(booking.id, event.startDateTime);
   const subject = `🎟️ ${isResend ? 'Your tickets (resent)' : 'Your tickets are here'}: ${event.title}`;
   const content = `
     ${greeting(buyerName)}
-    ${paragraph(`${tickets.length > 1 ? 'Your tickets are' : 'Your ticket is'} ready! Keep this email handy &mdash; it&rsquo;s your pass to a great night.`)}
+    ${paragraph(`${tickets.length > 1 ? 'Your ticket PDFs are' : 'Your ticket PDF is'} attached to this email. Save ${tickets.length > 1 ? 'them' : 'it'} to your phone or print ${tickets.length > 1 ? 'them' : 'it'} for entry.`)}
     ${eventSummaryBlock(event)}
     ${ticketStubs(tickets)}
     <div style="height:12px; line-height:12px; font-size:0;">&nbsp;</div>
     ${callout('<strong>How entry works</strong><br>Open your tickets on your phone and show the QR code at the door &mdash; or download the PDF and bring it along. Each QR code can be scanned once.')}
-    ${buttons(ctaButton('View & Download Tickets', `${FRONTEND_URL}/account/tickets/${bookingReference}`))}
+    ${buttons(ctaButton('View & Download Tickets', ticketUrl))}
     ${finePrint(`Booking reference: <strong>${escapeHtml(bookingReference)}</strong>`)}
   `;
   return sendEmail(
@@ -516,6 +547,14 @@ export async function sendTicketDelivery(
       eyebrow: isResend ? 'Tickets resent' : 'Your tickets are here',
       headline: event.title,
     }),
+    `Hi ${buyerName},\n\nYour tickets for ${event.title} are ready.\n` +
+      `${formatEventDate(event.startDateTime, event.timezone)} at ${formatEventTime(event.startDateTime, event.timezone)}\n` +
+      `${event.venueName}, ${event.city}\n\nBooking reference: ${bookingReference}\n\n` +
+      tickets.map((ticket) => `${ticket.ticketNumber} — ${ticket.ticketTierName || 'Admission'}`).join('\n') +
+      `\n\nView and download tickets: ${ticketUrl}\n` +
+      `Your ticket PDFs are attached. Save them to your phone or print them for entry.\n` +
+      `Show each ticket's QR code at the door. Each QR code can be scanned once.\n\nNeed help? ${SUPPORT_EMAIL}`,
+    () => ticketAttachments(tickets),
   );
 }
 
@@ -579,6 +618,7 @@ export async function sendEventReminder(
   );
   const label = hoursAway <= 30 ? 'tomorrow' : `in ${Math.round(hoursAway / 24)} days`;
   const subject = `⏰ ${event.title} is ${label} — are you ready?`;
+  const ticketUrl = `${FRONTEND_URL}/booking/lookup?bookingReference=${encodeURIComponent(bookingReference)}`;
   const calUrl = buildGoogleCalendarUrl(event);
   const content = `
     ${greeting(attendeeName)}
@@ -586,7 +626,7 @@ export async function sendEventReminder(
     ${eventSummaryBlock(event)}
     ${callout('<strong>Before you head out</strong><br>&#10003; Have your QR code ready on your phone (or bring the PDF)<br>&#10003; Arrive a little early to beat the queue<br>&#10003; Bring your energy &mdash; we&rsquo;ll bring the vibes')}
     ${buttons(
-      ctaButton('View My Tickets', `${FRONTEND_URL}/account/tickets/${bookingReference}`),
+      ctaButton('View My Tickets', ticketUrl),
       ctaButton('Add to Google Calendar', calUrl, 'secondary'),
     )}
   `;
@@ -609,13 +649,14 @@ export async function sendEventUpdated(
   changeSummary: string,
 ): Promise<boolean> {
   const subject = `Event update: ${event.title}`;
+  const ticketUrl = `${FRONTEND_URL}/booking/lookup?bookingReference=${encodeURIComponent(bookingReference)}`;
   const content = `
     ${greeting(buyerName)}
     ${paragraph('There&rsquo;s an update to an event you have tickets for. Here&rsquo;s what changed:')}
     ${callout(escapeHtml(changeSummary))}
     ${eventSummaryBlock(event)}
     ${paragraph('Your tickets are still valid &mdash; no action is needed unless the new details don&rsquo;t work for you.')}
-    ${buttons(ctaButton('View My Booking', `${FRONTEND_URL}/account/tickets/${bookingReference}`))}
+    ${buttons(ctaButton('View My Booking', ticketUrl))}
   `;
   return sendEmail(
     to,
