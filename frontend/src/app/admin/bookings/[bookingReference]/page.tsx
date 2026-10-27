@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { adminGetBooking, adminCancelBooking, adminResendConfirmation, adminResendTickets, adminCreateRefund } from '@/lib/api';
-import { formatMoney } from '@/lib/format';
+import { formatMoney, parseMoneyToMinor } from '@/lib/format';
 
 export default function AdminBookingDetailPage() {
   const { token } = useAuth();
@@ -58,13 +58,18 @@ export default function AdminBookingDetailPage() {
   async function handleRefund() {
     if (!token || !booking) return;
     const remaining = booking.totalAmountMinor - booking.refundedAmountMinor;
-    const amountStr = prompt(`Refund amount in cents (max ${remaining})?`, String(remaining));
-    if (!amountStr) return;
+    const amountStr = prompt(`Refund amount in ${booking.currency} (max ${formatMoney(remaining, booking.currency)})?`, (remaining / 100).toFixed(2));
+    if (amountStr === null) return;
+    const amountMinor = parseMoneyToMinor(amountStr);
+    if (amountMinor === null || amountMinor <= 0 || amountMinor > remaining) {
+      alert(`Enter an amount greater than zero and no more than ${formatMoney(remaining, booking.currency)}, with up to two decimal places.`);
+      return;
+    }
     const reason = prompt('Refund reason?');
     if (!reason) return;
     setBusy(true);
     try {
-      await adminCreateRefund({ bookingId: booking.id, amountMinor: Number(amountStr), reason }, token);
+      await adminCreateRefund({ bookingId: booking.id, amountMinor, reason }, token);
       setMessage('Refund requested.');
       load();
     } catch (err: any) {

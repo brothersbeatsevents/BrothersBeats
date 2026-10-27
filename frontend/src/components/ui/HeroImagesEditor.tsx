@@ -77,10 +77,11 @@ export default function HeroImagesEditor({ images, onChange, token, disabled, on
     <fieldset disabled={disabled || uploading} className="min-w-0 space-y-3">
       <legend className="text-sm font-medium text-bb-text">Homepage hero images ({images.length}/{MAX_HERO_IMAGES})</legend>
       <p className="text-xs text-bb-text-muted">Add up to {MAX_HERO_IMAGES} images in total, including your existing banner. Multiple images rotate every 5 seconds until a visitor interacts or pauses.</p>
+      <p className="text-xs text-bb-text-muted">Recommended size: 2400 × 1200 px (2:1). Images fill the same 2:1 frame on mobile, tablet, and desktop.</p>
       {images.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2" role="group" aria-label="Select a hero image to edit">
           {images.map((item, i) => (
-            <button key={`${item.url}-${i}`} type="button" onClick={() => setSelected(i)} aria-label={`Edit hero image ${i + 1}`} aria-pressed={i === index} className={`relative aspect-[4/1] sm:aspect-[3/1] lg:aspect-[4/1] overflow-hidden rounded-lg border-2 ${i === index ? 'border-bb-gold' : 'border-bb-border'}`}>
+            <button key={`${item.url}-${i}`} type="button" onClick={() => setSelected(i)} aria-label={`Edit hero image ${i + 1}`} aria-pressed={i === index} className={`relative aspect-[2/1] overflow-hidden rounded-lg border-2 ${i === index ? 'border-bb-gold' : 'border-bb-border'}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={item.url} alt="" className="w-full h-full object-cover" style={{ objectPosition: item.position || '50% 50%', transform: `scale(${item.zoom || 1})` }} />
               <span className="absolute bottom-0 right-0 rounded-tl bg-black/70 px-1.5 text-xs text-white">{i + 1}</span>
@@ -91,7 +92,7 @@ export default function HeroImagesEditor({ images, onChange, token, disabled, on
       {image && (
         <>
           <div
-            className={`relative w-full aspect-[4/1] sm:aspect-[3/1] lg:aspect-[4/1] overflow-hidden rounded-xl border border-bb-border bg-bb-ink touch-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'} ${disabled || uploading ? 'pointer-events-none' : ''}`}
+            className={`relative w-full aspect-[2/1] overflow-hidden rounded-xl border border-bb-border bg-bb-ink touch-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'} ${disabled || uploading ? 'pointer-events-none' : ''}`}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId);
               lastPointer.current = { x: event.clientX, y: event.clientY };
@@ -117,7 +118,7 @@ export default function HeroImagesEditor({ images, onChange, token, disabled, on
             <img src={image.url} alt={image.alt || ''} draggable={false} className="absolute inset-0 w-full h-full object-cover select-none" style={{ objectPosition: image.position || '50% 50%', transform: `scale(${zoom})` }} />
             <div className="absolute inset-0 pointer-events-none ring-2 ring-inset ring-white/70" />
           </div>
-          <p className="text-xs text-bb-text-muted">Editing image {index + 1}. Drag to choose the crop, or use the sliders. Crop and zoom apply to tablets (3:1) and desktop (4:1). On phones, the homepage shows the full image without zoom.</p>
+          <p className="text-xs text-bb-text-muted">Editing image {index + 1}. Drag to choose the crop, or use the sliders. This 2:1 crop and zoom apply on all screen sizes.</p>
           <div className="flex flex-wrap gap-3 text-xs font-semibold">
             <button type="button" disabled={index === 0} onClick={() => moveImage(-1)} className="text-bb-text-secondary disabled:opacity-40">Move earlier</button>
             <button type="button" disabled={index === images.length - 1} onClick={() => moveImage(1)} className="text-bb-text-secondary disabled:opacity-40">Move later</button>

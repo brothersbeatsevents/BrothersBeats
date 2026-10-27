@@ -235,8 +235,9 @@ export default function AdminEventDetailPage() {
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Hero image</label>
           {event.heroImageUrl && (
-            <img src={event.heroImageUrl} alt={event.title} className="w-full max-h-56 object-cover rounded-lg mb-2 bg-bb-neutral" />
+            <img src={event.heroImageUrl} alt={event.title} className="w-full aspect-[2/1] object-cover rounded-lg mb-2 bg-bb-neutral" />
           )}
+          <p className="text-xs text-bb-text-muted mb-2">Recommended size: 2400 × 1200 px (2:1). Images are cropped to this ratio on mobile and desktop.</p>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"

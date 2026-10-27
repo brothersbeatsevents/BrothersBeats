@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { HeroImage } from '@/lib/hero-images';
 
@@ -62,7 +62,7 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
           }
         }}
       >
-        <div className="relative aspect-[4/1] sm:aspect-[3/1] lg:aspect-[4/1]" aria-live={paused ? 'polite' : 'off'} aria-atomic="true">
+        <div className="relative aspect-[2/1]" aria-live={paused ? 'polite' : 'off'} aria-atomic="true">
           {images.map((image, index) => (
             <div
               key={`${image.url}-${index}`}
@@ -77,8 +77,8 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
                 src={image.url}
                 alt={image.alt || ''}
                 fetchPriority={index === 0 ? 'high' : 'auto'}
-                className="absolute inset-0 w-full h-full object-contain sm:object-cover sm:[object-position:var(--hero-position)] sm:[transform:scale(var(--hero-zoom))]"
-                style={{ '--hero-position': image.position || '50% 50%', '--hero-zoom': image.zoom || 1 } as CSSProperties}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: image.position || '50% 50%', transform: `scale(${image.zoom || 1})` }}
               />
             </div>
           ))}

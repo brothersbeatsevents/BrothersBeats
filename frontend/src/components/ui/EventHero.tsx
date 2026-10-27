@@ -28,7 +28,7 @@ export default function EventHero({ event }: { event: EventHeroData }) {
             This event has been cancelled. {event.cancellationMessage}
           </div>
         )}
-        <div className="rounded-2xl overflow-hidden bg-bb-bg-surface aspect-video mb-6">
+        <div className="rounded-2xl overflow-hidden bg-bb-bg-surface aspect-[2/1] mb-6">
           {event.heroImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

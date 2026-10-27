@@ -20,8 +20,6 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (pathname?.startsWith('/admin')) return null;
-
   return (
     <header className="sticky top-0 z-50 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
       <HeaderTopBar whatsappUrl={whatsappUrl} />
