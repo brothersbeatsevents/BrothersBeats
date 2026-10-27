@@ -1,7 +1,7 @@
 export function EventCardSkeleton() {
   return (
     <div className="bg-bb-surface rounded-2xl border border-bb-border overflow-hidden">
-      <div className="aspect-[4/3] skeleton" />
+      <div className="aspect-[2/1] skeleton" />
       <div className="p-4 space-y-2">
         <div className="h-5 w-20 rounded-full skeleton" />
         <div className="h-5 w-3/4 rounded skeleton" />

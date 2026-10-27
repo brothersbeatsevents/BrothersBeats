@@ -8,6 +8,7 @@ import { useState } from 'react';
 import HeaderTopBar from './HeaderTopBar';
 
 const NAV_LINKS = [
+  { href: '/', label: 'Home' },
   { href: '/events', label: 'Events' },
   { href: '/booking/lookup', label: 'Find my ticket' },
   { href: '/gallery', label: 'Gallery' },
