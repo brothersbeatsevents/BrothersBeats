@@ -32,6 +32,14 @@ Parameters:
     Default: ''
     AllowedPattern: '^$|^https://[a-z0-9.-]+/?$'
     Description: Existing Cognito custom-domain HTTPS origin; leave empty to use the default Cognito domain
+  CognitoCustomDomainName:
+    Type: String
+    Default: ''
+    Description: Custom hostname to provision on this environment's user pool; leave empty to skip domain creation
+  CognitoCustomDomainCertificateArn:
+    Type: String
+    Default: ''
+    Description: Issued ACM certificate ARN in us-east-1, required when CognitoCustomDomainName is set
   SESFromEmail:
     Type: String
     Default: ''
@@ -51,6 +59,7 @@ Conditions:
   HasExtraCallbackUrls: !Not [!Equals [!Ref ExtraCallbackUrls, '']]
   HasGoogleAuth: !Equals [!Ref GoogleAuthEnabled, 'true']
   HasCognitoAuthUrl: !Not [!Equals [!Ref CognitoAuthUrl, '']]
+  HasCognitoCustomDomain: !Not [!Equals [!Ref CognitoCustomDomainName, '']]
   HasSESFromEmail: !Not [!Equals [!Ref SESFromEmail, '']]
 
 Globals:
@@ -233,6 +242,17 @@ Resources:
     Properties:
       Domain: !Sub 'brothers-beats-${Environment}-${AWS::AccountId}'
       UserPoolId: !Ref CognitoUserPool
+
+  CognitoCustomDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Condition: HasCognitoCustomDomain
+    Properties:
+      Domain: !Ref CognitoCustomDomainName
+      UserPoolId: !Ref CognitoUserPool
+      ManagedLoginVersion: 2
+      CustomDomainConfig:
+        CertificateArn: !Ref CognitoCustomDomainCertificateArn
+        SecurityPolicy: TLS_V1_2_2021
 
   # ── Google Identity Provider ──
   CognitoGoogleIdP:
@@ -518,6 +538,10 @@ Outputs:
       - HasCognitoAuthUrl
       - !Ref CognitoAuthUrl
       - !Sub 'https://brothers-beats-${Environment}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com'
+  CognitoCustomDomainDnsTarget:
+    Condition: HasCognitoCustomDomain
+    Description: DNS CNAME target for the custom Cognito domain
+    Value: !GetAtt CognitoCustomDomain.CloudFrontDistribution
   MediaBucketName:
     Description: S3 media bucket name
     Value: !Ref MediaBucket

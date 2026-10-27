@@ -7,6 +7,10 @@ import express from 'express';
 import type { Server } from 'node:http';
 import { S3Client } from '@aws-sdk/client-s3';
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
+import {
+  CognitoIdentityProviderClient, SignUpCommand, ConfirmSignUpCommand,
+  ResendConfirmationCodeCommand, InitiateAuthCommand, AdminAddUserToGroupCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
 import { store } from '../store/memory';
 import type { BookingEntity, TicketEntity, User } from '../types';
 
@@ -49,6 +53,7 @@ before(async () => {
   ({ seedStore } = await import('../seed/data'));
   const app = express();
   app.use(express.json());
+  app.use('/auth', (await import('../routes/auth')).default);
   app.use('/me', (await import('../routes/me')).default);
   server = await new Promise<Server>((resolve, reject) => {
     const listener = app.listen(0, '127.0.0.1', () => resolve(listener));
@@ -98,6 +103,102 @@ async function request(path: string, user: User, verified?: boolean, body?: unkn
   });
   return { status: response.status, body: await response.json() as any };
 }
+
+async function authRequest(path: string, body: unknown) {
+  const response = await fetch(`${baseUrl}/auth${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body), signal: AbortSignal.timeout(10000),
+  });
+  return { status: response.status, body: await response.json() as any };
+}
+
+test('a guest buyer can sign up, verify a copied code, sign in, and see their tickets', async (t) => {
+  const password = 'GuestPassword123';
+  let signedUp = false;
+  let confirmed = false;
+  t.mock.method(CognitoIdentityProviderClient.prototype, 'send', async (command: any) => {
+    if (command instanceof SignUpCommand) {
+      assert.equal(command.input.Username, customer.email);
+      signedUp = true;
+      return {};
+    }
+    if (command instanceof ConfirmSignUpCommand) {
+      assert(signedUp);
+      assert.equal(command.input.ConfirmationCode, '012345');
+      confirmed = true;
+      return {};
+    }
+    if (command instanceof AdminAddUserToGroupCommand) return {};
+    if (command instanceof InitiateAuthCommand) {
+      assert(confirmed);
+      assert.equal(command.input.AuthParameters?.PASSWORD, password);
+      return { AuthenticationResult: { IdToken: token(customer, true), AccessToken: 'test-access', RefreshToken: 'test-refresh', ExpiresIn: 3600 } };
+    }
+    throw new Error('Unexpected Cognito operation');
+  });
+
+  assert.equal((await authRequest('/signup', { email: customer.email, password, name: 'Guest buyer' })).status, 200);
+  assert.equal((await authRequest('/confirm', { email: customer.email, code: ' 01 23 45\n' })).status, 200);
+  const login = await authRequest('/signin', { email: customer.email, password });
+  assert.equal(login.status, 200);
+  const response = await fetch(`${baseUrl}/me/bookings`, { headers: { Authorization: `Bearer ${login.body.data.id_token}` } });
+  const result = await response.json() as any;
+  assert.equal(response.status, 200);
+  assert(result.data.some((item: any) => item.bookingReference === booking.bookingReference));
+  assert.equal(booking.customerUserId, undefined);
+});
+
+test('retrying signup resends verification for an existing unconfirmed guest buyer', async (t) => {
+  let resends = 0;
+  let confirmed = false;
+  t.mock.method(CognitoIdentityProviderClient.prototype, 'send', async (command: any) => {
+    if (command instanceof SignUpCommand) throw Object.assign(new Error('User exists'), { name: 'UsernameExistsException' });
+    if (command instanceof ResendConfirmationCodeCommand) {
+      assert.equal(command.input.Username, customer.email);
+      resends++;
+      return {};
+    }
+    if (command instanceof ConfirmSignUpCommand) {
+      assert.equal(resends, 1, 'The code must actually have been resent');
+      assert.equal(command.input.ConfirmationCode, '023456');
+      confirmed = true;
+      return {};
+    }
+    if (command instanceof AdminAddUserToGroupCommand) return {};
+    throw new Error('Unexpected Cognito operation');
+  });
+
+  const result = await authRequest('/signup', { email: customer.email, password: 'GuestPassword123', name: 'Guest buyer' });
+  assert.equal(result.status, 200);
+  assert.equal(resends, 1);
+  assert.equal((await authRequest('/confirm', { email: customer.email, code: '023456' })).status, 200);
+  assert(confirmed);
+  assert.equal(booking.customerUserId, undefined);
+});
+
+test('existing confirmed accounts keep the same signup response without changing their credentials', async (t) => {
+  let existing = false;
+  const operations: string[] = [];
+  t.mock.method(CognitoIdentityProviderClient.prototype, 'send', async (command: any) => {
+    operations.push(command.constructor.name);
+    if (command instanceof SignUpCommand) {
+      if (existing) throw Object.assign(new Error('User exists'), { name: 'UsernameExistsException' });
+      return {};
+    }
+    if (command instanceof ResendConfirmationCodeCommand) {
+      throw Object.assign(new Error('Already confirmed'), { name: 'NotAuthorizedException' });
+    }
+    throw new Error('Existing credentials must never be changed during signup');
+  });
+
+  const input = { email: customer.email, password: 'GuestPassword123', name: 'Guest buyer' };
+  const fresh = await authRequest('/signup', input);
+  existing = true;
+  const retry = await authRequest('/signup', input);
+  assert.deepEqual(retry, fresh, 'Signup responses must not reveal account existence');
+  assert.equal(retry.status, 200);
+  assert.deepEqual(operations, ['SignUpCommand', 'SignUpCommand', 'ResendConfirmationCodeCommand']);
+});
 
 test('a verified customer sees guest bookings for the same email without changing their ownership', async () => {
   const result = await request('/me/bookings', customer, true);

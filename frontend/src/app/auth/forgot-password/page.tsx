@@ -9,7 +9,7 @@ import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
 function ForgotPasswordContent() {
   const searchParams = useSearchParams();
   const returnTo = getAuthReturnPath(searchParams.get('next'));
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(searchParams.get('email') || '');
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
 

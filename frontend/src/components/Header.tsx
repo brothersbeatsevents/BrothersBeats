@@ -12,7 +12,6 @@ const NAV_LINKS = [
   { href: '/booking/lookup', label: 'Find my ticket' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/services', label: 'Services' },
-  { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ];
 
