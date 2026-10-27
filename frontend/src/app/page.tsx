@@ -27,7 +27,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={organizationJsonLd()} />
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6" aria-label="Discover events">
+      <section className="max-w-7xl mx-auto sm:px-6 sm:pt-6" aria-label="Discover events">
         {heroImages.length > 0 ? (
           <HeroCarousel images={heroImages} />
         ) : (

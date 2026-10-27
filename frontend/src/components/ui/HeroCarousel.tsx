@@ -41,7 +41,7 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
   return (
     <div>
       <div
-        className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-bb-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bb-gold"
+        className="relative w-full overflow-hidden sm:rounded-3xl bg-bb-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bb-gold"
         role="region"
         aria-roledescription={multiple ? 'carousel' : undefined}
         aria-label="Homepage highlights"
@@ -84,16 +84,16 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 p-2 sm:contents">
+        <div className="contents">
           {multiple && (
             <>
-              <button type="button" onClick={() => goTo(active - 1)} aria-label="Previous slide" className="order-1 shrink-0 sm:absolute sm:left-4 sm:top-1/2 sm:-translate-y-1/2 w-11 h-11 rounded-full bg-black/65 text-white text-2xl hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+              <button type="button" onClick={() => goTo(active - 1)} aria-label="Previous slide" className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 text-white text-2xl hover:bg-black/65 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
                 <span aria-hidden="true">‹</span>
               </button>
-              <button type="button" onClick={() => goTo(active + 1)} aria-label="Next slide" className="order-2 shrink-0 sm:absolute sm:right-4 sm:top-1/2 sm:-translate-y-1/2 w-11 h-11 rounded-full bg-black/65 text-white text-2xl hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+              <button type="button" onClick={() => goTo(active + 1)} aria-label="Next slide" className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 text-white text-2xl hover:bg-black/65 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
                 <span aria-hidden="true">›</span>
               </button>
-              <div className="order-4 flex w-full items-center justify-center rounded-full bg-black/70 px-1 text-white sm:absolute sm:left-6 sm:bottom-6 sm:w-auto">
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 sm:bottom-6 sm:left-6 sm:translate-x-0 flex items-center justify-center rounded-full bg-black/40 px-1 text-white">
                 <button
                   type="button"
                   data-carousel-playback
@@ -122,7 +122,7 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
           )}
           <Link
             href="/events"
-            className="order-3 ml-auto sm:absolute sm:right-6 sm:top-6 bg-bb-gold text-bb-ink text-xs sm:text-base font-semibold px-3 sm:px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
+            className="absolute right-2 top-2 sm:right-6 sm:top-6 bg-bb-gold text-bb-ink text-xs sm:text-base font-semibold px-3 sm:px-6 py-2 sm:py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
           >
             Explore Events
           </Link>
