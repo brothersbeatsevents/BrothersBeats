@@ -48,7 +48,7 @@ export default function AdminServiceEnquiriesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Event-service enquiries</h1>
         <button
           onClick={handleExport}
@@ -60,7 +60,7 @@ export default function AdminServiceEnquiriesPage() {
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
-        <input placeholder="Search name, email, phone…" value={q} onChange={(e) => setQ(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm flex-1 min-w-[200px]" />
+        <input placeholder="Search name, email, phone…" value={q} onChange={(e) => setQ(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]" />
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm">
           <option value="">All statuses</option>
           {STATUS_OPTIONS.map((s) => (
@@ -73,7 +73,7 @@ export default function AdminServiceEnquiriesPage() {
         <p className="text-bb-text-secondary">Loading…</p>
       ) : (
         <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-bb-neutral text-bb-text-secondary text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Name</th>

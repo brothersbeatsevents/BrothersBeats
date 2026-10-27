@@ -92,7 +92,7 @@ export default function AdminBookingDetailPage() {
       {message && <p className="text-sm text-bb-green mb-4">{message}</p>}
       {resendError && <p role="alert" className="text-sm text-bb-red mb-4">{resendError}</p>}
 
-      <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 mb-6 grid grid-cols-2 gap-4 text-sm">
+      <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div><p className="text-bb-text-secondary">Buyer</p><p className="font-semibold text-bb-text">{booking.buyerName}</p></div>
         <div><p className="text-bb-text-secondary">Email</p><p className="font-semibold text-bb-text">{booking.buyerEmail}</p></div>
         <div><p className="text-bb-text-secondary">Quantity</p><p className="font-semibold text-bb-text">{booking.quantity}</p></div>
@@ -123,7 +123,7 @@ export default function AdminBookingDetailPage() {
           <h2 className="font-display font-bold text-lg text-bb-text mb-3">Tickets</h2>
           <div className="space-y-2">
             {booking.tickets.map((t: any) => (
-              <div key={t.id} className="flex items-center justify-between border border-bb-border rounded-xl p-3 text-sm">
+              <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 border border-bb-border rounded-xl p-3 text-sm">
                 <span>#{t.ticketNumber} — {t.ticketTierNameSnapshot || booking.ticketTierNameSnapshot} — {t.attendeeName}</span>
                 <span className="text-xs text-bb-text-secondary">{t.status}</span>
               </div>

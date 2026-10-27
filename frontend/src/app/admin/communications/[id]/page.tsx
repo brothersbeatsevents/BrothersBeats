@@ -89,7 +89,7 @@ export default function CampaignDetailPage() {
     <div className="max-w-2xl">
       <Link href="/admin/communications" className="text-sm text-bb-gold hover:text-bb-gold-dark">&larr; Back to communications</Link>
 
-      <div className="flex items-center justify-between mt-3 mb-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-3 mb-1">
         <h1 className="font-display font-bold text-2xl text-bb-text">{campaign.name}</h1>
         <span className="text-xs font-semibold px-3 py-1 rounded-full bg-bb-pale-green text-bb-green">{campaign.status}</span>
       </div>

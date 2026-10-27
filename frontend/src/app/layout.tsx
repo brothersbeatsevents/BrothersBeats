@@ -85,7 +85,7 @@ export default async function RootLayout({
         <CookieBanner />
         <AuthProvider>
           <Header whatsappUrl={settings?.whatsappGroupUrl} />
-          <main className="flex-1">{children}</main>
+          <main className="min-w-0 w-full flex-1">{children}</main>
           <Footer whatsappUrl={settings?.whatsappGroupUrl} />
         </AuthProvider>
       </body>

@@ -90,7 +90,7 @@ export default function GalleryMediaDetailPage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Edit gallery media</h1>
         <span className="text-xs font-semibold px-3 py-1 rounded-full bg-bb-neutral text-bb-text-secondary">{item.status}</span>
       </div>

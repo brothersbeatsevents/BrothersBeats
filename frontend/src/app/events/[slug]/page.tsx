@@ -61,8 +61,8 @@ export default async function EventDetailPage({ params }: Props) {
         }}
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 lg:gap-8">
+        <div className="min-w-0 space-y-6">
           <div>
             <h2 className="font-display font-bold text-xl text-bb-text mb-3">About this event</h2>
             <p className="text-bb-text-secondary whitespace-pre-line">{event.longDescription}</p>

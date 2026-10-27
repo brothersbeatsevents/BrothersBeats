@@ -52,7 +52,7 @@ export default function NewManualBookingPage() {
     <div className="max-w-lg">
       <h1 className="font-display font-bold text-2xl text-bb-text mb-6">New manual booking</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-bb-surface border border-bb-border rounded-2xl p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6">
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Event</label>
           <select required value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm">
@@ -63,7 +63,7 @@ export default function NewManualBookingPage() {
         <fieldset className="space-y-3">
           <legend className="text-sm font-medium text-bb-text mb-1">Ticket types</legend>
           {tiers.map((tier) => (
-            <label key={tier.id} className="flex items-center justify-between gap-3 text-sm text-bb-text">
+            <label key={tier.id} className="flex flex-wrap items-center justify-between gap-3 text-sm text-bb-text">
               <span>{tier.name} — {tier.priceAmountMinor === 0 ? 'Free' : formatMoney(tier.priceAmountMinor, tier.currency)}</span>
               <input aria-label={`${tier.name} quantity`} type="number" min={0} max={tier.maxQuantity - tier.quantitySold - tier.quantityReserved} value={quantities[tier.id] || 0} onChange={(e) => setQuantities((current) => ({ ...current, [tier.id]: Number(e.target.value) }))} className="w-20 rounded-lg border border-bb-border px-3 py-2 text-sm" />
             </label>

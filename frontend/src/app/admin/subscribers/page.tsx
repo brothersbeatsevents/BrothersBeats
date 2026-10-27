@@ -33,7 +33,7 @@ export default function AdminSubscribersPage() {
       )}
 
       <div className="flex flex-wrap gap-3 mb-4">
-        <input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm flex-1 min-w-[200px]" />
+        <input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]" />
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm">
           <option value="">All statuses</option>
           <option value="SUBSCRIBED">Subscribed</option>
@@ -46,7 +46,7 @@ export default function AdminSubscribersPage() {
         <p className="text-bb-text-secondary">Loading…</p>
       ) : (
         <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-bb-neutral text-bb-text-secondary text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Email</th>

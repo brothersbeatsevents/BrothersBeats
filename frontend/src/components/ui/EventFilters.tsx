@@ -25,7 +25,7 @@ export default function EventFilters({
         value={values.q || ''}
         onChange={(e) => onChange({ ...values, q: e.target.value })}
         placeholder="Search events…"
-        className="flex-1 min-w-[200px] rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
+        className="w-full min-w-0 sm:min-w-[200px] sm:w-auto flex-1 rounded-full border border-bb-border bg-bb-surface px-4 py-2.5 text-sm text-bb-text focus:outline-none focus:ring-2 focus:ring-bb-gold"
       />
       <select
         value={values.category || ''}

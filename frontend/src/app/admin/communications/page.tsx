@@ -24,7 +24,7 @@ export default function AdminCommunicationsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Communications</h1>
         <Link href="/admin/communications/new" className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
           + New campaign
@@ -35,7 +35,7 @@ export default function AdminCommunicationsPage() {
         <p className="text-bb-text-secondary">Loading…</p>
       ) : (
         <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-bb-neutral text-bb-text-secondary text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Name</th>

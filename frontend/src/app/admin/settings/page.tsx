@@ -48,7 +48,7 @@ export default function AdminSettingsPage() {
     <div className="max-w-xl">
       <h1 className="font-display font-bold text-2xl text-bb-text mb-6">Organization settings</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-bb-surface border border-bb-border rounded-2xl p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6">
         <HeroImagesEditor
           images={form.heroImages || []}
           onChange={(images: HeroImage[]) => set('heroImages', images)}
@@ -64,7 +64,7 @@ export default function AdminSettingsPage() {
           <label className="block text-sm font-medium text-bb-text mb-1">Support email</label>
           <input type="email" value={form.supportEmail || ''} onChange={(e) => set('supportEmail', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-bb-text mb-1">Default currency</label>
             <input value={form.defaultCurrency || ''} onChange={(e) => set('defaultCurrency', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />

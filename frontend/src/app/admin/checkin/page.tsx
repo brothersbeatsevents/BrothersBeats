@@ -179,13 +179,13 @@ export default function AdminCheckInPage() {
         )}
       </div>
 
-      <form onSubmit={handleManualSubmit} className="flex gap-2 mb-6">
+      <form onSubmit={handleManualSubmit} className="flex flex-col sm:flex-row gap-2 mb-6">
         <input
           value={manualCode}
           onChange={(e) => setManualCode(e.target.value)}
           placeholder="Or enter ticket number (BBE-…)"
           autoCapitalize="characters"
-          className="flex-1 rounded-lg border border-bb-border px-4 py-2.5 text-sm"
+          className="min-w-0 flex-1 rounded-lg border border-bb-border px-4 py-2.5 text-sm"
         />
         <button type="submit" disabled={scanPhase === 'checking'} className="border border-bb-border font-semibold px-5 py-2.5 rounded-full text-sm hover:border-bb-gold disabled:opacity-50">
           Check in

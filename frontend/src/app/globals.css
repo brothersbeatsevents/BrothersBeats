@@ -6,6 +6,7 @@
 
 /* ── CSS Custom Properties — Brothers Beats palette (White & Gold) ── */
 :root {
+  --site-header-height: 148px;
   --bb-bg-main: #FFFFFF;
   --bb-bg-surface: #FFFFFF;
   --bb-bg-neutral: #F4F1EA;
@@ -39,6 +40,34 @@ body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--bb-text-primary);
   background-color: var(--bb-bg-main);
+  overflow-wrap: break-word;
+}
+
+/* Let content shrink inside flex/grid layouts instead of widening the page.
+   Explicit Tailwind minimum widths still take precedence, including tables. */
+:where(.flex > *, .grid > *, input, textarea, select, fieldset) {
+  min-width: 0;
+}
+
+:where(img, video, canvas, iframe, input, textarea, select) {
+  max-width: 100%;
+}
+
+:where(input[type='checkbox'], input[type='radio']) {
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  :root { --site-header-height: 108px; }
+}
+
+/* Avoid focus zoom on phones, which otherwise shifts forms off screen. */
+@media (max-width: 639px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='submit']):not([type='button']),
+  textarea,
+  select {
+    font-size: 1rem;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {

@@ -22,11 +22,11 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
+    <header className="sticky top-0 z-40 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
       <HeaderTopBar whatsappUrl={whatsappUrl} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
+        <div className="flex justify-between items-center gap-3 h-16">
+          <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 shrink-0">
             <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={48} height={48} className="h-12 w-12 shrink-0 object-contain" priority />
             <span className="hidden sm:flex flex-col font-display font-bold leading-tight">
               <span className="text-xl text-white">
@@ -39,7 +39,7 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1" aria-label="Main navigation">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -55,7 +55,7 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden xl:flex items-center gap-3 shrink-0">
             {user ? (
               <>
                 {isAdmin ? (
@@ -68,7 +68,7 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
                 ) : (
                   <Link
                     href="/account"
-                    className="text-sm font-medium text-white/75 hover:text-bb-gold transition-colors"
+                    className="max-w-32 truncate text-sm font-medium text-white/75 hover:text-bb-gold transition-colors"
                   >
                     {user.display_name}
                   </Link>
@@ -98,7 +98,7 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
             )}
           </div>
 
-          <div className="lg:hidden flex items-center gap-1">
+          <div className="xl:hidden flex shrink-0 items-center gap-1">
             {isAdmin && (
               <Link
                 href="/admin"
@@ -127,7 +127,7 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
         </div>
 
         {mobileOpen && (
-          <nav id="mobile-navigation" className="lg:hidden pb-6 pt-2 space-y-1 border-t border-white/10">
+          <nav id="mobile-navigation" aria-label="Main navigation" className="xl:hidden max-h-[calc(100dvh-var(--site-header-height))] overflow-y-auto overscroll-contain pb-4 pt-2 space-y-1 border-t border-white/10">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}

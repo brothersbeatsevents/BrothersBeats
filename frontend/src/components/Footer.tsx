@@ -54,8 +54,8 @@ export default function Footer({ whatsappUrl }: { whatsappUrl?: string | null })
   return (
     <footer className="bg-bb-ink text-white mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="sm:col-span-2">
             <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={168} height={112} className="h-14 w-auto object-contain" />
             <p className="mt-3 text-sm text-white/70 max-w-sm">
               {SITE_CONFIG.mission} {SITE_CONFIG.description}
@@ -88,12 +88,12 @@ export default function Footer({ whatsappUrl }: { whatsappUrl?: string | null })
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email"
-                className="flex-1 rounded-full px-4 py-2 text-sm text-bb-ink bg-white focus:outline-none focus:ring-2 focus:ring-bb-gold-light"
+                className="min-w-0 flex-1 rounded-full px-4 py-2 text-sm text-bb-ink bg-white focus:outline-none focus:ring-2 focus:ring-bb-gold-light"
               />
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold text-sm px-4 py-2 rounded-full transition-colors"
+                className="shrink-0 bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold text-sm px-4 py-2 rounded-full transition-colors"
               >
                 {status === 'loading' ? 'Joining…' : 'Subscribe'}
               </button>

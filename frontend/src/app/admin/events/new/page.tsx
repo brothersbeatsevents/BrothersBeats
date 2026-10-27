@@ -57,7 +57,7 @@ export default function NewEventPage() {
     <div className="max-w-2xl">
       <h1 className="font-display font-bold text-2xl text-bb-text mb-6">New event</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-bb-surface border border-bb-border rounded-2xl p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6">
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Title</label>
           <input required value={form.title} onChange={(e) => set('title', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
@@ -78,7 +78,7 @@ export default function NewEventPage() {
           <label className="block text-sm font-medium text-bb-text mb-1">Full description</label>
           <textarea rows={4} value={form.longDescription} onChange={(e) => set('longDescription', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-bb-text mb-1">Venue name</label>
             <input required value={form.venueName} onChange={(e) => set('venueName', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
@@ -88,7 +88,7 @@ export default function NewEventPage() {
             <input required value={form.city} onChange={(e) => set('city', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-bb-text mb-1">Start date/time</label>
             <input required type="datetime-local" value={form.startDateTime} onChange={(e) => set('startDateTime', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
@@ -98,7 +98,7 @@ export default function NewEventPage() {
             <input required type="datetime-local" value={form.endDateTime} onChange={(e) => set('endDateTime', e.target.value)} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-bb-text mb-1">Capacity</label>
             <input required type="number" min={1} value={form.capacity} onChange={(e) => set('capacity', Number(e.target.value))} className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm" />

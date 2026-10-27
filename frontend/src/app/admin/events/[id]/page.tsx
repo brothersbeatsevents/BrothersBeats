@@ -193,7 +193,7 @@ export default function AdminEventDetailPage() {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
         <h1 className="font-display font-bold text-2xl text-bb-text">{event.title}</h1>
         <span className="text-xs font-semibold px-3 py-1 rounded-full bg-bb-pale-green text-bb-green">{event.status}</span>
       </div>
@@ -230,7 +230,7 @@ export default function AdminEventDetailPage() {
         </button>
       </div>
 
-      <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 mb-8 space-y-4">
+      <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6 mb-8 space-y-4">
         <h2 className="font-display font-bold text-lg text-bb-text">Details</h2>
         <div>
           <label className="block text-sm font-medium text-bb-text mb-1">Hero image</label>
@@ -283,8 +283,8 @@ export default function AdminEventDetailPage() {
         </div>
       </div>
 
-      <div className="bg-bb-surface border border-bb-border rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-display font-bold text-lg text-bb-text">Ticket types</h2>
           <button
             onClick={() => setShowAddTier((v) => !v)}
@@ -295,12 +295,12 @@ export default function AdminEventDetailPage() {
         </div>
 
         {showAddTier && (
-          <form onSubmit={handleAddTier} className="grid grid-cols-2 gap-3 mb-6 bg-bb-neutral rounded-xl p-4">
-            <div className="col-span-2">
+          <form onSubmit={handleAddTier} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 bg-bb-neutral rounded-xl p-4">
+            <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Ticket name</label>
               <input required placeholder="e.g. General Admission" value={tierForm.name} onChange={(e) => setTierForm((f) => ({ ...f, name: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Type</label>
               <select value={tierForm.type} onChange={(e) => setTierForm((f) => ({ ...f, type: e.target.value, ...(e.target.value === 'CHILD' ? { name: 'Child 0–12 yrs', priceEuros: '0.00' } : {}) }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm">
                 <option value="STANDARD">Standard</option>
@@ -319,7 +319,7 @@ export default function AdminEventDetailPage() {
                 </p>
               )}
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Description / age guidance</label>
               <input value={tierForm.description} onChange={(e) => setTierForm((f) => ({ ...f, description: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
             </div>
@@ -339,7 +339,7 @@ export default function AdminEventDetailPage() {
               <label className="block text-xs font-medium text-bb-text-secondary mb-1">Sales end</label>
               <input required type="datetime-local" value={tierForm.salesEndAt} onChange={(e) => setTierForm((f) => ({ ...f, salesEndAt: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
             </div>
-            <button type="submit" className="col-span-2 bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold py-2 rounded-full text-sm transition-colors">
+            <button type="submit" className="sm:col-span-2 bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold py-2 rounded-full text-sm transition-colors">
               Add ticket type
             </button>
           </form>
@@ -349,12 +349,12 @@ export default function AdminEventDetailPage() {
           {(event.ticketTiers || []).map((tier: any) => (
             <div key={tier.id} className="border border-bb-border rounded-xl p-3">
               {editingTierId === tier.id ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-bb-text-secondary mb-1">Ticket name</label>
                     <input value={editTierForm.name} onChange={(e) => setEditTierForm((f) => ({ ...f, name: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
                   </div>
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-bb-text-secondary mb-1">Description / age guidance</label>
                     <input value={editTierForm.description} onChange={(e) => setEditTierForm((f) => ({ ...f, description: e.target.value }))} className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm" />
                   </div>
@@ -387,7 +387,7 @@ export default function AdminEventDetailPage() {
                       className="w-full rounded-lg border border-bb-border px-3 py-2 text-sm"
                     />
                   </div>
-                  <div className="col-span-2 flex gap-2">
+                  <div className="sm:col-span-2 flex flex-wrap gap-2">
                     <button onClick={() => handleSaveTier(tier.id)} className="text-xs font-semibold text-bb-ink bg-bb-gold rounded-full px-4 py-2 hover:bg-bb-gold-dark">
                       Save
                     </button>
@@ -397,7 +397,7 @@ export default function AdminEventDetailPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-bb-text text-sm">{tier.name}</p>
                     <p className="text-xs text-bb-text-secondary">
