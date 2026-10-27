@@ -25,9 +25,9 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
     <header className="sticky top-0 z-50 bg-bb-ink/95 text-white backdrop-blur border-b border-white/10">
       <HeaderTopBar whatsappUrl={whatsappUrl} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={64} height={64} className="h-16 w-16 shrink-0 object-contain" priority />
+            <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={48} height={48} className="h-12 w-12 shrink-0 object-contain" priority />
             <span className="hidden sm:flex flex-col font-display font-bold leading-tight">
               <span className="text-xl text-white">
                 <span>Brothers</span><span className="text-bb-gold">Beats</span>{' '}
@@ -44,7 +44,7 @@ export default function Header({ whatsappUrl }: { whatsappUrl?: string | null })
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                className={`px-3 xl:px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                   pathname === link.href
                     ? 'text-bb-gold bg-bb-gold/10'
                     : 'text-white/75 hover:text-bb-gold hover:bg-white/10'

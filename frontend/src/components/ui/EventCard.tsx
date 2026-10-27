@@ -46,9 +46,9 @@ export default function EventCard({ event }: { event: EventCardData }) {
           </div>
         )}
       </div>
-      <div className="p-4">
+      <div className="p-3">
         <CategoryPill category={event.category} />
-        <h3 className="mt-2 font-display font-bold text-bb-text text-lg leading-snug group-hover:text-bb-gold transition-colors line-clamp-2">
+        <h3 className="mt-1 font-display font-bold text-bb-text text-base leading-snug group-hover:text-bb-gold transition-colors line-clamp-2">
           {event.title}
         </h3>
         <p className="mt-1 text-sm text-bb-text-secondary">

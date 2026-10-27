@@ -27,12 +27,12 @@ export default async function HomePage() {
     <>
       <JsonLd data={organizationJsonLd()} />
 
-      <section className="max-w-7xl mx-auto sm:px-6 sm:pt-6" aria-label="Discover events">
+      <section className="max-w-7xl mx-auto sm:px-6 sm:pt-3" aria-label="Discover events">
         {heroImages.length > 0 ? (
           <HeroCarousel images={heroImages} />
         ) : (
           <div className="rounded-3xl bg-bb-neutral">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10 text-center">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center">
               <h1 className="font-display font-bold text-3xl sm:text-4xl text-bb-text leading-tight">
                 {SITE_CONFIG.tagline}
               </h1>
@@ -45,9 +45,9 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text">Upcoming events</h2>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-6 sm:pb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display font-bold text-xl sm:text-2xl text-bb-text">Upcoming events</h2>
           <Link href="/events" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
             View all &rarr;
           </Link>
@@ -56,8 +56,8 @@ export default async function HomePage() {
       </section>
 
       {gallery.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-          <div className="flex items-center justify-between mb-8">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text">Event memories</h2>
             <Link href="/gallery" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
               View gallery &rarr;
@@ -78,14 +78,14 @@ export default async function HomePage() {
       )}
 
       {sponsors.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text text-center mb-8">Our Sponsors</h2>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text text-center mb-4">Our Sponsors</h2>
           <SponsorGrid sponsors={sponsors} />
         </section>
       )}
 
       {settings?.whatsappGroupUrl && (
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 text-center">
           <p className="text-sm font-semibold uppercase tracking-wide text-bb-text-secondary">Join Our</p>
           <h2 className="mt-1 font-display font-bold text-2xl sm:text-3xl text-bb-text">WhatsApp Announcement Group</h2>
           <p className="mt-3 text-bb-text-secondary max-w-xl mx-auto">
@@ -95,7 +95,7 @@ export default async function HomePage() {
             href={settings.whatsappGroupUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-block bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
+            className="mt-4 inline-block bg-bb-gold text-bb-ink font-semibold px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
           >
             Join Now
           </a>
@@ -103,7 +103,7 @@ export default async function HomePage() {
       )}
 
       <section className="bg-bb-gold">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 text-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 text-center">
           <h2 className="font-display font-bold text-3xl text-bb-ink">Planning a private event?</h2>
           <p className="mt-3 text-bb-ink/80 max-w-xl mx-auto">
             Brothers Beats can plan and manage your wedding, birthday, or corporate celebration as a paid,
@@ -111,7 +111,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/services"
-            className="mt-6 inline-block bg-bb-ink text-bb-gold font-semibold px-6 py-3 rounded-full hover:bg-bb-ink/80 transition-colors"
+            className="mt-4 inline-block bg-bb-ink text-bb-gold font-semibold px-6 py-3 rounded-full hover:bg-bb-ink/80 transition-colors"
           >
             Plan a Private Event With Us
           </Link>

@@ -80,7 +80,7 @@ export default function HeaderTopBar({ whatsappUrl }: { whatsappUrl?: string | n
 
   return (
     <div className="bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex flex-wrap sm:flex-nowrap items-center justify-center gap-3 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-1 flex flex-wrap sm:flex-nowrap items-center justify-center gap-2 sm:gap-6">
         <form onSubmit={handleSearch} role="search" className="flex min-w-0 basis-full sm:basis-auto sm:flex-1 sm:max-w-96 lg:flex-none lg:w-[28rem] lg:max-w-none">
           <input
             type="search"
