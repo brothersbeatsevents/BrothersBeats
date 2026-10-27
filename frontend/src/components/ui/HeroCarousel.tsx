@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import type { HeroImage } from '@/lib/hero-images';
 
@@ -41,7 +41,7 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
   return (
     <div>
       <div
-        className="relative aspect-[2/1] sm:aspect-[3/1] lg:aspect-[4/1] w-full overflow-hidden rounded-3xl bg-bb-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bb-gold"
+        className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-bb-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bb-gold"
         role="region"
         aria-roledescription={multiple ? 'carousel' : undefined}
         aria-label="Homepage highlights"
@@ -62,7 +62,7 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
           }
         }}
       >
-        <div className="absolute inset-0" aria-live={paused ? 'polite' : 'off'} aria-atomic="true">
+        <div className="relative aspect-[4/1] sm:aspect-[3/1] lg:aspect-[4/1]" aria-live={paused ? 'polite' : 'off'} aria-atomic="true">
           {images.map((image, index) => (
             <div
               key={`${image.url}-${index}`}
@@ -77,54 +77,56 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
                 src={image.url}
                 alt={image.alt || ''}
                 fetchPriority={index === 0 ? 'high' : 'auto'}
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ objectPosition: image.position || '50% 50%', transform: `scale(${image.zoom || 1})` }}
+                className="absolute inset-0 w-full h-full object-contain sm:object-cover sm:[object-position:var(--hero-position)] sm:[transform:scale(var(--hero-zoom))]"
+                style={{ '--hero-position': image.position || '50% 50%', '--hero-zoom': image.zoom || 1 } as CSSProperties}
               />
             </div>
           ))}
         </div>
 
-        {multiple && (
-          <>
-            <button type="button" onClick={() => goTo(active - 1)} aria-label="Previous slide" className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/65 text-white text-2xl hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
-              <span aria-hidden="true">‹</span>
-            </button>
-            <button type="button" onClick={() => goTo(active + 1)} aria-label="Next slide" className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/65 text-white text-2xl hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
-              <span aria-hidden="true">›</span>
-            </button>
-            <div className="absolute left-2 bottom-2 sm:left-6 sm:bottom-6 flex items-center rounded-full bg-black/70 px-1 text-white">
-              <button
-                type="button"
-                data-carousel-playback
-                onClick={() => setPaused((current) => !current)}
-                aria-label={paused ? 'Play slideshow' : 'Pause slideshow'}
-                className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
-              >
-                <span aria-hidden="true">{paused ? '▶' : 'Ⅱ'}</span>
+        <div className="flex flex-wrap items-center gap-2 p-2 sm:contents">
+          {multiple && (
+            <>
+              <button type="button" onClick={() => goTo(active - 1)} aria-label="Previous slide" className="order-1 shrink-0 sm:absolute sm:left-4 sm:top-1/2 sm:-translate-y-1/2 w-11 h-11 rounded-full bg-black/65 text-white text-2xl hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+                <span aria-hidden="true">‹</span>
               </button>
-              <div className="flex" role="group" aria-label="Choose a slide">
-                {images.map((image, index) => (
-                  <button
-                    key={`${image.url}-${index}`}
-                    type="button"
-                    onClick={() => goTo(index)}
-                    aria-label={`Show slide ${index + 1}`}
-                    aria-current={index === active ? 'true' : undefined}
-                    className="flex h-11 w-6 sm:w-8 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
-                  >
-                    <span className={`h-2 w-2 rounded-full ${index === active ? 'bg-bb-gold' : 'bg-white/60'}`} />
-                  </button>
-                ))}
+              <button type="button" onClick={() => goTo(active + 1)} aria-label="Next slide" className="order-2 shrink-0 sm:absolute sm:right-4 sm:top-1/2 sm:-translate-y-1/2 w-11 h-11 rounded-full bg-black/65 text-white text-2xl hover:bg-black/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+                <span aria-hidden="true">›</span>
+              </button>
+              <div className="order-4 flex w-full items-center justify-center rounded-full bg-black/70 px-1 text-white sm:absolute sm:left-6 sm:bottom-6 sm:w-auto">
+                <button
+                  type="button"
+                  data-carousel-playback
+                  onClick={() => setPaused((current) => !current)}
+                  aria-label={paused ? 'Play slideshow' : 'Pause slideshow'}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                >
+                  <span aria-hidden="true">{paused ? '▶' : 'Ⅱ'}</span>
+                </button>
+                <div className="flex" role="group" aria-label="Choose a slide">
+                  {images.map((image, index) => (
+                    <button
+                      key={`${image.url}-${index}`}
+                      type="button"
+                      onClick={() => goTo(index)}
+                      aria-label={`Show slide ${index + 1}`}
+                      aria-current={index === active ? 'true' : undefined}
+                      className="flex h-11 w-7 sm:w-8 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                    >
+                      <span className={`h-2 w-2 rounded-full ${index === active ? 'bg-bb-gold' : 'bg-white/60'}`} />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </>
-        )}
-        <Link
-          href="/events"
-          className="absolute right-3 top-3 sm:right-6 sm:top-6 bg-bb-gold text-bb-ink text-xs sm:text-base font-semibold px-3 sm:px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
-        >
-          Explore Events
-        </Link>
+            </>
+          )}
+          <Link
+            href="/events"
+            className="order-3 ml-auto sm:absolute sm:right-6 sm:top-6 bg-bb-gold text-bb-ink text-xs sm:text-base font-semibold px-3 sm:px-6 py-3 rounded-full hover:bg-bb-gold-dark transition-colors"
+          >
+            Explore Events
+          </Link>
+        </div>
       </div>
     </div>
   );

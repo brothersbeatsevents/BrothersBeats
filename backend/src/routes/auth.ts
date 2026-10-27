@@ -18,9 +18,13 @@ import { User } from '../types';
 
 const router = Router();
 
-const COGNITO_DOMAIN = process.env.COGNITO_DOMAIN
-  ? `https://${process.env.COGNITO_DOMAIN}.auth.${process.env.AWS_REGION || 'eu-west-1'}.amazoncognito.com`
-  : '';
+// Use the same domain for authorization, code exchange, and session refresh.
+const COGNITO_DOMAIN = (
+  process.env.COGNITO_AUTH_URL ||
+  (process.env.COGNITO_DOMAIN
+    ? `https://${process.env.COGNITO_DOMAIN}.auth.${process.env.AWS_REGION || 'eu-west-1'}.amazoncognito.com`
+    : '')
+).replace(/\/+$/, '');
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
 const CUSTOMER_GROUP = process.env.COGNITO_CUSTOMER_GROUP_NAME || 'CUSTOMER';
 
