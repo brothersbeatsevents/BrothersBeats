@@ -140,7 +140,16 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 
     const eventType: string =
       sesEvent?.notificationType || sesEvent?.eventType || '';
-    console.info('[SES-SNS] Event received:', eventType);
+    console.info('[SES-SNS] Event received:', {
+      eventType,
+      messageId: sesEvent.mail?.messageId,
+      recipients: sesEvent.mail?.destination,
+      smtpResponse: sesEvent.delivery?.smtpResponse,
+      bounceType: sesEvent.bounce?.bounceType,
+      diagnostics: sesEvent.bounce?.bouncedRecipients?.map((recipient: any) => recipient.diagnosticCode),
+      rejectReason: sesEvent.reject?.reason,
+      renderingError: sesEvent.failure?.errorMessage,
+    });
 
     try {
       if (eventType === 'Bounce') {

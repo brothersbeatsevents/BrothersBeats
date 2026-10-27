@@ -14,10 +14,17 @@ import { AuthRequest, authenticate } from '../middleware/auth';
 import { BookingEntity, EventEntity, TicketEntity, User } from '../types';
 import { sendTicketDelivery } from '../services/email';
 import { getSignedDownloadUrl } from '../services/s3';
+import { isValidOptionalPhone, PHONE_ERROR } from '../services/phone-validation';
 
 const router = Router();
 
 router.use(authenticate);
+
+function canAccessBooking(booking: BookingEntity, req: AuthRequest): boolean {
+  if (booking.customerUserId === req.user!.id) return true;
+  return !booking.customerUserId && !!req.verifiedEmail &&
+    (booking.normalizedBuyerEmail || booking.buyerEmail).trim().toLowerCase() === req.verifiedEmail;
+}
 
 function publicUser(user: User) {
   return {
@@ -43,6 +50,11 @@ router.patch('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const user = req.user!;
   const { display_name, phone } = req.body;
 
+  if (!isValidOptionalPhone(phone)) {
+    res.status(400).json({ success: false, error: PHONE_ERROR });
+    return;
+  }
+
   if (display_name !== undefined) {
     if (typeof display_name !== 'string' || !display_name.trim()) {
       res.status(400).json({ success: false, error: 'display_name must be a non-empty string' });
@@ -51,11 +63,7 @@ router.patch('/', async (req: AuthRequest, res: Response): Promise<void> => {
     user.display_name = display_name.trim().slice(0, 100);
   }
   if (phone !== undefined) {
-    if (typeof phone !== 'string') {
-      res.status(400).json({ success: false, error: 'phone must be a string' });
-      return;
-    }
-    user.phone = phone.trim().slice(0, 30);
+    user.phone = phone.trim();
   }
 
   user.updated_at = new Date().toISOString();
@@ -117,7 +125,14 @@ router.patch('/preferences', async (req: AuthRequest, res: Response): Promise<vo
 
 // GET /api/me/bookings — booking history for the logged-in customer
 router.get('/bookings', async (req: AuthRequest, res: Response): Promise<void> => {
-  const bookings = await db.filterBy<BookingEntity>('bookings', 'customerUserId', req.user!.id);
+  const [owned, emailMatches] = await Promise.all([
+    db.filterBy<BookingEntity>('bookings', 'customerUserId', req.user!.id),
+    req.verifiedEmail
+      ? db.filterBy<BookingEntity>('bookings', 'normalizedBuyerEmail', req.verifiedEmail)
+      : Promise.resolve([] as BookingEntity[]),
+  ]);
+  const bookings = [...new Map([...owned, ...emailMatches.filter((booking) => canAccessBooking(booking, req))]
+    .map((booking) => [booking.id, booking])).values()];
   bookings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   res.json({
     success: true,
@@ -138,7 +153,7 @@ router.get('/bookings', async (req: AuthRequest, res: Response): Promise<void> =
 // GET /api/me/bookings/:bookingReference — booking detail + tickets (owned only)
 router.get('/bookings/:bookingReference', async (req: AuthRequest, res: Response): Promise<void> => {
   const booking = await db.findBy<BookingEntity>('bookings', 'bookingReference', req.params.bookingReference);
-  if (!booking || booking.customerUserId !== req.user!.id) {
+  if (!booking || !canAccessBooking(booking, req)) {
     res.status(404).json({ success: false, error: 'Booking not found' });
     return;
   }
@@ -171,7 +186,7 @@ router.get('/bookings/:bookingReference', async (req: AuthRequest, res: Response
 // POST /api/me/bookings/:bookingReference/resend — re-send the ticket delivery email
 router.post('/bookings/:bookingReference/resend', async (req: AuthRequest, res: Response): Promise<void> => {
   const booking = await db.findBy<BookingEntity>('bookings', 'bookingReference', req.params.bookingReference);
-  if (!booking || booking.customerUserId !== req.user!.id) {
+  if (!booking || !canAccessBooking(booking, req)) {
     res.status(404).json({ success: false, error: 'Booking not found' });
     return;
   }
@@ -187,16 +202,20 @@ router.post('/bookings/:bookingReference/resend', async (req: AuthRequest, res: 
     return;
   }
 
-  await sendTicketDelivery(
+  const sent = await sendTicketDelivery(
     booking.buyerEmail,
     booking.buyerName,
-    tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot })),
+    tickets.map((t) => ({ ticketNumber: t.ticketNumber, ticketTierName: t.ticketTierNameSnapshot, ticketPdfS3Key: t.ticketPdfS3Key })),
     { title: event.title, startDateTime: event.startDateTime, venueName: event.venueName, city: event.city, timezone: event.timezone, slug: event.slug },
-    booking.bookingReference,
+    booking,
     true,
   );
+  if (!sent) {
+    res.status(502).json({ success: false, error: 'Ticket email could not be sent. Please contact support for help.' });
+    return;
+  }
 
-  res.json({ success: true, message: 'Tickets resent to your email' });
+  res.json({ success: true, message: 'Ticket email submitted for delivery. Check your inbox and junk folder.' });
 });
 
 // POST /api/me/bookings/claim — attach a guest booking (matching email) to this account
@@ -208,7 +227,7 @@ router.post('/bookings/claim', async (req: AuthRequest, res: Response): Promise<
   }
 
   const booking = await db.findBy<BookingEntity>('bookings', 'bookingReference', bookingReference);
-  if (!booking || booking.normalizedBuyerEmail !== req.user!.email.trim().toLowerCase()) {
+  if (!booking || !canAccessBooking(booking, req)) {
     res.status(404).json({ success: false, error: 'Booking not found for your account email' });
     return;
   }
@@ -227,7 +246,7 @@ router.get('/tickets/:ticketId/download', async (req: AuthRequest, res: Response
     return;
   }
   const booking = await db.get<BookingEntity>('bookings', ticket.bookingId);
-  if (!booking || booking.customerUserId !== req.user!.id) {
+  if (!booking || !canAccessBooking(booking, req)) {
     res.status(404).json({ success: false, error: 'Ticket not found' });
     return;
   }

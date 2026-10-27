@@ -414,6 +414,13 @@ export interface WebhookEventEntity {
   created_at: string;
 }
 
+export interface BookingAccessTokenEntity {
+  id: string; // SHA-256 of the bearer token, never the token itself
+  bookingId: string;
+  expiresAt: number;
+  ttl: number;
+}
+
 export type EmailMessageType =
   | 'VERIFY_EMAIL'
   | 'PASSWORD_RESET'
@@ -508,7 +515,7 @@ export interface OrgSettings {
 }
 
 // ── Gallery media (public photo/video showcase — admin-authored only) ──
-export type GalleryMediaType = 'IMAGE' | 'YOUTUBE_VIDEO';
+export type GalleryMediaType = 'IMAGE' | 'YOUTUBE_VIDEO' | 'INSTAGRAM_REEL';
 export type GalleryMediaStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export interface GalleryMediaEntity {
@@ -530,6 +537,8 @@ export interface GalleryMediaEntity {
 
   youtubeUrl?: string;
   youtubeVideoId?: string;
+  instagramUrl?: string;
+  instagramShortcode?: string;
 
   featured: boolean;
   sortOrder: number;

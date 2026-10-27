@@ -14,7 +14,9 @@ import {
   QueryCommand,
   ScanCommand,
   UpdateCommand,
+  TransactWriteCommand,
 } from '@aws-sdk/lib-dynamodb';
+import type { BookingEntity, TicketSelection } from '../types';
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE || 'brothers-beats-dev';
 
@@ -35,6 +37,7 @@ export type EntityType =
   | 'EVENT'
   | 'TICKET_TIER'
   | 'BOOKING'
+  | 'BOOKING_ACCESS_TOKEN'
   | 'TICKET'
   | 'REFUND'
   | 'SUBSCRIBER'
@@ -322,6 +325,38 @@ export async function atomicRateLimitIncrement(
 }
 
 // ── Atomic inventory reservation/sale guards (HIGH-3) ──
+export async function expireBookingReservation(booking: BookingEntity, items: TicketSelection[]): Promise<boolean> {
+  const now = new Date().toISOString();
+  try {
+    await docClient.send(new TransactWriteCommand({
+      TransactItems: [
+        { Update: {
+          TableName: TABLE_NAME, Key: { PK: 'ENTITY#BOOKING', SK: booking.id },
+          UpdateExpression: 'SET bookingStatus = :expired, updated_at = :now',
+          ConditionExpression: 'bookingStatus = :pending',
+          ExpressionAttributeValues: { ':expired': 'EXPIRED', ':pending': 'RESERVED_PENDING_PAYMENT', ':now': now },
+        } },
+        { Update: {
+          TableName: TABLE_NAME, Key: { PK: 'ENTITY#EVENT', SK: booking.eventId },
+          UpdateExpression: 'SET totalTicketsReserved = totalTicketsReserved - :qty, updated_at = :now',
+          ConditionExpression: 'totalTicketsReserved >= :qty',
+          ExpressionAttributeValues: { ':qty': booking.quantity, ':now': now },
+        } },
+        ...items.map((item) => ({ Update: {
+          TableName: TABLE_NAME, Key: { PK: 'ENTITY#TICKET_TIER', SK: item.ticketTierId },
+          UpdateExpression: 'SET quantityReserved = quantityReserved - :qty, updated_at = :now',
+          ConditionExpression: 'quantityReserved >= :qty',
+          ExpressionAttributeValues: { ':qty': item.quantity, ':now': now },
+        } })),
+      ],
+    }));
+    return true;
+  } catch (error: any) {
+    if (error.name === 'TransactionCanceledException' && error.CancellationReasons?.[0]?.Code === 'ConditionalCheckFailed') return false;
+    throw error;
+  }
+}
+
 // Throws ConditionalCheckError if the operation would exceed capacity.
 export class ConditionalCheckError extends Error {
   constructor() {

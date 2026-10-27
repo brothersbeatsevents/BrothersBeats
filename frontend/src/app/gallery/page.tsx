@@ -10,7 +10,7 @@ import ErrorState from '@/components/ui/ErrorState';
 const FILTERS = [
   { value: '', label: 'All' },
   { value: 'IMAGE', label: 'Photos' },
-  { value: 'YOUTUBE_VIDEO', label: 'Videos' },
+  { value: 'VIDEO', label: 'Videos' },
 ];
 
 export default function GalleryPage() {

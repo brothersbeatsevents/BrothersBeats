@@ -9,6 +9,8 @@ import { v4 as uuid } from 'uuid';
 import { db } from '../store';
 import { EventServiceEnquiryEntity } from '../types';
 import { sendAdminAlert } from '../services/email';
+import { isValidOptionalPhone, PHONE_ERROR } from '../services/phone-validation';
+import { getEnquiryDateError } from '../services/enquiry-date-validation';
 import {
   validateServiceEnquiryInput,
   resolveEventServiceType,
@@ -36,6 +38,21 @@ router.post('/', async (req, res: Response): Promise<void> => {
   const validationError = validateServiceEnquiryInput({ fullName, email, message, consentToContact });
   if (validationError) {
     res.status(400).json({ success: false, error: validationError });
+    return;
+  }
+
+  if (!isValidOptionalPhone(phone)) {
+    res.status(400).json({ success: false, error: PHONE_ERROR });
+    return;
+  }
+
+  const dateError = getEnquiryDateError(preferredDate) || getEnquiryDateError(preferredDateEnd);
+  if (dateError) {
+    res.status(400).json({ success: false, error: dateError });
+    return;
+  }
+  if (preferredDateEnd && (!preferredDate || preferredDateEnd < preferredDate)) {
+    res.status(400).json({ success: false, error: 'End date must be the same as or later than the preferred date.' });
     return;
   }
 

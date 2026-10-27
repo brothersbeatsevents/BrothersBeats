@@ -50,6 +50,24 @@ test('a fully-populated YouTube video is publishable', () => {
   assert.deepEqual(validateGalleryMediaForPublish(makeVideo()), []);
 });
 
+test('a YouTube Short is publishable', () => {
+  assert.deepEqual(validateGalleryMediaForPublish(makeVideo({ youtubeUrl: 'https://www.youtube.com/shorts/dQw4w9WgXcQ' })), []);
+});
+
+test('an Instagram Reel requires a validated URL and matching shortcode to publish', () => {
+  const reel = makeVideo({
+    type: 'INSTAGRAM_REEL', youtubeUrl: undefined, youtubeVideoId: undefined,
+    instagramUrl: 'https://www.instagram.com/reel/DA_12-abC3/', instagramShortcode: 'DA_12-abC3',
+  });
+  assert.deepEqual(validateGalleryMediaForPublish(reel), []);
+  for (const overrides of [
+    { instagramUrl: undefined }, { instagramShortcode: undefined },
+    { instagramShortcode: 'different' }, { instagramUrl: 'https://evil.example/reel/DA_12-abC3/' },
+  ]) {
+    assert.ok(validateGalleryMediaForPublish({ ...reel, ...overrides }).some((error) => error.includes('Instagram Reel')));
+  }
+});
+
 test('an image without alt text cannot be published', () => {
   const errors = validateGalleryMediaForPublish(makeImage({ altText: undefined }));
   assert.ok(errors.some((e) => e.includes('Alt text')));

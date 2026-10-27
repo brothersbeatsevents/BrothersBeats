@@ -1,19 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getPriceQuote, getEvent } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import PriceSummary from '@/components/ui/PriceSummary';
 import CheckoutForm from '@/components/ui/CheckoutForm';
 import ErrorState from '@/components/ui/ErrorState';
+import CheckoutAccountChoice from '@/components/ui/CheckoutAccountChoice';
 
 function CheckoutPageContent() {
   const params = useParams<{ eventId: string }>();
   const searchParams = useSearchParams();
-  const { isAdmin, user } = useAuth();
-  const router = useRouter();
+  const { isAdmin, user, loading: authLoading } = useAuth();
   const tier = searchParams.get('tier') || '';
   const qty = Number(searchParams.get('qty')) || 1;
   const itemsParam = searchParams.get('items');
@@ -84,7 +84,14 @@ function CheckoutPageContent() {
     }
   }
 
-  const checkoutPath = `/checkout/${params.eventId}?${new URLSearchParams({ items: JSON.stringify(items), slug })}`;
+  const checkoutQuery = new URLSearchParams(searchParams.toString());
+  checkoutQuery.delete('guest');
+  const checkoutPath = `/checkout/${params.eventId}?${checkoutQuery}`;
+  const allowGuestCheckout = event?.allowGuestCheckout !== false;
+
+  if (loading || authLoading) {
+    return <div className="max-w-3xl mx-auto px-4 py-16 text-center text-bb-text-secondary">Loading checkout…</div>;
+  }
 
   if (isAdmin) {
     return (
@@ -100,35 +107,11 @@ function CheckoutPageContent() {
     );
   }
 
-  if (!loading && !error && quote && !user && !guestCheckout) {
+  if (!error && quote && !user && (!guestCheckout || !allowGuestCheckout)) {
     return (
-      <div className="max-w-xl mx-auto px-4 sm:px-6 py-16 text-center">
-        <h1 className="font-display font-bold text-3xl text-bb-text mb-3">Choose how to continue</h1>
-        <p className="text-bb-text-secondary mb-8">
-          Create an account to keep your ticket details in your profile, or continue as a guest.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            type="button"
-            onClick={() => router.push(`/auth/sign-up?next=${encodeURIComponent(checkoutPath)}`)}
-            className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-3 rounded-full"
-          >
-            Sign up to save tickets
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push(`${checkoutPath}&guest=true`)}
-            className="border border-bb-border text-bb-text font-semibold px-6 py-3 rounded-full"
-          >
-            Continue as guest
-          </button>
-        </div>
-      </div>
+      <CheckoutAccountChoice checkoutPath={checkoutPath} eventTitle={event?.title} eventSlug={slug}
+        quote={quote} allowGuestCheckout={allowGuestCheckout} />
     );
-  }
-
-  if (loading) {
-    return <div className="max-w-3xl mx-auto px-4 py-16 text-center text-bb-text-secondary">Loading checkout…</div>;
   }
 
   if (error || !quote) {
@@ -195,7 +178,7 @@ function CheckoutPageContent() {
             {discountError && <p id="discount-error" role="alert" className="mt-2 text-bb-red">{discountError}</p>}
           </div>
           {quote.totalAmountMinor > 0 && <p className="text-xs text-bb-text-muted mt-3">
-            Your tickets are reserved for 30 minutes while you complete payment.
+            Your tickets are reserved for 15 minutes while you complete payment.
           </p>}
         </div>
       </div>

@@ -1,6 +1,6 @@
 // ──────────────────────────────────────────
 // Admin: Gallery media — dedicated workspace independent of the event form.
-// Photos are presigned-S3 uploads; YouTube entries are validated URL records.
+// Photos are presigned-S3 uploads; videos and Reels are validated URL records.
 // Never stores arbitrary iframe/script/embed HTML.
 // ──────────────────────────────────────────
 
@@ -11,6 +11,7 @@ import { AuthRequest, authenticate, requireAdmin } from '../../middleware/auth';
 import { auditLog } from '../../middleware/audit';
 import { GalleryMediaEntity, EventEntity } from '../../types';
 import { normalizeYouTubeUrl } from '../../services/youtube';
+import { normalizeInstagramReelUrl } from '../../services/instagram';
 import { validateGalleryMediaForPublish } from '../../services/gallery-validation';
 
 const router = Router();
@@ -22,19 +23,20 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   let items = await db.getAll<GalleryMediaEntity>('galleryMedia');
 
   if (status) items = items.filter((m) => m.status === status);
-  if (type === 'IMAGE' || type === 'YOUTUBE_VIDEO') items = items.filter((m) => m.type === type);
+  if (type === 'VIDEO') items = items.filter((m) => m.type === 'YOUTUBE_VIDEO' || m.type === 'INSTAGRAM_REEL');
+  else if (['IMAGE', 'YOUTUBE_VIDEO', 'INSTAGRAM_REEL'].includes(type)) items = items.filter((m) => m.type === type);
   if (eventId) items = items.filter((m) => m.eventId === eventId);
 
   items.sort((a, b) => a.sortOrder - b.sortOrder || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   res.json({ success: true, data: items });
 });
 
-// POST /api/admin/gallery — create a draft media record (photo or YouTube video)
+// POST /api/admin/gallery — create a draft photo, YouTube video/Short, or Instagram Reel
 router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { type, title, caption, altText, eventId, imageS3Key, imageUrl, imageWidth, imageHeight, youtubeUrl, featured, sortOrder } = req.body;
+  const { type, title, caption, altText, eventId, imageS3Key, imageUrl, imageWidth, imageHeight, youtubeUrl, instagramUrl, featured, sortOrder } = req.body;
 
-  if (type !== 'IMAGE' && type !== 'YOUTUBE_VIDEO') {
-    res.status(400).json({ success: false, error: 'type must be IMAGE or YOUTUBE_VIDEO' });
+  if (!['IMAGE', 'YOUTUBE_VIDEO', 'INSTAGRAM_REEL'].includes(type)) {
+    res.status(400).json({ success: false, error: 'type must be IMAGE, YOUTUBE_VIDEO, or INSTAGRAM_REEL' });
     return;
   }
   if (!title || typeof title !== 'string') {
@@ -84,12 +86,24 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
       imageWidth: typeof imageWidth === 'number' ? imageWidth : undefined,
       imageHeight: typeof imageHeight === 'number' ? imageHeight : undefined,
     };
+  } else if (type === 'INSTAGRAM_REEL') {
+    const normalized = normalizeInstagramReelUrl(instagramUrl);
+    if (!normalized) {
+      res.status(400).json({ success: false, error: 'A valid instagram.com/reel/ or instagram.com/reels/ URL is required' });
+      return;
+    }
+    media = {
+      ...base,
+      type: 'INSTAGRAM_REEL',
+      instagramUrl: normalized.canonicalUrl,
+      instagramShortcode: normalized.shortcode,
+    };
   } else {
     const normalized = normalizeYouTubeUrl(youtubeUrl);
     if (!normalized) {
       res.status(400).json({
         success: false,
-        error: 'A valid youtube.com or youtu.be video URL is required (playlists, channels, shorts, and live links are not supported)',
+        error: 'A valid youtube.com or youtu.be video or Shorts URL is required (playlists, channels, and live links are not supported)',
       });
       return;
     }
@@ -105,7 +119,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
   auditLog(req.user!.id, 'CREATE_GALLERY_MEDIA', 'GALLERY_MEDIA', media.id, {
     actorRole: req.user!.role as any,
     eventId: media.eventId,
-    summary: `Created gallery ${media.type === 'IMAGE' ? 'photo' : 'YouTube video'} "${media.title}"`,
+    summary: `Created gallery ${media.type === 'IMAGE' ? 'photo' : media.type === 'INSTAGRAM_REEL' ? 'Instagram Reel' : 'YouTube video'} "${media.title}"`,
   });
 
   res.status(201).json({ success: true, data: media });

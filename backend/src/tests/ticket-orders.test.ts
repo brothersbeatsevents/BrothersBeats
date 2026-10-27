@@ -11,9 +11,10 @@ import { seedStore } from '../seed/data';
 import { BookingEntity, EventEntity, TicketTierEntity, User } from '../types';
 import { generateToken } from '../middleware/auth';
 import { parseTicketSelections, quoteTicketOrder } from '../services/ticket-order';
-import { reserveOrderInventory, expireStaleReservations, releaseBookingInventory } from '../services/inventory';
+import { reserveOrderInventory, expireStaleReservations, expirePendingReservations, releaseBookingInventory } from '../services/inventory';
 import checkoutRoutes from '../routes/checkout';
 import pricingRoutes from '../routes/pricing';
+import publicEventRoutes from '../routes/events';
 import webhookRoutes from '../routes/webhooks-stripe';
 import adminBookingRoutes from '../routes/admin/bookings';
 import adminEventRoutes from '../routes/admin/events';
@@ -28,7 +29,11 @@ process.env.STRIPE_WEBHOOK_SECRET = 'whsec_local_regression';
 const stripe = new Stripe('sk_test_local_regression');
 const sessionPrototype = Object.getPrototypeOf(stripe.checkout.sessions);
 let stripeLines: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+let stripePaymentMethods: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = [];
 let failStripe = false;
+let failStripeExpiry = false;
+let stripeSessionStatus = 'expired';
+const expiredSessions: string[] = [];
 let server: Server;
 let baseUrl: string;
 let event: EventEntity;
@@ -46,12 +51,20 @@ before(async () => {
   mock.method(sessionPrototype, 'create', async (params: Stripe.Checkout.SessionCreateParams) => {
     if (failStripe) throw new Error('Simulated Stripe outage');
     stripeLines = params.line_items || [];
+    stripePaymentMethods = params.payment_method_types || [];
     return { id: 'cs_test_basket', url: 'https://checkout.stripe.test/basket' };
   });
+  mock.method(sessionPrototype, 'expire', async (id: string) => {
+    expiredSessions.push(id);
+    if (failStripeExpiry) throw new Error('Stripe expiry failed');
+    return { id, status: 'expired' };
+  });
+  mock.method(sessionPrototype, 'retrieve', async (id: string) => ({ id, status: stripeSessionStatus }));
   const app = express();
   app.use(express.json({ verify: (req, _res, body) => { (req as any).rawBody = body; } }));
   app.use('/checkout', checkoutRoutes);
   app.use('/pricing', pricingRoutes);
+  app.use('/events', publicEventRoutes);
   app.use('/webhook', webhookRoutes);
   app.use('/admin/bookings', adminBookingRoutes);
   app.use('/admin/events', adminEventRoutes);
@@ -91,7 +104,11 @@ beforeEach(async () => {
   const admin = Array.from(store.users.values()).find((user) => user.role === 'ADMIN') as User;
   adminToken = generateToken(admin);
   stripeLines = [];
+  stripePaymentMethods = [];
   failStripe = false;
+  failStripeExpiry = false;
+  stripeSessionStatus = 'expired';
+  expiredSessions.length = 0;
 });
 
 const basket = () => [{ ticketTierId: standard.id, quantity: 1 }, { ticketTierId: group.id, quantity: 4 }, { ticketTierId: child.id, quantity: 2 }];
@@ -119,6 +136,8 @@ test('Standard, Group and free Child tickets share one quote and Stripe checkout
   assert.equal(preview.body.data.totalAmountMinor, 8000);
   assert.equal(preview.body.data.lineItems.length, 3);
   const booking = await startBasket();
+  // `card` also provides Apple Pay and Google Pay; no Link or other methods.
+  assert.deepEqual(stripePaymentMethods, ['card', 'revolut_pay']);
   assert.equal(booking.totalAmountMinor, preview.body.data.totalAmountMinor);
   assert.equal(event.totalTicketsReserved, 7);
   assert.deepEqual(stripeLines.map((line) => [line.quantity, line.price_data?.unit_amount]), [[1, 2000], [4, 1500], [2, 0]]);
@@ -136,12 +155,12 @@ test('Standard, Group and free Child tickets share one quote and Stripe checkout
   assert.deepEqual(report.body.data.byTicketTier.map((line: any) => [line.name, line.quantity, line.grossMinor]), [['Standard', 1, 2000], ['Group', 4, 6000], ['Child 0–12 yrs', 2, 0]]);
 });
 
-test('free child-only booking issues tickets immediately and returns a signed confirmation link', async () => {
+test('free child-only booking issues tickets immediately and returns a secure confirmation link', async () => {
   const result = await request('/checkout/session', { eventId: event.id, items: [{ ticketTierId: child.id, quantity: 3 }], ...buyer });
   assert.equal(result.status, 200);
   assert.equal(stripeLines.length, 0);
   const url = new URL(result.body.data.checkoutUrl);
-  const verified = verifyBookingToken(url.searchParams.get('token')!);
+  const verified = await verifyBookingToken(url.searchParams.get('token')!);
   assert(verified);
   const booking = await db.get<BookingEntity>('bookings', verified.bookingId);
   assert.equal(booking?.paymentStatus, 'NOT_REQUIRED');
@@ -165,6 +184,63 @@ test('mixed order enforces group minimum, aggregate order limit, and event capac
   event.capacity = 6;
   assert.equal((await request('/pricing/quote', { eventId: event.id, items: basket() })).status, 409);
   assert.equal((await request('/checkout/session', { eventId: event.id, items: basket(), ...buyer })).status, 409);
+});
+
+test('a four-ticket group can be quoted and reserved when six tickets remain', async () => {
+  event.capacity = 6;
+  group.maxQuantity = 6;
+  group.name = 'Group of 4';
+  const details = await request(`/events/${event.slug}`);
+  assert.equal(details.body.data.availableTickets, 6);
+  assert.equal(details.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 6);
+  const items = [{ ticketTierId: group.id, quantity: 4 }];
+  assert.equal((await request('/pricing/quote', { eventId: event.id, items })).status, 200);
+  assert.equal((await request('/checkout/session', { eventId: event.id, items, ...buyer })).status, 200);
+  assert.equal(group.quantityReserved, 4);
+  assert.equal(event.totalTicketsReserved, 4);
+  const updated = await request(`/events/${event.slug}`);
+  assert.equal(updated.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 2);
+});
+
+test('one Group of 4 selection stays one unit for group tickets configured with a minimum of one', async () => {
+  group.name = 'Group of 4';
+  group.minPerOrder = 1;
+  group.groupMinSize = undefined;
+  group.priceAmountMinor = 7000;
+  group.maxQuantity = 6;
+  const items = [{ ticketTierId: group.id, quantity: 1 }];
+  const quote = await request('/pricing/quote', { eventId: event.id, items });
+  assert.equal(quote.status, 200);
+  assert.equal(quote.body.data.quantity, 1);
+  assert.equal(quote.body.data.totalAmountMinor, 7000);
+  assert.equal((await request('/checkout/session', { eventId: event.id, items, ...buyer })).status, 200);
+  assert.equal(group.quantityReserved, 1);
+  assert.equal(event.totalTicketsReserved, 1);
+});
+
+test('a stale count of six is replaced by the current two remaining after another booking', async () => {
+  group.name = 'Group of 4';
+  group.minPerOrder = 1;
+  group.groupMinSize = undefined;
+  group.maxQuantity = 6;
+  const before = await request(`/events/${event.slug}`);
+  assert.equal(before.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 6);
+  const items = [{ ticketTierId: group.id, quantity: 4 }];
+  assert.equal((await request('/checkout/session', { eventId: event.id, items, ...buyer })).status, 200);
+  const rejected = await request('/pricing/quote', { eventId: event.id, items });
+  assert.equal(rejected.status, 409);
+  assert.match(rejected.body.error, /Group of 4\. Only 2 left/);
+  const after = await request(`/events/${event.slug}`);
+  assert.equal(after.body.data.ticketTiers.find((tier: any) => tier.id === group.id).available, 2);
+  assert.equal((await request('/pricing/quote', { eventId: event.id, items: [{ ticketTierId: group.id, quantity: 1 }] })).status, 200);
+});
+
+test('ticket-type availability never exceeds the remaining event capacity', async () => {
+  event.capacity = 6;
+  event.totalTicketsSold = 4;
+  const details = await request(`/events/${event.slug}`);
+  assert.equal(details.body.data.availableTickets, 2);
+  assert(details.body.data.ticketTiers.every((tier: any) => tier.available <= 2));
 });
 
 test('duplicate, fractional, negative and empty selections are rejected', () => {
@@ -228,6 +304,68 @@ test('expiry and payment failure release every type exactly once', async () => {
   await expireStaleReservations(event.id);
   assert.equal(stale.bookingStatus, 'EXPIRED');
   assert.equal(event.totalTicketsReserved, 0);
+});
+
+test('checkout holds tickets for 15 minutes and the scheduler closes the session before release', async () => {
+  const started = Date.now();
+  const booking = await startBasket();
+  const deadline = Date.parse(booking.reservedUntil!);
+  assert(deadline >= started + 15 * 60 * 1000);
+  assert(deadline <= Date.now() + 15 * 60 * 1000);
+  await expirePendingReservations();
+  assert.equal(booking.bookingStatus, 'RESERVED_PENDING_PAYMENT');
+  assert.equal(expiredSessions.length, 0);
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  await expirePendingReservations();
+  assert.deepEqual(expiredSessions, [booking.paymentProviderSessionId]);
+  assert.equal(booking.bookingStatus, 'EXPIRED');
+  assert.equal(event.totalTicketsReserved, 0);
+  for (const tier of [standard, group, child]) assert.equal(tier.quantityReserved, 0);
+  await expirePendingReservations();
+  await webhook('checkout.session.expired', { metadata: { bookingId: booking.id } }, 'evt_after_scheduled_expiry');
+  assert.equal(event.totalTicketsReserved, 0);
+  assert.equal(expiredSessions.length, 1);
+});
+
+test('completed Stripe checkout keeps its reservation until payment fulfillment arrives', async () => {
+  const booking = await startBasket();
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  failStripeExpiry = true;
+  stripeSessionStatus = 'complete';
+  await expirePendingReservations();
+  assert.equal(booking.bookingStatus, 'RESERVED_PENDING_PAYMENT');
+  assert.equal(event.totalTicketsReserved, booking.quantity);
+  await webhook('checkout.session.completed', { metadata: { bookingId: booking.id }, payment_intent: 'pi_before_expiry' });
+  assert.equal(booking.bookingStatus, 'CONFIRMED');
+  assert.equal(event.totalTicketsSold, booking.quantity);
+});
+
+test('a session still open after failed expiry retains its inventory for retry', async () => {
+  const booking = await startBasket();
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  failStripeExpiry = true;
+  stripeSessionStatus = 'open';
+  const expectedError = mock.method(console, 'error', () => {});
+  await assert.rejects(expirePendingReservations(), /retry required/);
+  expectedError.mock.restore();
+  assert.equal(booking.bookingStatus, 'RESERVED_PENDING_PAYMENT');
+  assert.equal(event.totalTicketsReserved, booking.quantity);
+  failStripeExpiry = false;
+  await expirePendingReservations();
+  assert.equal(booking.bookingStatus, 'EXPIRED');
+  assert.equal(event.totalTicketsReserved, 0);
+});
+
+test('overlapping expiry workers release a stale reservation only once', async () => {
+  const booking = await startBasket();
+  const fresh = await startBasket();
+  booking.reservedUntil = new Date(Date.now() - 1).toISOString();
+  await Promise.all([expirePendingReservations(), expireStaleReservations(event.id)]);
+  assert.equal(booking.bookingStatus, 'EXPIRED');
+  assert.equal(event.totalTicketsReserved, fresh.quantity);
+  assert.equal(standard.quantityReserved, 1);
+  assert.equal(group.quantityReserved, 4);
+  assert.equal(child.quantityReserved, 2);
 });
 
 test('admin cancellation and full refund return inventory for every type', async () => {

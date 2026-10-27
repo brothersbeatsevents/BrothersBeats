@@ -6,11 +6,12 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { createCheckoutSession, TicketSelection } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { isValidOptionalPhone, phoneInputProps, PHONE_ERROR } from '@/lib/phone';
 
 const checkoutSchema = z.object({
   buyerName: z.string().min(2, 'Name is required'),
   buyerEmail: z.string().email('A valid email is required'),
-  buyerPhone: z.string().optional(),
+  buyerPhone: z.string().trim().optional().refine(isValidOptionalPhone, PHONE_ERROR),
   acceptedTerms: z.literal(true, {
     errorMap: () => ({ message: 'You must accept the terms to continue' }),
   }),
@@ -100,9 +101,11 @@ export default function CheckoutForm({
       <div>
         <label className="block text-sm font-medium text-bb-text mb-1">Phone (optional)</label>
         <input
+          {...phoneInputProps}
           {...register('buyerPhone')}
           className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
         />
+        {errors.buyerPhone && <p className="text-xs text-bb-red mt-1">{errors.buyerPhone.message}</p>}
       </div>
       <label className="flex items-start gap-2 text-sm text-bb-text-secondary">
         <input type="checkbox" {...register('acceptedTerms')} className="mt-0.5" />

@@ -5,18 +5,26 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { getMyBookings } from '@/lib/api';
 import BookingStatusCard, { BookingSummary } from '@/components/ui/BookingStatusCard';
+import ErrorState from '@/components/ui/ErrorState';
 
 export default function AccountOverviewPage() {
   const { user, token, logout } = useAuth();
   const [bookings, setBookings] = useState<BookingSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!token) return;
+    setLoading(true);
+    setError('');
     getMyBookings(token)
       .then((res) => setBookings(res.data))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Could not load your bookings.'))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, attempt]);
+
+  if (error) return <ErrorState title="Could not load your bookings" message={error} onRetry={() => setAttempt((value) => value + 1)} />;
 
   const upcoming = bookings.filter(
     (b) => b.bookingStatus === 'CONFIRMED' && new Date(b.eventStartDateTimeSnapshot) > new Date(),
@@ -49,9 +57,9 @@ export default function AccountOverviewPage() {
         <p className="text-bb-text-secondary">Loading…</p>
       ) : bookings.length === 0 ? (
         <div className="bg-bb-neutral rounded-2xl p-8 text-center">
-          <p className="text-bb-text-secondary mb-4">You haven&apos;t booked any events yet.</p>
-          <Link href="/events" className="inline-block bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
-            Browse events
+          <p className="text-bb-text-secondary mb-4">No bookings found for this account. Booked with another email? Recover your tickets by email.</p>
+          <Link href="/booking/lookup?method=guest" className="inline-block bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
+            Find my ticket
           </Link>
         </div>
       ) : (

@@ -3,6 +3,8 @@
 import { useRef, useState } from 'react';
 import { sendContactMessage } from '@/lib/api';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { phoneInputProps } from '@/lib/phone';
+import { getEnquiryDateError, getTodayInDublin } from '@/lib/enquiry-date';
 
 type ContactReason = 'SPONSORSHIP' | 'PERFORMER' | 'PARTNERSHIP' | 'ORGANISE_EVENT' | 'PERSONAL_PARTY' | 'GENERAL_ENQUIRY';
 
@@ -23,7 +25,7 @@ function Field({ label, name, value, onChange, type = 'text', required = false, 
   return (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-bb-text mb-1">{label}{!required && <span className="text-bb-text-muted"> (optional)</span>}</label>
-      <input id={name} name={name} type={type} required={required} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={inputClass} />
+      <input id={name} name={name} {...(type === 'tel' ? phoneInputProps : { type })} min={type === 'date' ? getTodayInDublin() : undefined} max={type === 'date' ? '9999-12-31' : undefined} required={required} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={inputClass} />
     </div>
   );
 }
@@ -65,7 +67,7 @@ export default function ContactPage() {
     );
 
     if (reason === 'SPONSORSHIP') return <>{common}<Field label="Company name" name="companyName" value={values.companyName || ''} onChange={(value) => setValue('companyName', value)} /><Field label="What would you like to sponsor?" name="subject" value={values.subject || ''} onChange={(value) => setValue('subject', value)} required /><Field label="Budget / sponsorship range" name="budget" value={values.budget || ''} onChange={(value) => setValue('budget', value)} placeholder="e.g. EUR 2,000 - EUR 5,000" /><TextField label="Tell us briefly about your sponsorship idea" name="message" value={values.message || ''} onChange={(value) => setValue('message', value)} required /></>;
-    if (reason === 'PERFORMER') return <>{common}<Field label="Artist or band name" name="artistName" value={values.artistName || ''} onChange={(value) => setValue('artistName', value)} required /><Field label="Type of performance" name="performanceType" value={values.performanceType || ''} onChange={(value) => setValue('performanceType', value)} placeholder="DJ, live band, singer, dancer..." required /><Field label="Preferred date(s)" name="preferredDates" value={values.preferredDates || ''} onChange={(value) => setValue('preferredDates', value)} required /><Field label="Profile, Instagram, or website" name="profileLink" type="url" value={values.profileLink || ''} onChange={(value) => setValue('profileLink', value)} /><TextField label="Brief introduction" name="message" value={values.message || ''} onChange={(value) => setValue('message', value)} />;</>;
+    if (reason === 'PERFORMER') return <>{common}<Field label="Artist or band name" name="artistName" value={values.artistName || ''} onChange={(value) => setValue('artistName', value)} required /><Field label="Type of performance" name="performanceType" value={values.performanceType || ''} onChange={(value) => setValue('performanceType', value)} placeholder="DJ, live band, singer, dancer..." required /><Field label="Preferred date" name="preferredDate" type="date" value={values.preferredDate || ''} onChange={(value) => setValue('preferredDate', value)} required /><Field label="Profile, Instagram, or website" name="profileLink" type="url" value={values.profileLink || ''} onChange={(value) => setValue('profileLink', value)} /><TextField label="Brief introduction" name="message" value={values.message || ''} onChange={(value) => setValue('message', value)} />;</>;
     if (reason === 'PARTNERSHIP') return <>{common}<Field label="Company name" name="companyName" value={values.companyName || ''} onChange={(value) => setValue('companyName', value)} /><Field label="What type of partnership are you interested in?" name="partnershipType" value={values.partnershipType || ''} onChange={(value) => setValue('partnershipType', value)} required /><Field label="Website or social media" name="profileLink" type="url" value={values.profileLink || ''} onChange={(value) => setValue('profileLink', value)} /><TextField label="What do you have in mind?" name="message" value={values.message || ''} onChange={(value) => setValue('message', value)} required /></>;
     if (reason === 'ORGANISE_EVENT') return <>{common}<Field label="Company name" name="companyName" value={values.companyName || ''} onChange={(value) => setValue('companyName', value)} /><Field label="Event type" name="eventType" value={values.eventType || ''} onChange={(value) => setValue('eventType', value)} required /><Field label="Preferred date" name="preferredDate" type="date" value={values.preferredDate || ''} onChange={(value) => setValue('preferredDate', value)} required /><Field label="Estimated number of guests" name="guestCount" type="number" value={values.guestCount || ''} onChange={(value) => setValue('guestCount', value)} required /><Field label="Location / venue" name="location" value={values.location || ''} onChange={(value) => setValue('location', value)} required /><TextField label="Briefly tell us about your event" name="message" value={values.message || ''} onChange={(value) => setValue('message', value)} required /></>;
     if (reason === 'PERSONAL_PARTY') return <>{common}<Field label="Type of party" name="partyType" value={values.partyType || ''} onChange={(value) => setValue('partyType', value)} placeholder="Birthday, engagement, wedding..." required /><Field label="Preferred date" name="preferredDate" type="date" value={values.preferredDate || ''} onChange={(value) => setValue('preferredDate', value)} required /><Field label="Number of guests" name="guestCount" type="number" value={values.guestCount || ''} onChange={(value) => setValue('guestCount', value)} required /><Field label="Location" name="location" value={values.location || ''} onChange={(value) => setValue('location', value)} required /><TextField label="Anything specific you need?" name="message" value={values.message || ''} onChange={(value) => setValue('message', value)} /></>;
@@ -74,13 +76,19 @@ export default function ContactPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const dateError = getEnquiryDateError(values.preferredDate, ['PERFORMER', 'ORGANISE_EVENT', 'PERSONAL_PARTY'].includes(reason));
+    if (dateError) {
+      setStatus('error');
+      setError(dateError);
+      return;
+    }
     setStatus('loading');
     setError('');
     const reasonLabel = REASONS.find((item) => item.value === reason)?.label || reason;
     const { name, email, ...details } = values;
     const message = [`Contact reason: ${reasonLabel}`, ...Object.entries(details).filter(([, value]) => value.trim()).map(([key, value]) => `${key}: ${value}`)].join('\n');
     try {
-      await sendContactMessage({ name, email, message, contactReason: reason, phone: values.phone, website: values.website, formStartedAt: formStartedAt.current });
+      await sendContactMessage({ name, email, message, contactReason: reason, phone: values.phone, preferredDate: values.preferredDate, website: values.website, formStartedAt: formStartedAt.current });
       setStatus('sent');
     } catch (err: any) {
       setStatus('error');

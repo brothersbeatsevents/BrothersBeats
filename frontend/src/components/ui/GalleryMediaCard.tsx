@@ -1,11 +1,15 @@
+import GalleryMediaThumbnail from './GalleryMediaThumbnail';
+
 export interface GalleryMediaCardData {
   id: string;
-  type: 'IMAGE' | 'YOUTUBE_VIDEO';
+  type: 'IMAGE' | 'YOUTUBE_VIDEO' | 'INSTAGRAM_REEL';
   title: string;
   caption?: string;
   altText?: string;
   imageUrl?: string;
   youtubeVideoId?: string;
+  youtubeUrl?: string;
+  instagramShortcode?: string;
   eventTitleSnapshot?: string;
   featured?: boolean;
 }
@@ -17,30 +21,13 @@ export default function GalleryMediaCard({
   item: GalleryMediaCardData;
   onClick?: () => void;
 }) {
-  const thumbnailUrl =
-    item.type === 'IMAGE'
-      ? item.imageUrl
-      : item.youtubeVideoId
-      ? `https://img.youtube.com/vi/${item.youtubeVideoId}/hqdefault.jpg`
-      : undefined;
-
   return (
     <button
       type="button"
       onClick={onClick}
       className="group relative block w-full aspect-[4/3] overflow-hidden rounded-2xl border border-bb-border bg-bb-neutral text-left"
     >
-      {thumbnailUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={thumbnailUrl}
-          alt={item.altText || item.title}
-          loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-bb-text-muted text-sm">No image</div>
-      )}
+      <GalleryMediaThumbnail item={item} />
 
       {item.type === 'YOUTUBE_VIDEO' && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">

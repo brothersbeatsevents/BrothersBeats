@@ -20,6 +20,11 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (loading) return;
     if (!user) {
+      const ticketMatch = pathname?.match(/^\/account\/tickets\/([a-zA-Z0-9-]+)\/?$/);
+      if (ticketMatch) {
+        router.replace(`/booking/lookup?bookingReference=${encodeURIComponent(ticketMatch[1])}`);
+        return;
+      }
       router.replace(`/auth/sign-in?next=${encodeURIComponent(pathname || '/account')}`);
     } else if (isAdmin) {
       // Admins manage the platform, not customer bookings — send them to the admin panel instead

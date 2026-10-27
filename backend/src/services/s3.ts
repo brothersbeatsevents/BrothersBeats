@@ -70,4 +70,10 @@ export async function getSignedDownloadUrl(
   return getSignedUrl(s3, command, { expiresIn: expiresInSeconds });
 }
 
+export async function downloadBuffer(key: string): Promise<Uint8Array> {
+  const result = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+  if (!result.Body) throw new Error('Ticket PDF is empty');
+  return result.Body.transformToByteArray();
+}
+
 export { ALLOWED_TYPES, MAX_SIZE, PDF_MAX_SIZE };

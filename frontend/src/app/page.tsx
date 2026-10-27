@@ -6,7 +6,9 @@ import { organizationJsonLd, JsonLd } from '@/lib/json-ld';
 import EventGrid from '@/components/ui/EventGrid';
 import SponsorGrid from '@/components/ui/SponsorGrid';
 import HeroCarousel from '@/components/ui/HeroCarousel';
+import GalleryMediaThumbnail from '@/components/ui/GalleryMediaThumbnail';
 import { getHeroImages } from '@/lib/hero-images';
+import type { EventCardData } from '@/components/ui/EventCard';
 
 export const metadata: Metadata = {
   title: `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`,
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const events = await getEventsSSR();
-  const upcoming = events.filter((e: any) => e.status === 'PUBLISHED' || e.status === 'SALES_PAUSED').slice(0, 6);
+  const upcoming: EventCardData[] = events.filter((e: EventCardData) => e.status === 'PUBLISHED' || e.status === 'SALES_PAUSED').slice(0, 6);
   const gallery = (await getGallerySSR()).slice(0, 8);
   const settings = await getSettingsSSR();
   const heroImages = getHeroImages(settings);
@@ -25,23 +27,25 @@ export default async function HomePage() {
     <>
       <JsonLd data={organizationJsonLd()} />
 
-      {heroImages.length > 0 ? (
-        <HeroCarousel images={heroImages} />
-      ) : (
-        <section className="bg-bb-neutral">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
-            <h1 className="font-display font-bold text-4xl sm:text-6xl text-bb-text leading-tight">
-              {SITE_CONFIG.tagline}
-            </h1>
-            <p className="mt-4 text-lg text-bb-text-secondary max-w-2xl mx-auto">
-              Discover and book tickets for the best live music, community gatherings, and
-              celebrations near you.
-            </p>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6" aria-label="Discover events">
+        {heroImages.length > 0 ? (
+          <HeroCarousel images={heroImages} />
+        ) : (
+          <div className="rounded-3xl bg-bb-neutral">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10 text-center">
+              <h1 className="font-display font-bold text-3xl sm:text-4xl text-bb-text leading-tight">
+                {SITE_CONFIG.tagline}
+              </h1>
+              <p className="mt-3 text-sm sm:text-base text-bb-text-secondary max-w-2xl mx-auto">
+                Discover and book tickets for the best live music, community gatherings, and
+                celebrations near you.
+              </p>
+            </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-16">
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-display font-bold text-2xl sm:text-3xl text-bb-text">Upcoming events</h2>
           <Link href="/events" className="text-sm font-semibold text-bb-gold hover:text-bb-gold-dark">
@@ -66,13 +70,7 @@ export default async function HomePage() {
                 href="/gallery"
                 className="group relative block aspect-[4/3] overflow-hidden rounded-2xl border border-bb-border bg-bb-neutral"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.type === 'IMAGE' ? item.imageUrl : `https://img.youtube.com/vi/${item.youtubeVideoId}/hqdefault.jpg`}
-                  alt={item.altText || item.title}
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                <GalleryMediaThumbnail item={item} />
               </Link>
             ))}
           </div>

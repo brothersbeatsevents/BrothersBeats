@@ -13,12 +13,12 @@ const nextConfig = (phase: string): NextConfig => ({
     return [
       {
         // Applies to all pages: restrict embeddable frames to the privacy-enhanced
-        // YouTube player used by the gallery — never allow arbitrary iframe sources.
+        // YouTube player and Instagram Reels used by the gallery.
         source: '/:path*',
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-src 'self' https://www.youtube-nocookie.com;",
+            value: "frame-src 'self' https://www.youtube-nocookie.com https://www.instagram.com;",
           },
         ],
       },

@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
+import PasswordInput from '@/components/ui/PasswordInput';
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = getAuthReturnPath(searchParams.get('next'));
   const { signIn, loginWithCognito } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,10 +23,21 @@ export default function SignInPage() {
     setLoading(true);
     try {
       await signIn(email, password);
-      router.push('/account');
+      router.replace(returnTo);
     } catch (err: any) {
       setError(err.message || 'Sign in failed. Please check your credentials.');
     } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError('');
+    setLoading(true);
+    try {
+      await loginWithCognito(returnTo);
+    } catch (err: any) {
+      setError(err.message || 'Unable to start Google sign in.');
       setLoading(false);
     }
   }
@@ -33,7 +48,8 @@ export default function SignInPage() {
         <h1 className="font-display font-bold text-3xl text-bb-text text-center mb-8">Sign in</h1>
 
         <button
-          onClick={() => loginWithCognito()}
+          onClick={handleGoogleSignIn}
+          disabled={loading}
           className="w-full border border-bb-border rounded-full py-3 font-semibold text-bb-text hover:border-bb-gold transition-colors mb-6"
         >
           Continue with Google
@@ -57,9 +73,10 @@ export default function SignInPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-bb-text mb-1">Password</label>
-            <input
-              type="password"
+            <label htmlFor="sign-in-password" className="block text-sm font-medium text-bb-text mb-1">Password</label>
+            <PasswordInput
+              id="sign-in-password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -68,7 +85,7 @@ export default function SignInPage() {
           </div>
           {error && <p className="text-sm text-bb-red">{error}</p>}
           <div className="text-right">
-            <Link href="/auth/forgot-password" className="text-sm text-bb-gold hover:text-bb-gold-dark">
+            <Link href={authPageUrl('/auth/forgot-password', returnTo)} className="text-sm text-bb-gold hover:text-bb-gold-dark">
               Forgot password?
             </Link>
           </div>
@@ -83,11 +100,19 @@ export default function SignInPage() {
 
         <p className="text-center text-sm text-bb-text-secondary mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/sign-up" className="text-bb-gold font-semibold hover:text-bb-gold-dark">
+          <Link href={authPageUrl('/auth/sign-up', returnTo)} className="text-bb-gold font-semibold hover:text-bb-gold-dark">
             Sign up
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="py-16 text-center text-bb-text-secondary">Loading sign in…</div>}>
+      <SignInContent />
+    </Suspense>
   );
 }

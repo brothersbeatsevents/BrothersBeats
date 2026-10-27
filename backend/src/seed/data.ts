@@ -408,7 +408,7 @@ const pendingBooking: BookingEntity = {
   paymentMethod: 'STRIPE',
   paymentProvider: 'STRIPE',
   paymentProviderSessionId: 'cs_seed_pending_001',
-  reservedUntil: new Date(Date.now() + 25 * 60 * 1000).toISOString(),
+  reservedUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
   createdBy: customer2.id,
   created_at: now,
   updated_at: now,

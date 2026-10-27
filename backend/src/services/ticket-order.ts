@@ -54,8 +54,9 @@ export async function quoteTicketOrder(event: EventEntity, items: TicketSelectio
     if (item.quantity < minimum || item.quantity > tier.maxPerOrder) {
       throw new TicketOrderError(`Quantity for ${tier.name} must be between ${minimum} and ${tier.maxPerOrder}`);
     }
-    if (item.quantity > tier.maxQuantity - tier.quantitySold - tier.quantityReserved) {
-      throw new TicketOrderError(`Not enough tickets available for ${tier.name}`, 409);
+    const available = Math.max(0, tier.maxQuantity - tier.quantitySold - tier.quantityReserved);
+    if (item.quantity > available) {
+      throw new TicketOrderError(`Not enough tickets available for ${tier.name}. Only ${available} left.`, 409);
     }
     if (currency && currency !== tier.currency) throw new TicketOrderError('Ticket types must use the same currency');
     currency = tier.currency;

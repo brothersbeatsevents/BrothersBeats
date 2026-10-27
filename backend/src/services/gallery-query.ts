@@ -32,7 +32,9 @@ export function filterPublishedGallery(
   let result = items.filter((m) => m.status === 'PUBLISHED');
 
   if (filters.eventId) result = result.filter((m) => m.eventId === filters.eventId);
-  if (filters.type === 'IMAGE' || filters.type === 'YOUTUBE_VIDEO') {
+  if (filters.type === 'VIDEO') {
+    result = result.filter((m) => m.type === 'YOUTUBE_VIDEO' || m.type === 'INSTAGRAM_REEL');
+  } else if (['IMAGE', 'YOUTUBE_VIDEO', 'INSTAGRAM_REEL'].includes(filters.type || '')) {
     result = result.filter((m) => m.type === filters.type);
   }
   if (filters.year) {

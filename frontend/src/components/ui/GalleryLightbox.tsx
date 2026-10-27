@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import SafeYouTubeEmbed from './SafeYouTubeEmbed';
+import GalleryVideoEmbed from './GalleryVideoEmbed';
 import { GalleryMediaCardData } from './GalleryMediaCard';
 
 export default function GalleryLightbox({
@@ -77,7 +77,7 @@ export default function GalleryLightbox({
             className="w-full max-h-[75vh] object-contain rounded-xl bg-black"
           />
         ) : (
-          <SafeYouTubeEmbed videoId={item.youtubeVideoId || ''} title={item.title} />
+          <GalleryVideoEmbed item={item} />
         )}
         <div className="mt-3 text-center">
           <p className="text-white font-semibold">{item.title}</p>

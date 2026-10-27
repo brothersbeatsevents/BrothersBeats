@@ -1,19 +1,47 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TicketTierData } from '@/components/ui/TicketTierCard';
 import TicketQuantitySelector from '@/components/ui/TicketQuantitySelector';
 import { formatMoney } from '@/lib/format';
-import { getPriceQuote } from '@/lib/api';
+import { getEvent, getPriceQuote } from '@/lib/api';
 
-export default function EventDetailTiers({ event }: { event: any }) {
+export default function EventDetailTiers({ event: initialEvent }: { event: any }) {
   const router = useRouter();
+  const [event, setEvent] = useState(initialEvent);
+  const availabilityRequest = useRef(0);
   const tiers: TicketTierData[] = event.ticketTiers || [];
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [quote, setQuote] = useState<any>(null);
   const [quoteError, setQuoteError] = useState('');
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const availabilityKey = JSON.stringify([event.status, event.isPast, event.availableTickets, event.perOrderLimit, tiers]);
+
+  const refreshAvailability = useCallback(async () => {
+    const requestId = ++availabilityRequest.current;
+    try {
+      const response = await getEvent(initialEvent.slug);
+      if (requestId === availabilityRequest.current) setEvent(response.data);
+    } catch {
+      // Quotes and checkout still validate availability if a refresh fails.
+    }
+  }, [initialEvent.slug]);
+
+  useEffect(() => {
+    setEvent(initialEvent);
+    const refresh = () => { if (!document.hidden) void refreshAvailability(); };
+    refresh();
+    const timer = window.setInterval(refresh, 30000);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      availabilityRequest.current++;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [initialEvent, refreshAvailability]);
 
   const soldOut = event.status === 'SOLD_OUT' || event.availableTickets <= 0;
   const salesClosed = event.isPast || event.status === 'CANCELLED' || event.status === 'COMPLETED' || event.status === 'SALES_PAUSED';
@@ -60,6 +88,7 @@ export default function EventDetailTiers({ event }: { event: any }) {
           if (!cancelled) {
             setQuote(null);
             setQuoteError(err.message || 'Unable to check ticket availability');
+            void refreshAvailability();
           }
         })
         .finally(() => {
@@ -70,7 +99,7 @@ export default function EventDetailTiers({ event }: { event: any }) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [event.id, items, quantity]);
+  }, [event.id, items, quantity, availabilityKey, refreshAvailability]);
 
   function goToCheckout() {
     if (!items.length) return;
@@ -138,7 +167,7 @@ export default function EventDetailTiers({ event }: { event: any }) {
                 ) : !tier.onSale ? (
                   <p className="text-xs font-medium text-bb-text-muted mt-1">Not on sale</p>
                 ) : tier.available <= 10 ? (
-                  <p className="text-xs font-medium text-bb-gold mt-1">{tier.available} left</p>
+                  <p aria-live="polite" className="text-xs font-medium text-bb-gold mt-1">{tier.available} left</p>
                 ) : null}
               </div>
               <TicketQuantitySelector

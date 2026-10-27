@@ -3,10 +3,13 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resetPassword } from '@/lib/api';
+import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const returnTo = getAuthReturnPath(searchParams.get('next'));
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -23,7 +26,7 @@ function ResetPasswordContent() {
     setLoading(true);
     try {
       await resetPassword(email.trim().toLowerCase(), code.trim(), newPassword);
-      router.push('/auth/sign-in?reset=1');
+      router.push(authPageUrl('/auth/sign-in', returnTo, { reset: '1' }));
     } catch (err: any) {
       setError(err.message || 'The reset code is invalid or has expired.');
     } finally {
@@ -57,9 +60,10 @@ function ResetPasswordContent() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-bb-text mb-1">New password</label>
-            <input
-              type="password"
+            <label htmlFor="reset-password" className="block text-sm font-medium text-bb-text mb-1">New password</label>
+            <PasswordInput
+              id="reset-password"
+              autoComplete="new-password"
               required
               minLength={8}
               value={newPassword}

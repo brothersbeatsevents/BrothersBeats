@@ -7,7 +7,7 @@ import { Router, Request, Response } from 'express';
 import Stripe from 'stripe';
 import { db } from '../store';
 import { verifyWebhookSignature } from '../services/stripe';
-import { releaseBookingInventory, restoreBookingInventory } from '../services/inventory';
+import { releaseBookingInventory, restoreBookingInventory, expireBookingReservation } from '../services/inventory';
 import { fulfillBooking } from '../services/booking-fulfillment';
 import { sendPaymentFailed, sendReservationExpired } from '../services/email';
 import { BookingEntity, EventEntity, TicketEntity, WebhookEventEntity, RefundEntity } from '../types';
@@ -32,10 +32,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   const booking = await db.get<BookingEntity>('bookings', bookingId);
   if (!booking || booking.bookingStatus !== 'RESERVED_PENDING_PAYMENT') return;
 
-  await releaseBookingInventory(booking);
-  booking.bookingStatus = 'EXPIRED';
-  booking.updated_at = new Date().toISOString();
-  await db.put('bookings', booking);
+  if (!(await expireBookingReservation(booking))) return;
 
   const event = await db.get<EventEntity>('events', booking.eventId);
   if (event) {

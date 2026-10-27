@@ -46,9 +46,6 @@ Conditions:
   HasExtraCallbackUrls: !Not [!Equals [!Ref ExtraCallbackUrls, '']]
   HasGoogleAuth: !Equals [!Ref GoogleAuthEnabled, 'true']
   HasSESFromEmail: !Not [!Equals [!Ref SESFromEmail, '']]
-  IsNotProdAndHasSESFromEmail: !And
-    - !Not [!Equals [!Ref Environment, prod]]
-    - !Not [!Equals [!Ref SESFromEmail, '']]
 
 Globals:
   Function:
@@ -356,6 +353,11 @@ Resources:
                 - cognito-idp:ListUsers
               Resource: !GetAtt CognitoUserPool.Arn
       Events:
+        ReservationExpiry:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+            Input: '{"source":"brothers-beats.reservation-expiry"}'
         ApiProxy:
           Type: Api
           Properties:
@@ -378,6 +380,14 @@ Resources:
     Properties:
       Name: !Sub 'brothers-beats-${Environment}'
       StageName: !Ref Environment
+      # GatewayResponses requires an inline definition; SAM adds the API events below.
+      MergeDefinitions: true
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          title: Brothers Beats API
+          version: '1.0'
+        paths: {}
       TracingEnabled: false
       MethodSettings:
         - ResourcePath: '/*'

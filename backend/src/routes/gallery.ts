@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────
-// Public gallery — published Brothers Beats event photos and YouTube videos
+// Public gallery — published Brothers Beats event photos, videos, Shorts, and Reels
 // GET /api/gallery            — list published media (filters: eventId, type, year, featured)
 // GET /api/gallery/:mediaId   — single published media item
 // ──────────────────────────────────────────

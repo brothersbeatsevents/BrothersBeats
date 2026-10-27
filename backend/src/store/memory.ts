@@ -8,6 +8,7 @@ import {
   EventEntity,
   TicketTierEntity,
   BookingEntity,
+  BookingAccessTokenEntity,
   TicketEntity,
   RefundEntity,
   SubscriberEntity,
@@ -29,6 +30,7 @@ class Store {
   events: Map<string, EventEntity> = new Map();
   ticketTiers: Map<string, TicketTierEntity> = new Map();
   bookings: Map<string, BookingEntity> = new Map();
+  bookingAccessTokens: Map<string, BookingAccessTokenEntity> = new Map();
   tickets: Map<string, TicketEntity> = new Map();
   refunds: Map<string, RefundEntity> = new Map();
   subscribers: Map<string, SubscriberEntity> = new Map();
@@ -73,6 +75,7 @@ class Store {
     this.events.clear();
     this.ticketTiers.clear();
     this.bookings.clear();
+    this.bookingAccessTokens.clear();
     this.tickets.clear();
     this.refunds.clear();
     this.subscribers.clear();

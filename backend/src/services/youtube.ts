@@ -23,8 +23,7 @@ export interface NormalizedYouTubeVideo {
 /**
  * Validate and normalise a YouTube URL.
  * Returns null if the URL is malformed, uses an unsupported hostname, or
- * points at a playlist/channel/shorts/live URL shape rather than a single
- * standard video.
+ * points at a playlist/channel/live URL shape rather than a single video or Short.
  */
 export function normalizeYouTubeUrl(rawUrl: string): NormalizedYouTubeVideo | null {
   if (typeof rawUrl !== 'string' || !rawUrl.trim()) return null;
@@ -53,11 +52,11 @@ export function normalizeYouTubeUrl(rawUrl: string): NormalizedYouTubeVideo | nu
 
     if (url.pathname === '/watch') {
       videoId = url.searchParams.get('v');
-    } else if (segments[0] === 'embed' && segments.length === 2) {
+    } else if (['embed', 'shorts'].includes(segments[0]) && segments.length === 2) {
       videoId = segments[1];
     } else {
       // Reject playlists (/playlist), channels (/channel, /c, /@handle),
-      // shorts (/shorts/...), live (/live/...), and any other URL shape.
+      // live (/live/...), and any other URL shape.
       return null;
     }
   }
@@ -66,6 +65,8 @@ export function normalizeYouTubeUrl(rawUrl: string): NormalizedYouTubeVideo | nu
 
   return {
     videoId,
-    canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
+    canonicalUrl: url.pathname.startsWith('/shorts/')
+      ? `https://www.youtube.com/shorts/${videoId}`
+      : `https://www.youtube.com/watch?v=${videoId}`,
   };
 }

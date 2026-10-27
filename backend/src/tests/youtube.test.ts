@@ -48,8 +48,22 @@ test('rejects a channel URL', () => {
   assert.equal(normalizeYouTubeUrl('https://www.youtube.com/channel/UC1234567890'), null);
 });
 
-test('rejects a shorts URL', () => {
-  assert.equal(normalizeYouTubeUrl('https://www.youtube.com/shorts/dQw4w9WgXcQ'), null);
+test('accepts Shorts URLs and preserves their portrait format', () => {
+  for (const host of ['www.youtube.com', 'youtube.com', 'm.youtube.com']) {
+    assert.deepEqual(normalizeYouTubeUrl(`https://${host}/shorts/dQw4w9WgXcQ/?si=share-code`), {
+      videoId: 'dQw4w9WgXcQ',
+      canonicalUrl: 'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+    });
+  }
+});
+
+test('rejects malformed Shorts URLs and lookalike domains', () => {
+  for (const url of [
+    'https://www.youtube.com/shorts/',
+    'https://www.youtube.com/shorts/short',
+    'https://www.youtube.com/shorts/dQw4w9WgXcQ/extra',
+    'https://youtube.com.evil.example/shorts/dQw4w9WgXcQ',
+  ]) assert.equal(normalizeYouTubeUrl(url), null);
 });
 
 test('rejects a live URL', () => {

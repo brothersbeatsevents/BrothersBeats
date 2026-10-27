@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { forgotPassword } from '@/lib/api';
+import { authPageUrl, getAuthReturnPath } from '@/lib/auth-redirect';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
+  const searchParams = useSearchParams();
+  const returnTo = getAuthReturnPath(searchParams.get('next'));
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -37,7 +41,7 @@ export default function ForgotPasswordPage() {
               We&apos;ve sent a reset code to {email}.
             </p>
             <Link
-              href={`/auth/reset-password?email=${encodeURIComponent(email)}`}
+              href={authPageUrl('/auth/reset-password', returnTo, { email })}
               className="inline-block mt-4 text-bb-gold font-semibold hover:text-bb-gold-dark"
             >
               Enter code &rarr;
@@ -67,11 +71,19 @@ export default function ForgotPasswordPage() {
         )}
 
         <p className="text-center text-sm text-bb-text-secondary mt-6">
-          <Link href="/auth/sign-in" className="text-bb-gold font-semibold hover:text-bb-gold-dark">
+          <Link href={authPageUrl('/auth/sign-in', returnTo)} className="text-bb-gold font-semibold hover:text-bb-gold-dark">
             Back to sign in
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<div className="py-16 text-center text-bb-text-secondary">Loading…</div>}>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

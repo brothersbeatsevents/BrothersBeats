@@ -135,6 +135,9 @@ export async function createCheckoutSession(
   const session = await stripe.checkout.sessions.create(
     {
       mode: 'payment',
+      // Apple Pay and Google Pay use `card` and appear on eligible devices.
+      // Keep this explicit so Dashboard defaults cannot add other methods.
+      payment_method_types: ['card', 'revolut_pay'],
       customer_email: input.buyerEmail,
       line_items: input.lineItems.map((item) => ({
         price_data: {
@@ -171,14 +174,10 @@ export async function createCheckoutSession(
 
 export async function expireCheckoutSession(
   providerSessionId: string,
-): Promise<void> {
+): Promise<Stripe.Checkout.Session> {
   const stripe = await getStripeClient();
-  try {
-    await stripe.checkout.sessions.expire(providerSessionId);
-  } catch (err) {
-    // Already expired/completed — non-fatal
-    console.warn('[Stripe] expireCheckoutSession:', err);
-  }
+  // The caller must verify expiry before returning reserved tickets to sale.
+  return stripe.checkout.sessions.expire(providerSessionId);
 }
 
 export async function retrieveCheckoutSession(

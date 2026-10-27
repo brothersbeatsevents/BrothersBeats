@@ -1,6 +1,6 @@
 import { HeroImage, OrgSettings } from '../types';
 
-export const MAX_HERO_IMAGES = 6;
+export const MAX_HERO_IMAGES = 7;
 
 export function getHeroImages(settings: Partial<OrgSettings> | null): HeroImage[] {
   // An explicitly empty list hides the banner; only legacy records use the fallback.
@@ -14,7 +14,7 @@ export function getHeroImages(settings: Partial<OrgSettings> | null): HeroImage[
 
 export function validateHeroImages(value: unknown): string | null {
   if (!Array.isArray(value) || value.length > MAX_HERO_IMAGES) {
-    return 'Hero images must be a list of up to 6 images.';
+    return `Hero images must be a list of up to ${MAX_HERO_IMAGES} images.`;
   }
   for (const image of value) {
     if (!image || typeof image !== 'object' || typeof image.url !== 'string') {

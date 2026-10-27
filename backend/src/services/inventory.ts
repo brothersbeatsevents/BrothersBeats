@@ -6,6 +6,7 @@
 import { db } from '../store';
 import { BookingEntity, EventEntity, TicketSelection, TicketTierEntity } from '../types';
 import { bookingSelections } from './ticket-order';
+import { expireCheckoutSession, retrieveCheckoutSession } from './stripe';
 
 const USE_DYNAMO = !!process.env.USE_DYNAMODB;
 
@@ -124,33 +125,55 @@ export async function restoreInventoryOnRefund(
   }
 }
 
-/**
- * Lazy reservation-expiry safety net: releases inventory for any booking on
- * this event whose reservation window has elapsed but was never confirmed or
- * explicitly expired (e.g. a missed/duplicate Stripe webhook). Called before
- * new reservations are made so capacity doesn't get stuck as "reserved"
- * forever. A scheduled job (EventBridge) is the more robust long-term
- * solution — see docs/CLAUDE.md follow-ups in the final delivery report.
- */
+/** Atomically expire a pending booking and return all of its inventory once. */
+export async function expireBookingReservation(booking: BookingEntity): Promise<boolean> {
+  return db.expireBookingReservation(booking, bookingSelections(booking));
+}
+
+async function expireStaleBooking(booking: BookingEntity): Promise<void> {
+  if (booking.bookingStatus !== 'RESERVED_PENDING_PAYMENT' || !booking.reservedUntil ||
+      new Date(booking.reservedUntil).getTime() > Date.now() ||
+      !Number.isFinite(Date.parse(booking.reservedUntil))) return;
+
+  if (booking.paymentProviderSessionId) {
+    // Stripe's timed expiry has a 30-minute minimum; close the session ourselves.
+    // Never release tickets while that session can still accept payment.
+    let session;
+    try {
+      session = await expireCheckoutSession(booking.paymentProviderSessionId);
+    } catch {
+      // A payment or the expiry webhook may have won the race.
+      session = await retrieveCheckoutSession(booking.paymentProviderSessionId);
+    }
+    if (session.status === 'complete') return;
+    if (session.status !== 'expired') throw new Error('Checkout session is still open; reservation retained');
+  }
+  await expireBookingReservation(booking);
+}
+
+/** Safety net before new checkout requests, in addition to the scheduled job. */
 export async function expireStaleReservations(eventId: string): Promise<void> {
   const bookings = await db.filterBy<import('../types').BookingEntity>(
     'bookings',
     'eventId',
     eventId,
   );
-  const now = Date.now();
+  for (const booking of bookings) await expireStaleBooking(booking);
+}
+
+/** Run every minute even when no one is browsing or starting another checkout. */
+export async function expirePendingReservations(): Promise<void> {
+  const bookings = await db.filterBy<BookingEntity>('bookings', 'bookingStatus', 'RESERVED_PENDING_PAYMENT');
+  let failures = 0;
   for (const booking of bookings) {
-    if (
-      booking.bookingStatus === 'RESERVED_PENDING_PAYMENT' &&
-      booking.reservedUntil &&
-      new Date(booking.reservedUntil).getTime() < now
-    ) {
-      await releaseBookingInventory(booking);
-      booking.bookingStatus = 'EXPIRED';
-      booking.updated_at = new Date().toISOString();
-      await db.put('bookings', booking);
+    try {
+      await expireStaleBooking(booking);
+    } catch (error) {
+      failures++;
+      console.error('[Reservations] Expiry failed:', { bookingId: booking.id, error });
     }
   }
+  if (failures) throw new Error(`Could not expire ${failures} reservation(s); retry required`);
 }
 
 /** Reserve every selected type, releasing earlier reservations if a later type fails. */

@@ -4,11 +4,11 @@ import { getHeroImages, validateHeroImages } from '../services/hero-images';
 
 const image = { url: 'https://images.example.com/banner.jpg', position: '25% 75%', zoom: 1.5, alt: 'Live music' };
 
-test('accepts one through six slides and an empty list to hide the banner', () => {
-  for (let count = 0; count <= 6; count++) {
+test('accepts one through seven slides and an empty list to hide the banner', () => {
+  for (let count = 0; count <= 7; count++) {
     assert.equal(validateHeroImages(Array.from({ length: count }, () => ({ ...image }))), null);
   }
-  assert.ok(validateHeroImages(Array.from({ length: 7 }, () => ({ ...image }))));
+  assert.ok(validateHeroImages(Array.from({ length: 8 }, () => ({ ...image }))));
 });
 
 test('rejects malformed lists and image URLs', () => {
