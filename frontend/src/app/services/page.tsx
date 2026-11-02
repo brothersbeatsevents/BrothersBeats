@@ -1,12 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import EventServiceEnquiryForm from '@/components/ui/EventServiceEnquiryForm';
+import { pageMetadata } from '@/lib/seo';
+import { JsonLd, breadcrumbJsonLd, serviceJsonLd } from '@/lib/json-ld';
 
-export const metadata: Metadata = {
-  title: 'Services',
-  description: 'Brothers Beats hosts and sells tickets for its own events, and offers paid private-event management for weddings, birthdays, and corporate celebrations.',
-  alternates: { canonical: '/services' },
-};
+const SERVICES_DESCRIPTION =
+  'Brothers Beats hosts and sells tickets for its own events, and offers paid private-event management in Dublin and across Ireland for weddings, birthdays, and corporate celebrations.';
+
+export const metadata: Metadata = pageMetadata({
+  title: 'Private Event Planning, Dublin',
+  description: SERVICES_DESCRIPTION,
+  path: '/services',
+});
 
 const TICKETED_HIGHLIGHTS = [
   'Secure, Stripe-powered checkout with flexible ticket tiers and group bookings.',
@@ -23,6 +28,19 @@ const PRIVATE_EVENT_HIGHLIGHTS = [
 export default function ServicesPage() {
   return (
     <div>
+      <JsonLd
+        data={serviceJsonLd({
+          name: 'Private event planning and management',
+          description: SERVICES_DESCRIPTION,
+          path: '/services',
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Home', url: '/' },
+          { name: 'Services', url: '/services' },
+        ])}
+      />
       <section className="bg-bb-neutral">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center">
           <h1 className="font-display font-bold text-4xl sm:text-5xl text-bb-text">What Brothers Beats offers</h1>

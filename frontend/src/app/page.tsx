@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getEventsSSR, getGallerySSR, getSettingsSSR, getSponsorsSSR } from '@/lib/server-api';
 import { SITE_CONFIG } from '@/lib/site-config';
-import { organizationJsonLd, JsonLd } from '@/lib/json-ld';
+import { JsonLd, itemListJsonLd } from '@/lib/json-ld';
 import EventGrid from '@/components/ui/EventGrid';
 import SponsorGrid from '@/components/ui/SponsorGrid';
 import HeroCarousel from '@/components/ui/HeroCarousel';
@@ -10,10 +10,28 @@ import GalleryMediaThumbnail from '@/components/ui/GalleryMediaThumbnail';
 import { getHeroImages } from '@/lib/hero-images';
 import type { EventCardData } from '@/components/ui/EventCard';
 
+const HOME_TITLE = `${SITE_CONFIG.name} | Live Events & Tickets in Dublin, Ireland`;
+
 export const metadata: Metadata = {
-  title: `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`,
+  title: { absolute: HOME_TITLE },
   description: SITE_CONFIG.description,
   alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: SITE_CONFIG.locale,
+    siteName: SITE_CONFIG.name,
+    url: '/',
+    title: HOME_TITLE,
+    description: SITE_CONFIG.description,
+    images: [{ url: SITE_CONFIG.ogImage, width: 1200, height: 630, alt: SITE_CONFIG.name }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: SITE_CONFIG.twitter,
+    title: HOME_TITLE,
+    description: SITE_CONFIG.description,
+    images: [SITE_CONFIG.ogImage],
+  },
 };
 
 export default async function HomePage() {
@@ -25,11 +43,20 @@ export default async function HomePage() {
   const sponsors = await getSponsorsSSR();
   return (
     <>
-      <JsonLd data={organizationJsonLd()} />
+      {upcoming.length > 0 && (
+        <JsonLd
+          data={itemListJsonLd(upcoming.map((e) => ({ name: e.title, url: `/events/${e.slug}` })))}
+        />
+      )}
 
       <section className="max-w-7xl mx-auto sm:px-6 sm:pt-3" aria-label="Discover events">
         {heroImages.length > 0 ? (
-          <HeroCarousel images={heroImages} />
+          <>
+            <h1 className="sr-only">
+              {SITE_CONFIG.name} — live events and tickets in Dublin, Ireland
+            </h1>
+            <HeroCarousel images={heroImages} />
+          </>
         ) : (
           <div className="rounded-3xl bg-bb-neutral">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center">

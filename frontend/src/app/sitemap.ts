@@ -1,42 +1,51 @@
 import type { MetadataRoute } from 'next';
+import { absoluteUrl } from '@/lib/seo';
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.brothersbeats.events';
+export const revalidate = 3600;
+
 const API_URL =
   process.env.API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   'http://localhost:4000/api';
 
-async function fetchEventSlugs(): Promise<string[]> {
+interface SitemapEvent {
+  slug: string;
+  updatedAt?: string;
+}
+
+async function fetchEvents(): Promise<SitemapEvent[]> {
   try {
     const res = await fetch(`${API_URL}/events`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
     const json = await res.json();
-    return (json.data || []).map((item: any) => item.slug).filter(Boolean);
+    return (json.data || []).filter((item: SitemapEvent) => item.slug);
   } catch {
     return [];
   }
 }
 
+// lastModified is only set when we know it; stamping every URL with "now"
+// teaches crawlers to ignore the field.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const eventSlugs = await fetchEventSlugs();
+  const events = await fetchEvents();
 
   const staticPages: MetadataRoute.Sitemap = [
-    { url: SITE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-    { url: `${SITE_URL}/events`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${SITE_URL}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${SITE_URL}/services`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${SITE_URL}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${SITE_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${SITE_URL}/terms`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${SITE_URL}/refund-policy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    { url: absoluteUrl('/'), changeFrequency: 'daily', priority: 1 },
+    { url: absoluteUrl('/events'), changeFrequency: 'daily', priority: 0.9 },
+    { url: absoluteUrl('/services'), changeFrequency: 'monthly', priority: 0.7 },
+    { url: absoluteUrl('/gallery'), changeFrequency: 'weekly', priority: 0.6 },
+    { url: absoluteUrl('/about'), changeFrequency: 'monthly', priority: 0.6 },
+    { url: absoluteUrl('/contact'), changeFrequency: 'monthly', priority: 0.5 },
+    { url: absoluteUrl('/privacy'), changeFrequency: 'yearly', priority: 0.2 },
+    { url: absoluteUrl('/terms'), changeFrequency: 'yearly', priority: 0.2 },
+    { url: absoluteUrl('/refund-policy'), changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  const eventPages: MetadataRoute.Sitemap = eventSlugs.map((slug) => ({
-    url: `${SITE_URL}/events/${slug}`,
-    lastModified: new Date(),
+  const eventPages: MetadataRoute.Sitemap = events.map((event) => ({
+    url: absoluteUrl(`/events/${event.slug}`),
+    ...(event.updatedAt && { lastModified: new Date(event.updatedAt) }),
     changeFrequency: 'weekly' as const,
-    priority: 0.7,
+    priority: 0.8,
   }));
 
   return [...staticPages, ...eventPages];

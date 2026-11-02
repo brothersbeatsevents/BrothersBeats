@@ -1,7 +1,5 @@
 import type { MetadataRoute } from 'next';
-
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.brothersbeats.events';
+import { absoluteUrl } from '@/lib/seo';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,10 +7,17 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/account/', '/auth/', '/api/', '/checkout/', '/booking/'],
+        disallow: [
+          '/admin/',
+          '/account/',
+          '/auth/',
+          '/api/',
+          '/checkout/',
+          '/booking/',
+          '/unsubscribe',
+        ],
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    sitemap: absoluteUrl('/sitemap.xml'),
   };
 }

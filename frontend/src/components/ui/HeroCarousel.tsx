@@ -75,7 +75,7 @@ export default function HeroCarousel({ images }: { images: HeroImage[] }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={image.url}
-                alt={image.alt || ''}
+                alt={image.alt || `Brothers Beats Events featured event ${index + 1}`}
                 fetchPriority={index === 0 ? 'high' : 'auto'}
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{ objectPosition: image.position || '50% 50%', transform: `scale(${image.zoom || 1})` }}

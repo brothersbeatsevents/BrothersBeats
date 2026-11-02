@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Terms of service',
-  description: `Terms of service for ${SITE_CONFIG.name}.`,
-  alternates: { canonical: '/terms' },
-};
+  description: `Terms of service for ${SITE_CONFIG.name} — the terms that apply when you buy tickets or use our event services.`,
+  path: '/terms',
+});
 
 export default function TermsPage() {
   return (
