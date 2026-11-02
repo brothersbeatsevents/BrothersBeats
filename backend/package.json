@@ -9,7 +9,7 @@
     "build:tsc": "tsc --noEmit",
     "start": "node dist/server.js",
     "seed": "USE_DYNAMODB=true tsx src/seed/seed-dynamodb.ts",
-    "test": "tsx --test src/tests/**/*.test.ts",
+    "test": "SES_FROM_EMAIL=tickets@brothersbeatsevents.com tsx --test src/tests/**/*.test.ts",
     "deploy:dev": "npm run build && sam deploy --config-env dev --profile brothersbeats",
     "deploy:prod": "npm run build && sam deploy --config-env prod --profile brothersbeats"
   },

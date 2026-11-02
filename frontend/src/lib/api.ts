@@ -154,7 +154,7 @@ export async function unsubscribe(email: string) {
   });
 }
 
-export async function sendContactMessage(data: { name: string; email: string; message: string; contactReason?: string; phone?: string; preferredDate?: string; website?: string; formStartedAt?: number }) {
+export async function sendContactMessage(data: { name: string; email: string; message: string; contactReason?: string; phone?: string; preferredDate?: string; website?: string; formStartedAt?: number; turnstileToken?: string }) {
   return apiFetch<{ success: boolean; message: string }>('/contact', {
     method: 'POST',
     body: data,
@@ -621,6 +621,7 @@ export async function submitServiceEnquiry(data: {
   message: string;
   consentToContact: boolean;
   source?: 'SERVICES_PAGE' | 'CONTACT_PAGE';
+  turnstileToken?: string;
 }) {
   return apiFetch<{ success: boolean; message: string }>('/service-enquiries', {
     method: 'POST',

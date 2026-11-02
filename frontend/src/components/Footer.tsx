@@ -113,7 +113,7 @@ export default function Footer({ whatsappUrl }: { whatsappUrl?: string | null })
               <li><Link href="/gallery" className="hover:text-bb-gold-light">Gallery</Link></li>
               <li><Link href="/services" className="hover:text-bb-gold-light">Services</Link></li>
               <li><Link href="/about" className="hover:text-bb-gold-light">About us</Link></li>
-              <li><Link href="/contact" className="hover:text-bb-gold-light">Contact</Link></li>
+              <li><Link href="/contact" className="hover:text-bb-gold-light">Contact Us</Link></li>
               <li><Link href="/booking/lookup" className="hover:text-bb-gold-light">Find my ticket</Link></li>
             </ul>
           </div>

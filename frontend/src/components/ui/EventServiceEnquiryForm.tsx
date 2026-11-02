@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { submitServiceEnquiry } from '@/lib/api';
 import { EVENT_SERVICE_TYPES, EVENT_SERVICE_TYPE_LABELS } from '@/lib/site-config';
-import { phoneInputProps } from '@/lib/phone';
+import { isValidOptionalPhone, phoneInputProps, sanitizePhoneInput, PHONE_ERROR } from '@/lib/phone';
+import Turnstile, { CaptchaState } from '@/components/ui/Turnstile';
 import { getEnquiryDateError, getTodayInDublin } from '@/lib/enquiry-date';
 
 export default function EventServiceEnquiryForm({
@@ -23,12 +24,23 @@ export default function EventServiceEnquiryForm({
   const [consentToContact, setConsentToContact] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
+  const [captcha, setCaptcha] = useState<CaptchaState>({});
+
+  const captchaEnabled = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!isValidOptionalPhone(phone)) {
+      setError(PHONE_ERROR);
+      return;
+    }
     const dateError = getEnquiryDateError(preferredDate);
     if (dateError) {
       setError(dateError);
+      return;
+    }
+    if (captchaEnabled && !captcha.token) {
+      setError('Please complete the security check.');
       return;
     }
     if (!consentToContact) {
@@ -50,6 +62,7 @@ export default function EventServiceEnquiryForm({
         message,
         consentToContact: true,
         source,
+        turnstileToken: captcha.token,
       });
       setStatus('sent');
     } catch (err: any) {
@@ -111,7 +124,7 @@ export default function EventServiceEnquiryForm({
           <input
             {...phoneInputProps}
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
             className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-bb-gold"
           />
         </div>
@@ -179,6 +192,8 @@ export default function EventServiceEnquiryForm({
         I agree to be contacted by Brothers Beats about this enquiry.
       </label>
 
+      {captchaEnabled && <Turnstile onChange={setCaptcha} />}
+      {captcha.error && <p className="text-sm text-bb-red">{captcha.error}</p>}
       {error && <p className="text-sm text-bb-red">{error}</p>}
 
       <button

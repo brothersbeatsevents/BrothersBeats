@@ -27,6 +27,7 @@ async function sendEmail(
   htmlBody: string,
   textBody?: string,
   loadAttachments?: () => Promise<Attachment[]>,
+  replyTo?: string,
 ): Promise<boolean> {
   if (!FROM_EMAIL) {
     console.warn('[SES] SES_FROM_EMAIL not set — skipping email');
@@ -51,7 +52,7 @@ async function sendEmail(
     const result = await sesClient.send(
       new SendEmailCommand({
         FromEmailAddress: FROM_EMAIL,
-        ReplyToAddresses: [SUPPORT_EMAIL],
+        ReplyToAddresses: [replyTo || SUPPORT_EMAIL],
         Destination: { ToAddresses: [to] },
         Content: {
           Simple: {
@@ -400,15 +401,24 @@ export async function sendWelcomeEmail(
   );
 }
 
-export async function sendAdminAlert(subject: string, message: string): Promise<boolean> {
+export async function sendAdminAlert(
+  subject: string,
+  message: string,
+  options?: { replyTo?: string },
+): Promise<boolean> {
   const content = `
     ${callout(escapeHtml(message), 'alert')}
     ${finePrint(`Timestamp: ${new Date().toISOString()}`)}
   `;
+  // FROM_EMAIL is only used as the envelope sender; the alert is delivered to
+  // the support inbox so the team doesn't have to email themselves.
   return sendEmail(
-    FROM_EMAIL,
+    SUPPORT_EMAIL,
     `[Brothers Beats Admin] ${subject}`,
     wrapInTemplate(content, { eyebrow: 'Admin alert', headline: subject, tone: 'alert' }),
+    message,
+    undefined,
+    options?.replyTo,
   );
 }
 

@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { href: '/booking/lookup', label: 'Find my ticket' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/services', label: 'Services' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/contact', label: 'Contact Us' },
 ];
 
 export default function Header({ whatsappUrl }: { whatsappUrl?: string | null }) {

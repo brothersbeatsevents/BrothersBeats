@@ -9,6 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { db } from '../store';
 import { EventServiceEnquiryEntity } from '../types';
 import { sendAdminAlert } from '../services/email';
+import { verifyTurnstileToken } from '../services/turnstile';
 import { isValidOptionalPhone, PHONE_ERROR } from '../services/phone-validation';
 import { getEnquiryDateError } from '../services/enquiry-date-validation';
 import {
@@ -33,7 +34,13 @@ router.post('/', async (req, res: Response): Promise<void> => {
     message,
     consentToContact,
     source,
+    turnstileToken,
   } = req.body;
+
+  if (!(await verifyTurnstileToken(turnstileToken))) {
+    res.status(403).json({ success: false, error: 'Security check failed — please try again.' });
+    return;
+  }
 
   const validationError = validateServiceEnquiryInput({ fullName, email, message, consentToContact });
   if (validationError) {
@@ -85,6 +92,7 @@ router.post('/', async (req, res: Response): Promise<void> => {
   await sendAdminAlert(
     'New paid event-management enquiry',
     `Type: ${enquiry.eventServiceType}\nFrom: ${enquiry.fullName} <${enquiry.email}>\nPhone: ${enquiry.phone || '—'}\nPreferred date: ${enquiry.preferredDate || '—'}\nVenue/city: ${enquiry.venueOrCity || '—'}\nGuests: ${enquiry.estimatedGuestCount ?? '—'}\nBudget: ${enquiry.budgetRange || '—'}\n\n${enquiry.message}`,
+    { replyTo: enquiry.email },
   ).catch((err) => console.error('[ServiceEnquiries] Failed to send alert:', err));
 
   // Generic response — never confirms internal status or dedup details.
