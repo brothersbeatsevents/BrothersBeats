@@ -10,7 +10,14 @@ declare global {
     turnstile?: {
       render: (
         container: HTMLElement,
-        options: { sitekey: string; theme?: 'light' | 'dark' | 'auto'; 'error-callback'?: () => void },
+        options: {
+          sitekey: string;
+          theme?: 'light' | 'dark' | 'auto';
+          callback?: (token: string) => void;
+          'expired-callback'?: () => void;
+          'timeout-callback'?: () => void;
+          'error-callback'?: () => void;
+        },
       ) => string;
       remove: (widgetId: string) => void;
     };
@@ -32,21 +39,27 @@ export default function Turnstile({ onChange }: { onChange: (state: CaptchaState
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | undefined>(undefined);
   const [scriptReady, setScriptReady] = useState(false);
+  // Keep the latest handler in a ref so a re-rendering parent never re-creates the widget.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     if (!SITE_KEY || !scriptReady || !containerRef.current || widgetId.current) return;
     widgetId.current = window.turnstile?.render(containerRef.current, {
-      sitekey: SITE_KEY!,
+      sitekey: SITE_KEY,
       theme: 'light',
+      callback: (token) => onChangeRef.current({ token }),
+      'expired-callback': () => onChangeRef.current({}),
+      'timeout-callback': () => onChangeRef.current({}),
       'error-callback': () =>
-        onChange({ error: 'Captcha failed to load — please refresh the page.' }),
+        onChangeRef.current({ error: 'Captcha failed to load — please refresh the page.' }),
     });
     return () => {
       const id = widgetId.current;
       if (id) window.turnstile?.remove(id);
       widgetId.current = undefined;
     };
-  }, [scriptReady, onChange]);
+  }, [scriptReady]);
 
   useEffect(() => {
     window.onTurnstileLoad = () => setScriptReady(true);

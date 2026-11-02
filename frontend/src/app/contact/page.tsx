@@ -46,6 +46,7 @@ export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
   const [captcha, setCaptcha] = useState<CaptchaState>({});
+  const [captchaKey, setCaptchaKey] = useState(0);
   const formStartedAt = useRef(Date.now());
 
   function setValue(key: string, value: string) {
@@ -107,6 +108,8 @@ export default function ContactPage() {
     } catch (err: any) {
       setStatus('error');
       setError(err.message || 'Something went wrong. Please try again.');
+      setCaptcha({});
+      setCaptchaKey((key) => key + 1);
     }
   }
 
@@ -121,7 +124,7 @@ export default function ContactPage() {
           </div>
           <fieldset><legend className="font-display font-bold text-xl text-bb-text mb-4">I&apos;m interested in:</legend><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{REASONS.map((item) => <label key={item.value} className={`flex items-center gap-3 border rounded-xl px-4 py-3 cursor-pointer transition-colors ${reason === item.value ? 'border-bb-gold bg-bb-gold/10' : 'border-bb-border hover:border-bb-gold'}`}><input type="radio" name="contactReason" value={item.value} checked={reason === item.value} onChange={() => selectReason(item.value)} className="accent-bb-gold" /><span className="text-sm font-medium text-bb-text">{item.label}</span></label>)}</div></fieldset>
           <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 space-y-4"><h2 className="font-display font-bold text-xl text-bb-text">{REASONS.find((item) => item.value === reason)?.label}</h2>{renderQuestions()}</div>
-          {captchaEnabled && <Turnstile onChange={setCaptcha} />}
+          {captchaEnabled && <Turnstile key={captchaKey} onChange={setCaptcha} />}
           {captcha.error && <p className="text-sm text-bb-red">{captcha.error}</p>}
           {status === 'error' && <p className="text-sm text-bb-red">{error}</p>}
           <button type="submit" disabled={status === 'loading'} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-3 rounded-full transition-colors">{status === 'loading' ? 'Sending…' : 'Send enquiry'}</button>
