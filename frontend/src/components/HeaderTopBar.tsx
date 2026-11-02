@@ -47,17 +47,6 @@ export default function HeaderTopBar({ whatsappUrl }: { whatsappUrl?: string | n
     { name: 'YouTube', href: SITE_CONFIG.socials.youtube, icon: filledIcon(FILLED.youtube), external: true },
     { name: 'TikTok', href: SITE_CONFIG.socials.tiktok, icon: filledIcon(FILLED.tiktok), external: true },
     {
-      name: 'Email',
-      href: `mailto:${SITE_CONFIG.supportEmail}`,
-      icon: strokeIcon(
-        <>
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-          <path d="m22 6-10 7L2 6" />
-        </>,
-      ),
-      external: false,
-    },
-    {
       name: 'WhatsApp',
       href: whatsappUrl || '',
       icon: strokeIcon(
