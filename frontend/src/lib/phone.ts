@@ -10,6 +10,11 @@ export const phoneInputProps = {
   title: PHONE_ERROR,
 } as const;
 
+/** Strips characters that can never be part of a phone number (digits, spaces, brackets, hyphens, one leading +). */
+export function sanitizePhoneInput(value: string): string {
+  return value.replace(/(?!^)\+/g, '').replace(/[^0-9+() -]/g, '');
+}
+
 export function isValidOptionalPhone(value: string | undefined): boolean {
   return value === undefined || value.trim() === '' ||
     (value.trim().length <= 40 && new RegExp(`^${PHONE_PATTERN}$`).test(value.trim()));

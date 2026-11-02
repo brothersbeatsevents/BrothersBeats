@@ -3,7 +3,8 @@
 import { useRef, useState } from 'react';
 import { sendContactMessage } from '@/lib/api';
 import { SITE_CONFIG } from '@/lib/site-config';
-import { phoneInputProps } from '@/lib/phone';
+import { isValidOptionalPhone, phoneInputProps, sanitizePhoneInput, PHONE_ERROR } from '@/lib/phone';
+import Turnstile, { CaptchaState } from '@/components/ui/Turnstile';
 import { getEnquiryDateError, getTodayInDublin } from '@/lib/enquiry-date';
 
 type ContactReason = 'SPONSORSHIP' | 'PERFORMER' | 'PARTNERSHIP' | 'ORGANISE_EVENT' | 'PERSONAL_PARTY' | 'GENERAL_ENQUIRY';
@@ -44,6 +45,7 @@ export default function ContactPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
+  const [captcha, setCaptcha] = useState<CaptchaState>({});
   const formStartedAt = useRef(Date.now());
 
   function setValue(key: string, value: string) {
@@ -57,12 +59,14 @@ export default function ContactPage() {
     setError('');
   }
 
+  const captchaEnabled = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
   function renderQuestions() {
     const common = (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Name" name="name" value={values.name || ''} onChange={(value) => setValue('name', value)} required />
         <Field label="Email" name="email" type="email" value={values.email || ''} onChange={(value) => setValue('email', value)} required />
-        <Field label="Phone" name="phone" type="tel" value={values.phone || ''} onChange={(value) => setValue('phone', value)} required />
+        <Field label="Phone" name="phone" type="tel" value={values.phone || ''} onChange={(value) => setValue('phone', sanitizePhoneInput(value))} required />
       </div>
     );
 
@@ -76,10 +80,20 @@ export default function ContactPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!isValidOptionalPhone(values.phone)) {
+      setStatus('error');
+      setError(PHONE_ERROR);
+      return;
+    }
     const dateError = getEnquiryDateError(values.preferredDate, ['PERFORMER', 'ORGANISE_EVENT', 'PERSONAL_PARTY'].includes(reason));
     if (dateError) {
       setStatus('error');
       setError(dateError);
+      return;
+    }
+    if (captchaEnabled && !captcha.token) {
+      setStatus('error');
+      setError('Please complete the security check.');
       return;
     }
     setStatus('loading');
@@ -88,7 +102,7 @@ export default function ContactPage() {
     const { name, email, ...details } = values;
     const message = [`Contact reason: ${reasonLabel}`, ...Object.entries(details).filter(([, value]) => value.trim()).map(([key, value]) => `${key}: ${value}`)].join('\n');
     try {
-      await sendContactMessage({ name, email, message, contactReason: reason, phone: values.phone, preferredDate: values.preferredDate, website: values.website, formStartedAt: formStartedAt.current });
+      await sendContactMessage({ name, email, message, contactReason: reason, phone: values.phone, preferredDate: values.preferredDate, website: values.website, formStartedAt: formStartedAt.current, turnstileToken: captcha.token });
       setStatus('sent');
     } catch (err: any) {
       setStatus('error');
@@ -107,6 +121,8 @@ export default function ContactPage() {
           </div>
           <fieldset><legend className="font-display font-bold text-xl text-bb-text mb-4">I&apos;m interested in:</legend><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{REASONS.map((item) => <label key={item.value} className={`flex items-center gap-3 border rounded-xl px-4 py-3 cursor-pointer transition-colors ${reason === item.value ? 'border-bb-gold bg-bb-gold/10' : 'border-bb-border hover:border-bb-gold'}`}><input type="radio" name="contactReason" value={item.value} checked={reason === item.value} onChange={() => selectReason(item.value)} className="accent-bb-gold" /><span className="text-sm font-medium text-bb-text">{item.label}</span></label>)}</div></fieldset>
           <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 space-y-4"><h2 className="font-display font-bold text-xl text-bb-text">{REASONS.find((item) => item.value === reason)?.label}</h2>{renderQuestions()}</div>
+          {captchaEnabled && <Turnstile onChange={setCaptcha} />}
+          {captcha.error && <p className="text-sm text-bb-red">{captcha.error}</p>}
           {status === 'error' && <p className="text-sm text-bb-red">{error}</p>}
           <button type="submit" disabled={status === 'loading'} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-3 rounded-full transition-colors">{status === 'loading' ? 'Sending…' : 'Send enquiry'}</button>
           <p className="text-xs text-bb-text-muted">Prefer email? Contact us directly at <a href={`mailto:${SITE_CONFIG.supportEmail}`} className="text-bb-gold underline">{SITE_CONFIG.supportEmail}</a>.</p>

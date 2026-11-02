@@ -6,6 +6,8 @@ import { Router, Response } from 'express';
 import { v4 as uuid } from 'uuid';
 import { db } from '../store';
 import { EventServiceEnquiryEntity, EventServiceType } from '../types';
+import { sendAdminAlert } from '../services/email';
+import { verifyTurnstileToken } from '../services/turnstile';
 import { validateEmail } from '../middleware/validate';
 import { isValidOptionalPhone, PHONE_ERROR } from '../services/phone-validation';
 import { getEnquiryDateError } from '../services/enquiry-date-validation';
@@ -13,7 +15,11 @@ import { getEnquiryDateError } from '../services/enquiry-date-validation';
 const router = Router();
 
 router.post('/', async (req, res: Response): Promise<void> => {
-  const { name, email, message, contactReason, phone, preferredDate, website, formStartedAt } = req.body;
+  const { name, email, message, contactReason, phone, preferredDate, website, formStartedAt, turnstileToken } = req.body;
+  if (!(await verifyTurnstileToken(turnstileToken))) {
+    res.status(403).json({ success: false, error: 'Security check failed — please try again.' });
+    return;
+  }
   if (website || (typeof formStartedAt === 'number' && Date.now() - formStartedAt < 2000)) {
     res.status(400).json({ success: false, error: 'Invalid request' });
     return;
@@ -67,6 +73,12 @@ router.post('/', async (req, res: Response): Promise<void> => {
     updated_at: now,
   };
   await db.put('serviceEnquiries', enquiry);
+
+  await sendAdminAlert(
+    'New contact form enquiry',
+    `Reason: ${enquiry.eventServiceType}\nFrom: ${enquiry.fullName} <${enquiry.email}>\nPhone: ${enquiry.phone || '—'}\nPreferred date: ${enquiry.preferredDate || '—'}\n\n${enquiry.message}`,
+    { replyTo: enquiry.email },
+  ).catch((err) => console.error('[Contact] Failed to send alert:', err));
 
   res.json({ success: true, message: 'Thanks for reaching out — we\'ll be in touch soon.' });
 });
