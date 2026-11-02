@@ -32,12 +32,14 @@ const nextConfig = (phase: string): NextConfig => ({
       },
       {
         // Applies to all pages: restrict embeddable frames to the privacy-enhanced
-        // YouTube player and Instagram Reels used by the gallery.
+        // YouTube player and Instagram Reels used by the gallery, plus the
+        // Cloudflare Turnstile challenge iframe on the enquiry forms.
         source: '/:path*',
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-src 'self' https://www.youtube-nocookie.com https://www.instagram.com;",
+            value:
+              "frame-src 'self' https://www.youtube-nocookie.com https://www.instagram.com https://challenges.cloudflare.com;",
           },
         ],
       },

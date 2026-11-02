@@ -25,6 +25,7 @@ export default function EventServiceEnquiryForm({
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
   const [captcha, setCaptcha] = useState<CaptchaState>({});
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   const captchaEnabled = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
@@ -68,6 +69,8 @@ export default function EventServiceEnquiryForm({
     } catch (err: any) {
       setStatus('error');
       setError(err.message || 'Something went wrong. Please try again.');
+      setCaptcha({});
+      setCaptchaKey((key) => key + 1);
     }
   }
 
@@ -192,7 +195,7 @@ export default function EventServiceEnquiryForm({
         I agree to be contacted by Brothers Beats about this enquiry.
       </label>
 
-      {captchaEnabled && <Turnstile onChange={setCaptcha} />}
+      {captchaEnabled && <Turnstile key={captchaKey} onChange={setCaptcha} />}
       {captcha.error && <p className="text-sm text-bb-red">{captcha.error}</p>}
       {error && <p className="text-sm text-bb-red">{error}</p>}
 
