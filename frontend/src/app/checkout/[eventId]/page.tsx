@@ -123,7 +123,7 @@ function CheckoutPageContent() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {slug && (
         <Link href={`/events/${slug}`} className="text-sm text-bb-text-secondary hover:text-bb-gold">
           &larr; Back to event
@@ -134,14 +134,14 @@ function CheckoutPageContent() {
       </h1>
       <p className="text-sm text-bb-text-secondary mb-8">{quote.totalAmountMinor === 0 ? 'Complete your details to confirm your free tickets.' : 'Complete your details to continue to secure payment.'}</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="order-2 md:order-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="order-2 lg:order-1">
           <CheckoutForm eventId={params.eventId} items={items} free={quote.totalAmountMinor === 0}
             discountCode={quote.discountCode}
             onSubmittingChange={setSubmitting}
             disabled={updatingDiscount || (hasDiscountCode && !quote.discountCode)} />
         </div>
-        <div className="order-1 md:order-2">
+        <div className="order-1 lg:order-2">
           <PriceSummary quote={quote} />
           <div className="mt-4 rounded-xl border border-bb-border p-4 text-sm">
             <label className="flex items-center gap-2 text-bb-text">

@@ -109,7 +109,7 @@ export default function EventDetailTiers({ event: initialEvent }: { event: any }
 
   if (soldOut) {
     return (
-      <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 text-center sticky top-24">
+      <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6 text-center lg:sticky lg:top-[calc(var(--site-header-height)+1rem)]">
         <p className="font-semibold text-bb-text">Sold out</p>
         <p className="text-sm text-bb-text-secondary mt-1">
           Check back later in case tickets become available.
@@ -120,7 +120,7 @@ export default function EventDetailTiers({ event: initialEvent }: { event: any }
 
   if (salesClosed) {
     return (
-      <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 text-center sticky top-24">
+      <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6 text-center lg:sticky lg:top-[calc(var(--site-header-height)+1rem)]">
         <p className="font-semibold text-bb-text">
           {event.status === 'CANCELLED'
             ? 'This event has been cancelled'
@@ -136,7 +136,7 @@ export default function EventDetailTiers({ event: initialEvent }: { event: any }
   const currency = tiers[0]?.currency || 'EUR';
 
   return (
-    <div className="bg-bb-surface border border-bb-border rounded-2xl p-5 sticky top-24 space-y-1">
+    <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-5 lg:sticky lg:top-[calc(var(--site-header-height)+1rem)] lg:max-h-[calc(100dvh-var(--site-header-height)-2rem)] lg:overflow-y-auto space-y-1">
       <h2 className="font-display font-bold text-lg text-bb-text mb-3">Select tickets</h2>
       <div className="divide-y divide-bb-border">
         {tiers.map((tier) => {
@@ -148,8 +148,8 @@ export default function EventDetailTiers({ event: initialEvent }: { event: any }
           const max = tierQty === 0 && availableMax < Math.max(tier.minPerOrder, tier.groupMinSize || 1) ? 0 : availableMax;
 
           return (
-            <div key={tier.id} role="group" aria-label={tier.name} className={`py-4 flex items-center justify-between gap-4 ${disabled ? 'opacity-50' : ''}`}>
-              <div className="min-w-0">
+            <div key={tier.id} role="group" aria-label={tier.name} className={`py-3 flex flex-wrap items-center justify-between gap-3 ${disabled ? 'opacity-50' : ''}`}>
+              <div className="min-w-[7rem] flex-1">
                 <p className="font-semibold text-bb-text">{tier.name}</p>
                 <p className="text-sm text-bb-text-secondary mt-0.5">
                   {tier.priceAmountMinor === 0 ? 'Free' : formatMoney(tier.priceAmountMinor, tier.currency)}

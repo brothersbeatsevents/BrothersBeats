@@ -18,9 +18,13 @@ import { User } from '../types';
 
 const router = Router();
 
-const COGNITO_DOMAIN = process.env.COGNITO_DOMAIN
-  ? `https://${process.env.COGNITO_DOMAIN}.auth.${process.env.AWS_REGION || 'eu-west-1'}.amazoncognito.com`
-  : '';
+// Use the same domain for authorization, code exchange, and session refresh.
+const COGNITO_DOMAIN = (
+  process.env.COGNITO_AUTH_URL ||
+  (process.env.COGNITO_DOMAIN
+    ? `https://${process.env.COGNITO_DOMAIN}.auth.${process.env.AWS_REGION || 'eu-west-1'}.amazoncognito.com`
+    : '')
+).replace(/\/+$/, '');
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
 const CUSTOMER_GROUP = process.env.COGNITO_CUSTOMER_GROUP_NAME || 'CUSTOMER';
 
@@ -330,6 +334,10 @@ router.post(
       // Return the same message for UsernameExistsException to prevent
       // email enumeration (attacker cannot distinguish existing vs new accounts).
       if (error.name === 'UsernameExistsException') {
+        // A previous signup may still be unconfirmed. Actually send a fresh code
+        // before directing the customer back to verification. Confirmed accounts
+        // reject this request; keep the same public response in either case.
+        await resendConfirmationCode(email).catch(() => {});
         res.json({
           success: true,
           message:
@@ -351,7 +359,8 @@ router.post(
   '/confirm',
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { email, code } = req.body;
-    if (!email || !code) {
+    const confirmationCode = typeof code === 'string' ? code.replace(/\s/g, '') : '';
+    if (!email || !confirmationCode) {
       res.status(400).json({
         success: false,
         error: 'Email and verification code are required',
@@ -360,7 +369,7 @@ router.post(
     }
 
     try {
-      await confirmSignUp(email, code);
+      await confirmSignUp(email, confirmationCode);
       // Newly confirmed customers join the CUSTOMER group so their JWT
       // carries CUSTOMER as their authorization role.
       await addUserToGroup(email, CUSTOMER_GROUP).catch((err) =>

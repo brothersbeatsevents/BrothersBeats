@@ -41,7 +41,7 @@ export default function AdminAuditLogPage() {
         <p className="text-bb-text-secondary">Loading…</p>
       ) : (
         <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-bb-neutral text-bb-text-secondary text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Time</th>

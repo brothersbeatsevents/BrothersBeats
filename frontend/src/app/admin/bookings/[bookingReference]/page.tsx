@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { adminGetBooking, adminCancelBooking, adminResendConfirmation, adminResendTickets, adminCreateRefund } from '@/lib/api';
-import { formatMoney } from '@/lib/format';
+import { formatMoney, parseMoneyToMinor } from '@/lib/format';
 
 export default function AdminBookingDetailPage() {
   const { token } = useAuth();
@@ -58,13 +58,18 @@ export default function AdminBookingDetailPage() {
   async function handleRefund() {
     if (!token || !booking) return;
     const remaining = booking.totalAmountMinor - booking.refundedAmountMinor;
-    const amountStr = prompt(`Refund amount in cents (max ${remaining})?`, String(remaining));
-    if (!amountStr) return;
+    const amountStr = prompt(`Refund amount in ${booking.currency} (max ${formatMoney(remaining, booking.currency)})?`, (remaining / 100).toFixed(2));
+    if (amountStr === null) return;
+    const amountMinor = parseMoneyToMinor(amountStr);
+    if (amountMinor === null || amountMinor <= 0 || amountMinor > remaining) {
+      alert(`Enter an amount greater than zero and no more than ${formatMoney(remaining, booking.currency)}, with up to two decimal places.`);
+      return;
+    }
     const reason = prompt('Refund reason?');
     if (!reason) return;
     setBusy(true);
     try {
-      await adminCreateRefund({ bookingId: booking.id, amountMinor: Number(amountStr), reason }, token);
+      await adminCreateRefund({ bookingId: booking.id, amountMinor, reason }, token);
       setMessage('Refund requested.');
       load();
     } catch (err: any) {
@@ -87,7 +92,7 @@ export default function AdminBookingDetailPage() {
       {message && <p className="text-sm text-bb-green mb-4">{message}</p>}
       {resendError && <p role="alert" className="text-sm text-bb-red mb-4">{resendError}</p>}
 
-      <div className="bg-bb-surface border border-bb-border rounded-2xl p-6 mb-6 grid grid-cols-2 gap-4 text-sm">
+      <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div><p className="text-bb-text-secondary">Buyer</p><p className="font-semibold text-bb-text">{booking.buyerName}</p></div>
         <div><p className="text-bb-text-secondary">Email</p><p className="font-semibold text-bb-text">{booking.buyerEmail}</p></div>
         <div><p className="text-bb-text-secondary">Quantity</p><p className="font-semibold text-bb-text">{booking.quantity}</p></div>
@@ -118,7 +123,7 @@ export default function AdminBookingDetailPage() {
           <h2 className="font-display font-bold text-lg text-bb-text mb-3">Tickets</h2>
           <div className="space-y-2">
             {booking.tickets.map((t: any) => (
-              <div key={t.id} className="flex items-center justify-between border border-bb-border rounded-xl p-3 text-sm">
+              <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 border border-bb-border rounded-xl p-3 text-sm">
                 <span>#{t.ticketNumber} — {t.ticketTierNameSnapshot || booking.ticketTierNameSnapshot} — {t.attendeeName}</span>
                 <span className="text-xs text-bb-text-secondary">{t.status}</span>
               </div>

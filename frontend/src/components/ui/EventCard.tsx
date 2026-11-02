@@ -25,7 +25,7 @@ export default function EventCard({ event }: { event: EventCardData }) {
       href={`/events/${event.slug}`}
       className="group block bg-bb-surface rounded-2xl border border-bb-border overflow-hidden hover:shadow-lg transition-shadow"
     >
-      <div className="relative aspect-[4/3] bg-bb-neutral overflow-hidden">
+      <div className="relative aspect-[2/1] bg-bb-neutral overflow-hidden">
         {event.heroImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -46,9 +46,9 @@ export default function EventCard({ event }: { event: EventCardData }) {
           </div>
         )}
       </div>
-      <div className="p-4">
+      <div className="p-3">
         <CategoryPill category={event.category} />
-        <h3 className="mt-2 font-display font-bold text-bb-text text-lg leading-snug group-hover:text-bb-gold transition-colors line-clamp-2">
+        <h3 className="mt-1 font-display font-bold text-bb-text text-base leading-snug group-hover:text-bb-gold transition-colors line-clamp-2">
           {event.title}
         </h3>
         <p className="mt-1 text-sm text-bb-text-secondary">

@@ -29,7 +29,7 @@ export default function AdminDashboard() {
     <div>
       <h1 className="font-display font-bold text-2xl text-bb-text mb-6">Dashboard</h1>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
         {stats.map((s) => (
           <div key={s.label} className="bg-bb-surface border border-bb-border rounded-2xl p-5">
             <p className="text-sm text-bb-text-secondary">{s.label}</p>
@@ -45,8 +45,8 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden overflow-x-auto">
+        <table className="w-full min-w-[36rem] text-sm">
           <thead className="bg-bb-neutral text-bb-text-secondary text-left">
             <tr>
               <th className="px-4 py-2 font-medium">Reference</th>

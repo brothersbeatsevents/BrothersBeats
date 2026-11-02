@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'About us',
-  description: `Learn about ${SITE_CONFIG.name} and our mission to bring memorable events to life.`,
-  alternates: { canonical: '/about' },
-};
+export const metadata: Metadata = pageMetadata({
+  title: 'About us — Dublin Event Organisers',
+  description: `Learn about ${SITE_CONFIG.name}, the Dublin team behind live music nights, community events and celebrations across Ireland — and our mission to bring memorable events to life.`,
+  path: '/about',
+});
 
 export default function AboutPage() {
   return (

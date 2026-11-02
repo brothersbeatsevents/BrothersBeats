@@ -103,7 +103,7 @@ export default function DiscountCodesPage() {
             <input required type="number" min="0.01" max={discountType === 'PERCENTAGE' ? 100 : undefined} step="0.01"
               value={value} onChange={(e) => setValue(e.target.value)} className={fieldClass} />
           </label>
-          {discountType === 'PERCENTAGE' && <div className="flex gap-2 sm:col-span-2">
+          {discountType === 'PERCENTAGE' && <div className="flex flex-wrap gap-2 sm:col-span-2">
             {[5, 10].map((preset) => <button key={preset} type="button" onClick={() => setValue(String(preset))}
               className={`rounded-full border px-4 py-1 text-sm ${value === String(preset) ? 'border-bb-gold bg-bb-gold/10' : 'border-bb-border'}`}>{preset}%</button>)}
             <span className="self-center text-xs text-bb-text-secondary">Or enter your own percentage above.</span>
@@ -128,7 +128,7 @@ export default function DiscountCodesPage() {
         </button>
       </form>
       <div className="overflow-x-auto rounded-2xl border border-bb-border bg-white">
-        <table className="w-full text-left text-sm">
+        <table className="w-full min-w-[36rem] text-left text-sm">
           <thead className="bg-bb-neutral"><tr>{['Code', 'Event / tickets', 'Discount', 'Status / expiry', 'Action'].map((heading) => <th key={heading} className="p-4 font-semibold">{heading}</th>)}</tr></thead>
           <tbody>{codes.map((discount) => <tr key={discount.id} className="border-t border-bb-border">
             <td className="p-4 font-mono font-semibold select-all">{discount.code}</td>

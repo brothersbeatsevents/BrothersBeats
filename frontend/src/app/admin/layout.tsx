@@ -50,9 +50,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)]">
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-bb-ink text-white border-b border-white/10">
-        <button onClick={() => setMobileNavOpen(!mobileNavOpen)} className="text-sm font-semibold">
+    <div className="flex flex-col min-h-[calc(100dvh-var(--site-header-height))]">
+      <div className="lg:hidden flex items-center justify-between gap-3 px-4 py-3 bg-bb-ink text-white border-b border-white/10">
+        <button onClick={() => setMobileNavOpen(!mobileNavOpen)} aria-expanded={mobileNavOpen} aria-controls="admin-navigation" className="text-sm font-semibold">
           ☰ Menu
         </button>
         <Link href="/" className="text-sm font-semibold text-white/80 hover:text-white">
@@ -60,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Link>
       </div>
       {mobileNavOpen && (
-        <nav className="md:hidden bg-bb-ink text-white p-2 space-y-1 border-b border-white/10">
+        <nav id="admin-navigation" aria-label="Admin navigation" className="lg:hidden bg-bb-ink text-white p-2 space-y-1 border-b border-white/10">
           {ADMIN_NAV.map((item) => (
             <Link
               key={item.href}
@@ -79,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
       )}
       <div className="flex flex-1 min-h-0">
-        <aside className="w-56 bg-bb-ink text-white flex-shrink-0 hidden md:flex md:flex-col">
+        <aside className="w-56 bg-bb-ink text-white flex-shrink-0 hidden lg:flex lg:flex-col">
           <div className="p-4 border-b border-white/10">
             <p className="font-display font-bold text-sm">Admin Panel</p>
             <p className="text-xs text-white/60 truncate">{user.display_name}</p>
@@ -106,7 +106,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
         </aside>
-        <main className="flex-1 min-w-0 p-6 md:p-8 bg-bb-neutral">{children}</main>
+        <div className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8 bg-bb-neutral">
+          <div className="mx-auto w-full max-w-screen-2xl">{children}</div>
+        </div>
       </div>
     </div>
   );

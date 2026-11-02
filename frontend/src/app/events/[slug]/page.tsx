@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getEventSSR, getSettingsSSR } from '@/lib/server-api';
-import { SITE_CONFIG } from '@/lib/site-config';
+import { pageMetadata, truncate } from '@/lib/seo';
+import { formatEventDate } from '@/lib/format';
 import { eventJsonLd, breadcrumbJsonLd, JsonLd } from '@/lib/json-ld';
 import EventHero from '@/components/ui/EventHero';
 import EventDetailTiers from './EventDetailTiers';
@@ -15,19 +16,22 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const event = await getEventSSR(slug);
-  if (!event) return { title: 'Event not found' };
+  if (!event) return { title: 'Event not found', robots: { index: false, follow: false } };
 
-  return {
-    title: event.title,
-    description: event.shortDescription,
-    openGraph: {
-      title: event.title,
-      description: event.shortDescription,
-      url: `${SITE_CONFIG.url}/events/${slug}`,
-      images: event.heroImageUrl ? [{ url: event.heroImageUrl, alt: event.title }] : undefined,
-    },
-    alternates: { canonical: `/events/${slug}` },
-  };
+  const when = formatEventDate(event.startDateTime, event.timezone);
+  const where = [event.venueName, event.city].filter(Boolean).join(', ');
+  const description =
+    truncate(event.seoDescription) ||
+    truncate(`${event.shortDescription} ${when}${where ? ` · ${where}` : ''}.`) ||
+    undefined;
+
+  return pageMetadata({
+    title: event.seoTitle || (event.isPast ? event.title : `${event.title} — Tickets, ${event.city || 'Dublin'}`),
+    description: description || '',
+    path: `/events/${slug}`,
+    image: event.socialImageUrl || event.heroImageUrl,
+    imageAlt: event.title,
+  });
 }
 
 export default async function EventDetailPage({ params }: Props) {
@@ -61,8 +65,8 @@ export default async function EventDetailPage({ params }: Props) {
         }}
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] gap-6 lg:gap-8">
+        <div className="min-w-0 space-y-6">
           <div>
             <h2 className="font-display font-bold text-xl text-bb-text mb-3">About this event</h2>
             <p className="text-bb-text-secondary whitespace-pre-line">{event.longDescription}</p>

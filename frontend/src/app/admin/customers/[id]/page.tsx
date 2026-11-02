@@ -31,7 +31,7 @@ export default function AdminCustomerDetailPage() {
       <h2 className="font-display font-bold text-lg text-bb-text mb-3">Booking history</h2>
       <div className="space-y-2">
         {customer.bookings.map((b: any) => (
-          <div key={b.bookingReference} className="bg-bb-surface border border-bb-border rounded-xl p-4 flex items-center justify-between text-sm">
+          <div key={b.bookingReference} className="bg-bb-surface border border-bb-border rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 text-sm">
             <div>
               <p className="font-semibold text-bb-text">{b.eventTitleSnapshot}</p>
               <p className="text-xs text-bb-text-secondary">Ref: {b.bookingReference} · {b.quantity} ticket(s)</p>

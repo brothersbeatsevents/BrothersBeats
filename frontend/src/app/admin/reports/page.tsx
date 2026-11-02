@@ -38,7 +38,7 @@ export default function AdminReportsPage() {
       {sales && (
         <div className="mb-8">
           <h2 className="font-display font-bold text-lg text-bb-text mb-3">Sales</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
             <div className="bg-bb-surface border border-bb-border rounded-2xl p-4">
               <p className="text-sm text-bb-text-secondary">Bookings</p>
               <p className="font-display font-bold text-xl text-bb-text">{sales.totalBookings}</p>
@@ -57,8 +57,8 @@ export default function AdminReportsPage() {
             </div>
           </div>
           {sales.byTicketTier.length > 0 && (
-            <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden overflow-x-auto">
+              <table className="w-full min-w-[36rem] text-sm">
                 <thead className="bg-bb-neutral text-bb-text-secondary text-left">
                   <tr><th className="px-4 py-2 font-medium">Ticket type</th><th className="px-4 py-2 font-medium">Quantity</th><th className="px-4 py-2 font-medium">Gross</th></tr>
                 </thead>
@@ -80,7 +80,7 @@ export default function AdminReportsPage() {
       {attendance && (
         <div>
           <h2 className="font-display font-bold text-lg text-bb-text mb-3">Attendance</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <div className="bg-bb-surface border border-bb-border rounded-2xl p-4">
               <p className="text-sm text-bb-text-secondary">Valid tickets</p>
               <p className="font-display font-bold text-xl text-bb-text">{attendance.validTickets}</p>

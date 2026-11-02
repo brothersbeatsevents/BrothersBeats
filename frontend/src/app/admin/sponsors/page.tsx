@@ -217,7 +217,7 @@ export default function AdminSponsorsPage() {
             <label className="block text-sm font-medium text-bb-text mb-1">Display order</label>
             <input type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} className="w-32 rounded-lg border border-bb-border px-4 py-2.5 text-sm" />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button type="submit" disabled={saving || uploading} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
               {saving ? 'Saving…' : editingId ? 'Save changes' : 'Add sponsor'}
             </button>

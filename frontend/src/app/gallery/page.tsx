@@ -36,7 +36,7 @@ export default function GalleryPage() {
         Photos and highlights from Brothers Beats events — the moments we&apos;ve created together.
       </p>
 
-      <div className="flex gap-2 mb-8">
+      <div className="flex flex-wrap gap-2 mb-8">
         {FILTERS.map((f) => (
           <button
             key={f.value}

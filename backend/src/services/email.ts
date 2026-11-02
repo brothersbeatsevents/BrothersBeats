@@ -250,7 +250,7 @@ function wrapInTemplate(content: string, opts: TemplateOptions = {}): string {
                 Questions? Email <a href="mailto:${SUPPORT_EMAIL}" style="color:${BRAND.gold}; text-decoration:none;">${SUPPORT_EMAIL}</a>
               </p>
               <p style="margin:0; font-family:${FONT_BODY}; font-size:12px; line-height:1.6; color:${BRAND.onInkMuted};">
-                <a href="${FRONTEND_URL}" style="color:${BRAND.gold}; text-decoration:none;">brothersbeats.events</a> &nbsp;&middot;&nbsp; Dublin, Ireland
+                <a href="${FRONTEND_URL}" style="color:${BRAND.gold}; text-decoration:none;">brothersbeatsevents.com</a> &nbsp;&middot;&nbsp; Dublin, Ireland
               </p>
             </td>
           </tr>

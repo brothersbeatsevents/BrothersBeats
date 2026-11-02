@@ -49,7 +49,7 @@ export default function GalleryLightbox({
         type="button"
         onClick={onClose}
         aria-label="Close"
-        className="absolute top-4 right-4 text-white/80 hover:text-white text-3xl leading-none"
+        className="absolute z-10 top-2 right-2 flex h-11 w-11 items-center justify-center text-white/80 hover:text-white text-3xl leading-none"
       >
         &times;
       </button>
@@ -68,7 +68,7 @@ export default function GalleryLightbox({
         </button>
       )}
 
-      <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+      <div className="max-w-4xl w-full max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}>
         {item.type === 'IMAGE' ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

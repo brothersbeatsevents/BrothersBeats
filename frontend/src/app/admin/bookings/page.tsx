@@ -28,9 +28,9 @@ export default function AdminBookingsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Bookings</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/admin/bookings/new" className="bg-bb-gold hover:bg-bb-gold-dark text-bb-ink font-semibold px-5 py-2.5 rounded-full transition-colors text-sm">
             + Manual booking
           </Link>
@@ -47,7 +47,7 @@ export default function AdminBookingsPage() {
           placeholder="Search reference, name, email…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="rounded-lg border border-bb-border px-4 py-2 text-sm flex-1 min-w-[200px]"
+          className="rounded-lg border border-bb-border px-4 py-2 text-sm flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]"
         />
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-bb-border px-4 py-2 text-sm">
           {STATUS_OPTIONS.map((s) => (
@@ -60,7 +60,7 @@ export default function AdminBookingsPage() {
         <p className="text-bb-text-secondary">Loading…</p>
       ) : (
         <div className="bg-bb-surface border border-bb-border rounded-2xl overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-bb-neutral text-bb-text-secondary text-left">
               <tr>
                 <th className="px-4 py-2 font-medium">Reference</th>

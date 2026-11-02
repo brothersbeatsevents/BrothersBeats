@@ -26,7 +26,20 @@ Parameters:
     Type: String
     Default: 'false'
     AllowedValues: ['true', 'false']
-    Description: Enable Google federation after the OAuth client credentials are stored in SSM
+    Description: Enable Google federation after storing the client ID in SSM and the secret in Secrets Manager
+  CognitoAuthUrl:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|^https://[a-z0-9.-]+/?$'
+    Description: Existing Cognito custom-domain HTTPS origin; leave empty to use the default Cognito domain
+  CognitoCustomDomainName:
+    Type: String
+    Default: ''
+    Description: Custom hostname to provision on this environment's user pool; leave empty to skip domain creation
+  CognitoCustomDomainCertificateArn:
+    Type: String
+    Default: ''
+    Description: Issued ACM certificate ARN in us-east-1, required when CognitoCustomDomainName is set
   SESFromEmail:
     Type: String
     Default: ''
@@ -45,6 +58,8 @@ Conditions:
   HasExtraCorsOrigins: !Not [!Equals [!Ref ExtraCorsOrigins, '']]
   HasExtraCallbackUrls: !Not [!Equals [!Ref ExtraCallbackUrls, '']]
   HasGoogleAuth: !Equals [!Ref GoogleAuthEnabled, 'true']
+  HasCognitoAuthUrl: !Not [!Equals [!Ref CognitoAuthUrl, '']]
+  HasCognitoCustomDomain: !Not [!Equals [!Ref CognitoCustomDomainName, '']]
   HasSESFromEmail: !Not [!Equals [!Ref SESFromEmail, '']]
 
 Globals:
@@ -65,6 +80,7 @@ Globals:
         COGNITO_USER_POOL_ID: !Ref CognitoUserPool
         COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         COGNITO_DOMAIN: !Sub 'brothers-beats-${Environment}-${AWS::AccountId}'
+        COGNITO_AUTH_URL: !If [HasCognitoAuthUrl, !Ref CognitoAuthUrl, !Ref 'AWS::NoValue']
         SES_FROM_EMAIL: !Ref SESFromEmail
         SES_CONFIGURATION_SET: !If
           - HasSESFromEmail
@@ -227,6 +243,17 @@ Resources:
       Domain: !Sub 'brothers-beats-${Environment}-${AWS::AccountId}'
       UserPoolId: !Ref CognitoUserPool
 
+  CognitoCustomDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Condition: HasCognitoCustomDomain
+    Properties:
+      Domain: !Ref CognitoCustomDomainName
+      UserPoolId: !Ref CognitoUserPool
+      ManagedLoginVersion: 2
+      CustomDomainConfig:
+        CertificateArn: !Ref CognitoCustomDomainCertificateArn
+        SecurityPolicy: TLS_V1_2_2021
+
   # ── Google Identity Provider ──
   CognitoGoogleIdP:
     Type: AWS::Cognito::UserPoolIdentityProvider
@@ -237,10 +264,11 @@ Resources:
       ProviderType: Google
       ProviderDetails:
         client_id: !Sub '{{resolve:ssm:/brothers-beats/${Environment}/google-client-id}}'
-        client_secret: !Sub '{{resolve:ssm:/brothers-beats/${Environment}/google-client-secret}}'
+        client_secret: !Sub '{{resolve:secretsmanager:/brothers-beats/${Environment}/google-oauth:SecretString:client_secret}}'
         authorize_scopes: 'openid email profile'
       AttributeMapping:
         email: email
+        email_verified: email_verified
         name: name
         picture: picture
 
@@ -380,14 +408,32 @@ Resources:
     Properties:
       Name: !Sub 'brothers-beats-${Environment}'
       StageName: !Ref Environment
-      # GatewayResponses requires an inline definition; SAM adds the API events below.
-      MergeDefinitions: true
+      # Define both Lambda proxy routes explicitly so GatewayResponses can use an inline API.
       DefinitionBody:
         swagger: '2.0'
         info:
           title: Brothers Beats API
           version: '1.0'
-        paths: {}
+        paths:
+          /:
+            x-amazon-apigateway-any-method:
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations'
+          /{proxy+}:
+            x-amazon-apigateway-any-method:
+              parameters:
+                - name: proxy
+                  in: path
+                  required: true
+                  type: string
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations'
       TracingEnabled: false
       MethodSettings:
         - ResourcePath: '/*'
@@ -480,11 +526,22 @@ Outputs:
     Value: !Ref CognitoUserPoolClient
   CognitoLoginUrl:
     Description: Cognito Hosted UI Login URL
-    Value: !Sub >-
-      https://brothers-beats-${Environment}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com/login?response_type=code&scope=openid+email+profile&redirect_uri=${FrontendUrl}/auth/callback
+    Value: !Sub
+      - '${AuthUrl}/login?client_id=${CognitoUserPoolClient}&response_type=code&scope=openid+email+profile&redirect_uri=${FrontendUrl}/auth/callback'
+      - AuthUrl: !If
+          - HasCognitoAuthUrl
+          - !Ref CognitoAuthUrl
+          - !Sub 'https://brothers-beats-${Environment}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com'
   CognitoDomain:
     Description: Cognito domain
-    Value: !Sub 'https://brothers-beats-${Environment}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com'
+    Value: !If
+      - HasCognitoAuthUrl
+      - !Ref CognitoAuthUrl
+      - !Sub 'https://brothers-beats-${Environment}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com'
+  CognitoCustomDomainDnsTarget:
+    Condition: HasCognitoCustomDomain
+    Description: DNS CNAME target for the custom Cognito domain
+    Value: !GetAtt CognitoCustomDomain.CloudFrontDistribution
   MediaBucketName:
     Description: S3 media bucket name
     Value: !Ref MediaBucket

@@ -37,16 +37,16 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-      <div className="flex flex-col sm:flex-row gap-8">
-        <nav className="sm:w-48 shrink-0 flex sm:flex-col gap-1 overflow-x-auto">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
+        <nav aria-label="Account navigation" className="lg:w-48 shrink-0 flex lg:flex-col gap-1 overflow-x-auto">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-4 py-2 rounded-full sm:rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
+                className={`shrink-0 px-4 py-2 rounded-full lg:rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                   active ? 'bg-bb-gold text-bb-ink' : 'text-bb-text-secondary hover:bg-bb-neutral'
                 }`}
               >

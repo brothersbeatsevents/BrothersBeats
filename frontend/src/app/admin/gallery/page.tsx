@@ -70,7 +70,7 @@ export default function AdminGalleryPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="font-display font-bold text-2xl text-bb-text">Gallery</h1>
         <Link
           href="/admin/gallery/new"

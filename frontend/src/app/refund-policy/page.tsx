@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Refund policy',
-  description: `Refund policy for ${SITE_CONFIG.name}.`,
-  alternates: { canonical: '/refund-policy' },
-};
+  description: `Refund policy for ${SITE_CONFIG.name} — when tickets can be refunded, including event cancellations.`,
+  path: '/refund-policy',
+});
 
 export default function RefundPolicyPage() {
   return (

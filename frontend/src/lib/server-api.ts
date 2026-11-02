@@ -22,12 +22,13 @@ async function serverFetch<T>(endpoint: string, revalidate?: number): Promise<T 
   }
 }
 
-export async function getEventsSSR(params?: { category?: string; city?: string; q?: string; sort?: string }) {
+export async function getEventsSSR(params?: { category?: string; city?: string; q?: string; sort?: string; past?: boolean }) {
   const qs = new URLSearchParams();
   if (params?.category) qs.set('category', params.category);
   if (params?.city) qs.set('city', params.city);
   if (params?.q) qs.set('q', params.q);
   if (params?.sort) qs.set('sort', params.sort);
+  if (params?.past) qs.set('past', 'true');
   const query = qs.toString();
   return (await serverFetch<any[]>(`/events${query ? `?${query}` : ''}`)) ?? [];
 }

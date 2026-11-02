@@ -31,13 +31,13 @@ export default function PriceSummary({ quote }: { quote: PriceQuoteData }) {
           {!!line.earlyBirdQuantity && (
             <div className="flex justify-between gap-3 text-bb-text-secondary">
               <span>{line.ticketTierName} (Early Bird) × {line.earlyBirdQuantity}</span>
-              <span>{amount((line.earlyBirdUnitPriceAmountMinor || 0) * line.earlyBirdQuantity)}</span>
+              <span className="shrink-0 whitespace-nowrap">{amount((line.earlyBirdUnitPriceAmountMinor || 0) * line.earlyBirdQuantity)}</span>
             </div>
           )}
           {(!line.earlyBirdQuantity || !!line.standardQuantity) && (
             <div className="flex justify-between gap-3 text-bb-text-secondary">
               <span>{line.ticketTierName} × {line.earlyBirdQuantity ? line.standardQuantity : line.quantity}</span>
-              <span>{amount(line.earlyBirdQuantity
+              <span className="shrink-0 whitespace-nowrap">{amount(line.earlyBirdQuantity
                 ? (line.standardUnitPriceAmountMinor || 0) * (line.standardQuantity || 0)
                 : line.unitPriceAmountMinor * line.quantity)}</span>
             </div>
@@ -47,18 +47,18 @@ export default function PriceSummary({ quote }: { quote: PriceQuoteData }) {
       {!!quote.discountAmountMinor && (
         <div className="flex justify-between gap-3 text-green-700">
           <span>Discount ({quote.discountCode})</span>
-          <span>−{formatMoney(quote.discountAmountMinor, quote.currency)}</span>
+          <span className="shrink-0 whitespace-nowrap">−{formatMoney(quote.discountAmountMinor, quote.currency)}</span>
         </div>
       )}
       {quote.feesAmountMinor > 0 && (
         <div className="flex justify-between text-bb-text-secondary">
           <span>Fees</span>
-          <span>{formatMoney(quote.feesAmountMinor, quote.currency)}</span>
+          <span className="shrink-0 whitespace-nowrap">{formatMoney(quote.feesAmountMinor, quote.currency)}</span>
         </div>
       )}
       <div className="flex justify-between font-bold text-bb-text text-base pt-2 border-t border-bb-border">
         <span>Total</span>
-        <span>{formatMoney(quote.totalAmountMinor, quote.currency)}</span>
+        <span className="shrink-0 whitespace-nowrap">{formatMoney(quote.totalAmountMinor, quote.currency)}</span>
       </div>
     </div>
   );

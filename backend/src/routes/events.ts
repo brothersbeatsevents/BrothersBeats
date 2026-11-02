@@ -41,6 +41,7 @@ function publicEventSummary(event: EventEntity) {
     heroImageUrl: event.heroImageUrl,
     availableTickets: available,
     badge,
+    updatedAt: event.updated_at,
   };
 }
 

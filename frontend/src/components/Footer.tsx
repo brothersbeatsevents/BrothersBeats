@@ -25,11 +25,6 @@ const socialLinks = [
     href: SITE_CONFIG.socials.youtube,
     icon: <path d="M23.5 6.2a3 3 0 0 0-2.1-2.12C19.55 3.58 12 3.58 12 3.58s-7.55 0-9.4.5A3 3 0 0 0 .5 6.2 31.2 31.2 0 0 0 0 12a31.2 31.2 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.12c1.85.5 9.4.5 9.4.5s7.55 0 9.4-.5a3 3 0 0 0 2.1-2.12A31.2 31.2 0 0 0 24 12a31.2 31.2 0 0 0-.5-5.8ZM9.55 15.57V8.43L15.82 12l-6.27 3.57Z" />,
   },
-  {
-    name: 'LinkedIn',
-    href: SITE_CONFIG.socials.linkedin,
-    icon: <path d="M5.34 7.31A2.31 2.31 0 1 1 5.34 2.7a2.31 2.31 0 0 1 0 4.62ZM3.35 21h3.98V9H3.35v12Zm6.35-12h3.82v1.64h.05c.53-1.01 1.83-2.08 3.77-2.08 4.03 0 4.78 2.65 4.78 6.1V21h-3.98v-5.62c0-1.34-.02-3.07-1.87-3.07-1.88 0-2.16 1.46-2.16 2.97V21H9.7V9Z" />,
-  },
 ] as const;
 
 const WHATSAPP_ICON = (
@@ -59,8 +54,8 @@ export default function Footer({ whatsappUrl }: { whatsappUrl?: string | null })
   return (
     <footer className="bg-bb-ink text-white mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="sm:col-span-2">
             <Image src="/images/BBlogo.png" alt="Brothers Beats logo" width={168} height={112} className="h-14 w-auto object-contain" />
             <p className="mt-3 text-sm text-white/70 max-w-sm">
               {SITE_CONFIG.mission} {SITE_CONFIG.description}
@@ -93,12 +88,12 @@ export default function Footer({ whatsappUrl }: { whatsappUrl?: string | null })
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email"
-                className="flex-1 rounded-full px-4 py-2 text-sm text-bb-ink bg-white focus:outline-none focus:ring-2 focus:ring-bb-gold-light"
+                className="min-w-0 flex-1 rounded-full px-4 py-2 text-sm text-bb-ink bg-white focus:outline-none focus:ring-2 focus:ring-bb-gold-light"
               />
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold text-sm px-4 py-2 rounded-full transition-colors"
+                className="shrink-0 bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold text-sm px-4 py-2 rounded-full transition-colors"
               >
                 {status === 'loading' ? 'Joining…' : 'Subscribe'}
               </button>

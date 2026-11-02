@@ -1,12 +1,21 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth';
 import Header from '@/components/Header';
 import { getSettingsSSR } from '@/lib/server-api';
 import Footer from '@/components/Footer';
 import { SITE_CONFIG } from '@/lib/site-config';
-import { organizationJsonLd, JsonLd } from '@/lib/json-ld';
+import { organizationJsonLd, websiteJsonLd, JsonLd } from '@/lib/json-ld';
 import CookieBanner from '@/components/CookieBanner';
+
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+  variable: '--font-display',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -21,11 +30,20 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_CONFIG.name}`,
   },
   description: SITE_CONFIG.description,
+  applicationName: SITE_CONFIG.name,
+  authors: [{ name: SITE_CONFIG.name, url: SITE_CONFIG.url }],
+  creator: SITE_CONFIG.name,
+  publisher: SITE_CONFIG.name,
+  category: 'events',
+  formatDetection: { telephone: false, email: false, address: false },
   keywords: [
     'Brothers Beats Events',
     'event tickets Dublin',
     'buy tickets Ireland',
     'live music Dublin',
+    'comedy shows Dublin',
+    'event management Ireland',
+    'wedding planner Dublin',
     'corporate events Dublin',
     'community events Ireland',
   ],
@@ -41,7 +59,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: SITE_CONFIG.locale,
-    url: SITE_CONFIG.url,
+    url: '/',
     siteName: SITE_CONFIG.name,
     title: `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`,
     description: SITE_CONFIG.description,
@@ -67,8 +85,11 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: SITE_CONFIG.url,
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
   },
 };
 
@@ -79,13 +100,14 @@ export default async function RootLayout({
 }) {
   const settings = await getSettingsSSR();
   return (
-    <html lang="en">
+    <html lang="en-IE" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="min-h-screen flex flex-col bg-bb-bg text-bb-text font-body">
         <JsonLd data={organizationJsonLd()} />
+        <JsonLd data={websiteJsonLd()} />
         <CookieBanner />
         <AuthProvider>
           <Header whatsappUrl={settings?.whatsappGroupUrl} />
-          <main className="flex-1">{children}</main>
+          <main className="min-w-0 w-full flex-1">{children}</main>
           <Footer whatsappUrl={settings?.whatsappGroupUrl} />
         </AuthProvider>
       </body>

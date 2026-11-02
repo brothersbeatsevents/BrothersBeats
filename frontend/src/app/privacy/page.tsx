@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Privacy policy',
-  description: `Privacy policy for ${SITE_CONFIG.name} — how we collect, use, and protect your personal information.`,
-  alternates: { canonical: '/privacy' },
-};
+  description: `Privacy policy for ${SITE_CONFIG.name} — how we collect, use, and protect your personal information when you book tickets or use our site.`,
+  path: '/privacy',
+});
 
 export default function PrivacyPage() {
   return (

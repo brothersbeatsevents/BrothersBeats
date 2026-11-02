@@ -35,8 +35,8 @@ export default function TicketTierCard({
         selected ? 'border-bb-gold bg-bb-gold/10' : 'border-bb-border bg-bb-surface hover:border-bb-gold'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
-      <div className="flex justify-between items-start gap-4">
-        <div>
+      <div className="flex flex-wrap justify-between items-start gap-3">
+        <div className="min-w-[8rem] flex-1">
           <p className="font-semibold text-bb-text">{tier.name}</p>
           {tier.description && <p className="text-sm text-bb-text-secondary mt-0.5">{tier.description}</p>}
           {tier.groupMinSize && (

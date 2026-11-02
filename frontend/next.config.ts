@@ -6,11 +6,30 @@ const nextConfig = (phase: string): NextConfig => ({
   // writes both processes to `.next`, so running `npm run build` while the dev
   // server is open can remove manifests that the dev server is actively using.
   distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
+  poweredByHeader: false,
   images: {
     unoptimized: true,
   },
   async headers() {
     return [
+      {
+        // Private/transactional areas must never appear in search results.
+        source: '/:section(admin|account|auth|checkout|booking|unsubscribe)/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/unsubscribe',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        // Brand assets rarely change; let browsers and CDNs cache them.
+        source: '/:file(icon-32.png|icon-192.png|icon-512.png|favicon.png|favicon.ico|apple-touch-icon.png)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+      {
+        source: '/images/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
       {
         // Applies to all pages: restrict embeddable frames to the privacy-enhanced
         // YouTube player and Instagram Reels used by the gallery.
