@@ -180,7 +180,10 @@ Resources:
             AllowedMethods: [GET, PUT]
             AllowedOrigins: !If
               - IsProd
-              - [!Ref FrontendUrl]
+              - !If
+                - HasExtraCorsOrigins
+                - !Split [',', !Sub '${FrontendUrl},${ExtraCorsOrigins}']
+                - [!Ref FrontendUrl]
               - [!Ref FrontendUrl, 'http://localhost:3001']
             MaxAge: 3600
       Tags:
