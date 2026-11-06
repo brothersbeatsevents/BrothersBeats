@@ -101,6 +101,14 @@ export default async function RootLayout({
   const settings = await getSettingsSSR();
   return (
     <html lang="en-IE" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <head>
+        <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TXFBGJM9" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+        ` }} />
+      </head>
       <body className="min-h-screen flex flex-col bg-bb-bg text-bb-text font-body">
         <JsonLd data={organizationJsonLd()} />
         <JsonLd data={websiteJsonLd()} />
