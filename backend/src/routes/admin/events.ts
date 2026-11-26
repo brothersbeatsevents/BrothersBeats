@@ -318,11 +318,6 @@ router.post('/:id/publish', async (req: AuthRequest, res: Response): Promise<voi
     res.status(409).json({ success: false, error: `Cannot publish an event with status ${event.status}` });
     return;
   }
-  const tiers = await db.filterBy<TicketTierEntity>('ticketTiers', 'eventId', event.id);
-  if (tiers.length === 0) {
-    res.status(400).json({ success: false, error: 'Add at least one ticket type before publishing' });
-    return;
-  }
   event.status = 'PUBLISHED';
   event.publishedAt = event.publishedAt || new Date().toISOString();
   event.updated_at = new Date().toISOString();
