@@ -148,15 +148,52 @@ router.patch('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   }
 
   const hasSales = event.totalTicketsSold > 0 || event.totalTicketsReserved > 0;
+
+  const nextStart = req.body.startDateTime ?? event.startDateTime;
+  const nextEnd = req.body.endDateTime ?? event.endDateTime;
+  if (Number.isNaN(new Date(nextStart).getTime()) || Number.isNaN(new Date(nextEnd).getTime())) {
+    res.status(400).json({ success: false, error: 'Invalid start or end date/time' });
+    return;
+  }
+  if (new Date(nextEnd).getTime() <= new Date(nextStart).getTime()) {
+    res.status(400).json({ success: false, error: 'End date/time must be after the start date/time' });
+    return;
+  }
+  if (req.body.capacity !== undefined) {
+    const capacity = Number(req.body.capacity);
+    if (!Number.isInteger(capacity) || capacity < 1) {
+      res.status(400).json({ success: false, error: 'Capacity must be a whole number of at least 1' });
+      return;
+    }
+    if (capacity < event.totalTicketsSold + event.totalTicketsReserved) {
+      res.status(400).json({ success: false, error: 'Capacity cannot be less than tickets already sold/reserved' });
+      return;
+    }
+    req.body.capacity = capacity;
+  }
+  if (req.body.perOrderLimit !== undefined) {
+    const limit = Number(req.body.perOrderLimit);
+    if (!Number.isInteger(limit) || limit < 1) {
+      res.status(400).json({ success: false, error: 'Per-order limit must be a whole number of at least 1' });
+      return;
+    }
+    req.body.perOrderLimit = limit;
+  }
+
   const majorChangeFields = ['startDateTime', 'endDateTime', 'venueName', 'city'];
   let majorChanged = false;
 
   for (const field of EDITABLE_FIELDS) {
     if (req.body[field] !== undefined) {
-      if (majorChangeFields.includes(field) && hasSales && req.body[field] !== (event as any)[field]) {
-        majorChanged = true;
+      if (majorChangeFields.includes(field) && hasSales) {
+        const isDateField = field === 'startDateTime' || field === 'endDateTime';
+        const changed = isDateField
+          ? new Date(req.body[field]).getTime() !== new Date((event as any)[field]).getTime()
+          : req.body[field] !== (event as any)[field];
+        if (changed) majorChanged = true;
       }
-      (event as any)[field] = req.body[field];
+      // null clears an optional field
+      (event as any)[field] = req.body[field] === null ? undefined : req.body[field];
     }
   }
   if (req.body.title !== undefined) {

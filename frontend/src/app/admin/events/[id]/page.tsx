@@ -15,6 +15,7 @@ import {
   uploadToPresignedUrl,
 } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
+import { CATEGORY_LABELS } from '@/lib/site-config';
 
 const LIFECYCLE_ACTIONS: Record<string, { action: any; label: string }[]> = {
   DRAFT: [{ action: 'publish', label: 'Publish' }],
@@ -37,6 +38,33 @@ function toLocalInput(value: string): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
+function toDetailsForm(e: any) {
+  return {
+    title: e.title || '',
+    category: e.category || 'OTHER',
+    visibility: e.visibility || 'PUBLIC',
+    shortDescription: e.shortDescription || '',
+    longDescription: e.longDescription || '',
+    venueName: e.venueName || '',
+    venueAddress: e.venueAddress || '',
+    city: e.city || '',
+    countyOrRegion: e.countyOrRegion || '',
+    country: e.country || '',
+    postalCode: e.postalCode || '',
+    mapUrl: e.mapUrl || '',
+    startDateTime: e.startDateTime ? toLocalInput(e.startDateTime) : '',
+    endDateTime: e.endDateTime ? toLocalInput(e.endDateTime) : '',
+    doorsOpenAt: e.doorsOpenAt ? toLocalInput(e.doorsOpenAt) : '',
+    capacity: e.capacity ?? 1,
+    perOrderLimit: e.perOrderLimit ?? 10,
+    refundPolicy: e.refundPolicy || '',
+    termsAndConditions: e.termsAndConditions || '',
+    supportEmail: e.supportEmail || '',
+  };
+}
+
+const INPUT_CLASS = 'w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm';
+
 export default function AdminEventDetailPage() {
   const { token } = useAuth();
   const router = useRouter();
@@ -52,15 +80,54 @@ export default function AdminEventDetailPage() {
   const [editingTierId, setEditingTierId] = useState<string | null>(null);
   const [editTierForm, setEditTierForm] = useState({ name: '', description: '', priceEuros: '0.00', maxQuantity: 0, salesStartAt: '', salesEndAt: '' });
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [form, setForm] = useState<ReturnType<typeof toDetailsForm> | null>(null);
+  const [savingDetails, setSavingDetails] = useState(false);
+  const [detailsMessage, setDetailsMessage] = useState('');
 
-  function load() {
+  function setField<K extends keyof ReturnType<typeof toDetailsForm>>(key: K, value: ReturnType<typeof toDetailsForm>[K]) {
+    setForm((f) => (f ? { ...f, [key]: value } : f));
+  }
+
+  function load(resetForm = false) {
     if (!token) return;
     adminGetEvent(params.id, token)
-      .then((res) => setEvent(res.data))
+      .then((res) => {
+        setEvent(res.data);
+        if (resetForm) setForm(toDetailsForm(res.data));
+      })
       .finally(() => setLoading(false));
   }
 
-  useEffect(load, [token, params.id]);
+  useEffect(() => load(true), [token, params.id]);
+
+  async function handleSaveDetails(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token || !form) return;
+    setSavingDetails(true);
+    setError('');
+    setDetailsMessage('');
+    try {
+      const res = await adminUpdateEvent(
+        params.id,
+        {
+          ...form,
+          startDateTime: new Date(form.startDateTime).toISOString(),
+          endDateTime: new Date(form.endDateTime).toISOString(),
+          doorsOpenAt: form.doorsOpenAt ? new Date(form.doorsOpenAt).toISOString() : null,
+          capacity: Number(form.capacity),
+          perOrderLimit: Number(form.perOrderLimit),
+        },
+        token,
+      );
+      setEvent((prev: any) => ({ ...prev, ...res.data }));
+      setForm(toDetailsForm(res.data));
+      setDetailsMessage('Event details saved.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to save event details.');
+    } finally {
+      setSavingDetails(false);
+    }
+  }
 
   async function handleAction(action: string) {
     if (!token) return;
@@ -74,7 +141,7 @@ export default function AdminEventDetailPage() {
     setError('');
     try {
       await adminEventAction(params.id, action as any, token, body);
-      load();
+      load(true);
     } catch (err: any) {
       setError(err.message || 'Action failed.');
     } finally {
@@ -247,40 +314,124 @@ export default function AdminEventDetailPage() {
           />
           {uploadingImage && <p className="text-xs text-bb-text-secondary mt-1">Uploading…</p>}
         </div>
-        <div>
-          <label className="block text-sm font-medium text-bb-text mb-1">Title</label>
-          <input
-            defaultValue={event.title}
-            onBlur={(e) => e.target.value !== event.title && handleSaveField('title', e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-bb-text mb-1">Short description</label>
-          <input
-            defaultValue={event.shortDescription}
-            onBlur={(e) => e.target.value !== event.shortDescription && handleSaveField('shortDescription', e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-bb-text mb-1">Full description</label>
-          <textarea
-            rows={4}
-            defaultValue={event.longDescription}
-            onBlur={(e) => e.target.value !== event.longDescription && handleSaveField('longDescription', e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-bb-text mb-1">Refund policy</label>
-          <textarea
-            rows={2}
-            defaultValue={event.refundPolicy}
-            onBlur={(e) => e.target.value !== event.refundPolicy && handleSaveField('refundPolicy', e.target.value)}
-            className="w-full rounded-lg border border-bb-border px-4 py-2.5 text-sm"
-          />
-        </div>
+        <form onSubmit={handleSaveDetails} className="space-y-4">
+          {form && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-bb-text mb-1">Title</label>
+                <input required value={form.title} onChange={(e) => setField('title', e.target.value)} className={INPUT_CLASS} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Category</label>
+                  <select value={form.category} onChange={(e) => setField('category', e.target.value)} className={INPUT_CLASS}>
+                    {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Visibility</label>
+                  <select value={form.visibility} onChange={(e) => setField('visibility', e.target.value)} className={INPUT_CLASS}>
+                    <option value="PUBLIC">Public</option>
+                    <option value="UNLISTED">Unlisted</option>
+                    <option value="PRIVATE">Private</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-bb-text mb-1">Short description</label>
+                <input value={form.shortDescription} onChange={(e) => setField('shortDescription', e.target.value)} className={INPUT_CLASS} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-bb-text mb-1">Full description</label>
+                <textarea rows={4} value={form.longDescription} onChange={(e) => setField('longDescription', e.target.value)} className={INPUT_CLASS} />
+              </div>
+
+              <h3 className="font-semibold text-bb-text pt-2">Date &amp; time</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Start date/time</label>
+                  <input required type="datetime-local" value={form.startDateTime} onChange={(e) => setField('startDateTime', e.target.value)} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">End date/time</label>
+                  <input required type="datetime-local" value={form.endDateTime} onChange={(e) => setField('endDateTime', e.target.value)} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Doors open</label>
+                  <input type="datetime-local" value={form.doorsOpenAt} onChange={(e) => setField('doorsOpenAt', e.target.value)} className={INPUT_CLASS} />
+                </div>
+              </div>
+
+              <h3 className="font-semibold text-bb-text pt-2">Location</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Venue name</label>
+                  <input required value={form.venueName} onChange={(e) => setField('venueName', e.target.value)} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Venue address</label>
+                  <input value={form.venueAddress} onChange={(e) => setField('venueAddress', e.target.value)} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">City</label>
+                  <input required value={form.city} onChange={(e) => setField('city', e.target.value)} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">County / region</label>
+                  <input value={form.countyOrRegion} onChange={(e) => setField('countyOrRegion', e.target.value)} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Postal code</label>
+                  <input value={form.postalCode} onChange={(e) => setField('postalCode', e.target.value)} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Country</label>
+                  <input value={form.country} onChange={(e) => setField('country', e.target.value)} className={INPUT_CLASS} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-bb-text mb-1">Map URL</label>
+                <input type="url" value={form.mapUrl} onChange={(e) => setField('mapUrl', e.target.value)} className={INPUT_CLASS} />
+              </div>
+
+              <h3 className="font-semibold text-bb-text pt-2">Capacity &amp; policies</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Capacity</label>
+                  <input required type="number" min={Math.max(1, (event.totalTicketsSold || 0) + (event.totalTicketsReserved || 0))} value={form.capacity} onChange={(e) => setField('capacity', Number(e.target.value))} className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-bb-text mb-1">Per-order limit</label>
+                  <input required type="number" min={1} value={form.perOrderLimit} onChange={(e) => setField('perOrderLimit', Number(e.target.value))} className={INPUT_CLASS} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-bb-text mb-1">Support email</label>
+                <input type="email" value={form.supportEmail} onChange={(e) => setField('supportEmail', e.target.value)} className={INPUT_CLASS} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-bb-text mb-1">Refund policy</label>
+                <textarea rows={2} value={form.refundPolicy} onChange={(e) => setField('refundPolicy', e.target.value)} className={INPUT_CLASS} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-bb-text mb-1">Terms and conditions</label>
+                <textarea rows={3} value={form.termsAndConditions} onChange={(e) => setField('termsAndConditions', e.target.value)} className={INPUT_CLASS} />
+              </div>
+
+              {event.status !== 'DRAFT' && (event.totalTicketsSold > 0 || event.totalTicketsReserved > 0) && (
+                <p className="text-xs text-bb-text-muted">
+                  Changing the date, time, venue or city will email everyone with a confirmed booking.
+                </p>
+              )}
+              {detailsMessage && <p className="text-sm text-bb-green">{detailsMessage}</p>}
+              <button type="submit" disabled={savingDetails} className="bg-bb-gold hover:bg-bb-gold-dark disabled:opacity-60 text-bb-ink font-semibold px-6 py-2.5 rounded-full transition-colors">
+                {savingDetails ? 'Saving…' : 'Save changes'}
+              </button>
+            </>
+          )}
+        </form>
       </div>
 
       <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6">
