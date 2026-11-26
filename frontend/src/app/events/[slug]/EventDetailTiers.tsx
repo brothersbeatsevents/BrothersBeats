@@ -132,6 +132,17 @@ export default function EventDetailTiers({ event: initialEvent }: { event: any }
     );
   }
 
+  if (tiers.length === 0) {
+    return (
+      <div className="bg-bb-surface border border-bb-border rounded-2xl p-4 sm:p-6 text-center lg:sticky lg:top-[calc(var(--site-header-height)+1rem)]">
+        <p className="font-semibold text-bb-text">Tickets coming soon</p>
+        <p className="text-sm text-bb-text-secondary mt-1">
+          Ticket sales for this event haven&apos;t opened yet. Please check back later.
+        </p>
+      </div>
+    );
+  }
+
   const subtotalAmountMinor = quote?.totalAmountMinor ?? items.reduce((sum, item) => sum + (tiers.find((tier) => tier.id === item.ticketTierId)?.priceAmountMinor || 0) * item.quantity, 0);
   const currency = tiers[0]?.currency || 'EUR';
 
